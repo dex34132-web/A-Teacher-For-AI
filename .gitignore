@@ -1,0 +1,108 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.pytype/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Secrets and credentials
+*.pem
+*.key
+*.cert
+credentials.json
+service-account*.json
+secrets.yaml
+secrets.json
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# AI/ML specific
+*.onnx
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.pkl
+*.pickle
+
+# Model caches
+.cache/
+.cache/huggingface/
+.cache/torch/
+.cache/transformers/
+
+# Local storage databases
+storage/*.db
+storage/*.sqlite
+storage/*.sqlite3
+storage/*.db-journal
+storage/*.db-wal
+storage/*.db-shm
+
+# Memory databases
+.opencode-mem/
+*.db.legacy.bak
+*.db.turso-migrate.json
+.turso-migrated
+.turso-migrate.lock
+.turso-operation.lock
+
+# Experiments and benchmarks (generated data)
+experiments/results/
+benchmarks/results/
+*.benchmark.json
+*.experiment.json
+
+# Large files
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Logs
+*.log
+logs/

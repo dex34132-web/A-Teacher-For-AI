@@ -1,0 +1,413 @@
+"""Knowledge supersession, merging, and redundancy for V2.4.
+
+Supersession:
+- When new knowledge conflicts with old, determine if new genuinely replaces old
+- Never automatically choose "newer = better" or "older = more trusted"
+- If evidence insufficient, retain both and mark uncertain
+
+Merging:
+- Detect memories representing the same underlying knowledge
+- Preserve provenance (memory IDs of source memories)
+- Never merge genuinely contradictory knowledge
+- Require sufficient semantic similarity + compatible outputs
+
+Redundancy:
+- Classify: exact duplicate, normalized duplicate, semantic duplicate,
+  related but independent, genuinely distinct
+- Preserve independent evidence through consolidation
+"""
+
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass
+from enum import Enum
+from typing import TYPE_CHECKING
+
+from core.learner.lifecycle import (
+    HealthSignals,
+    LifecycleConfig,
+    LifecycleEvent,
+    MemoryState,
+    compute_health_score,
+)
+
+if TYPE_CHECKING:
+    from core.learner.hybrid_memory import HybridExample
+
+
+# ---------------------------------------------------------------------------
+# Supersession
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SupersessionResult:
+    """Result of supersession analysis.
+
+    Attributes:
+        should_supersede: Whether old should be superseded by new.
+        reason: Human-readable explanation.
+        old_health: Health score of old memory.
+        new_health: Health score of new memory.
+        confidence_difference: new_health - old_health.
+    """
+
+    should_supersede: bool
+    reason: str
+    old_health: float
+    new_health: float
+    confidence_difference: float
+
+
+def analyze_supersession(
+    old: HybridExample,
+    new: HybridExample,
+    config: LifecycleConfig,
+) -> SupersessionResult:
+    """Analyze whether new knowledge supersedes old knowledge.
+
+    Rules:
+    1. Never automatically choose newer = better
+    2. Never automatically choose older = more trusted
+    3. Compare evidence quality, not just timestamps
+    4. If evidence insufficient, retain both
+
+    Args:
+        old: Existing memory.
+        new: Newer memory with similar input.
+        config: Lifecycle configuration.
+
+    Returns:
+        SupersessionResult with recommendation and explanation.
+    """
+    # Compute health for both
+    old_signals = HealthSignals(
+        success_rate=old.success_rate,
+        independent_evidence=old.success_count,
+        confidence=old.weight,
+        recency=min(1.0, max(0.0, 1.0 - (time.time() - old.last_used_at) / 86400)),
+        usage_frequency=min(1.0, old.use_count / 10.0),
+    )
+    new_signals = HealthSignals(
+        success_rate=new.success_rate,
+        independent_evidence=new.success_count,
+        confidence=new.weight,
+        recency=min(1.0, max(0.0, 1.0 - (time.time() - new.last_used_at) / 86400)),
+        usage_frequency=min(1.0, new.use_count / 10.0),
+    )
+
+    old_health = compute_health_score(old_signals)
+    new_health = compute_health_score(new_signals)
+    diff = new_health - old_health
+
+    # Check if outputs are actually different
+    outputs_differ = old.output != new.output
+
+    if not outputs_differ:
+        return SupersessionResult(
+            should_supersede=False,
+            reason="Same output — no supersession needed, consider merging",
+            old_health=old_health,
+            new_health=new_health,
+            confidence_difference=diff,
+        )
+
+    # Need sufficient evidence difference for supersession
+    if abs(diff) < config.supersession_threshold:
+        return SupersessionResult(
+            should_supersede=False,
+            reason=(
+                f"Insufficient evidence difference ({diff:.3f} < "
+                f"{config.supersession_threshold}) — retain both"
+            ),
+            old_health=old_health,
+            new_health=new_health,
+            confidence_difference=diff,
+        )
+
+    if diff > 0:
+        return SupersessionResult(
+            should_supersede=True,
+            reason=(
+                f"New knowledge has stronger evidence ({new_health:.3f} vs "
+                f"{old_health:.3f}, diff={diff:.3f})"
+            ),
+            old_health=old_health,
+            new_health=new_health,
+            confidence_difference=diff,
+        )
+    else:
+        return SupersessionResult(
+            should_supersede=False,
+            reason=(
+                f"Old knowledge has stronger evidence ({old_health:.3f} vs "
+                f"{new_health:.3f}, diff={abs(diff):.3f}) — retain old"
+            ),
+            old_health=old_health,
+            new_health=new_health,
+            confidence_difference=diff,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Merging
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class MergeCandidate:
+    """A pair of memories that may be merge candidates.
+
+    Attributes:
+        id_a: First memory ID.
+        id_b: Second memory ID.
+        output_similarity: How similar the outputs are [0, 1].
+        input_similarity: How similar the inputs are [0, 1].
+        combined_evidence: Total independent evidence if merged.
+    """
+
+    id_a: int
+    id_b: int
+    output_similarity: float
+    input_similarity: float
+    combined_evidence: int
+
+
+def _output_similarity(a: str, b: str) -> float:
+    """Compute token-level Jaccard similarity between outputs."""
+    if a == b:
+        return 1.0
+    tokens_a = set(a.lower().split())
+    tokens_b = set(b.lower().split())
+    if not tokens_a and not tokens_b:
+        return 1.0
+    if not tokens_a or not tokens_b:
+        return 0.0
+    intersection = tokens_a & tokens_b
+    union = tokens_a | tokens_b
+    return len(intersection) / len(union)
+
+
+def find_merge_candidates(
+    examples: list[HybridExample],
+    config: LifecycleConfig,
+) -> list[MergeCandidate]:
+    """Find pairs of memories that are candidates for merging.
+
+    Merge candidates must:
+    1. Have high output similarity (same underlying knowledge)
+    2. Not be genuinely contradictory
+    3. Have compatible evidence
+
+    Args:
+        examples: All memories to consider.
+        config: Lifecycle configuration.
+
+    Returns:
+        List of MergeCandidate pairs.
+    """
+    candidates: list[MergeCandidate] = []
+
+    for i in range(len(examples)):
+        for j in range(i + 1, len(examples)):
+            a = examples[i]
+            b = examples[j]
+
+            # Check output similarity
+            out_sim = _output_similarity(a.output, b.output)
+            if out_sim < config.merge_similarity:
+                continue
+
+            # Don't merge if outputs are genuinely different
+            if out_sim < 0.5:
+                continue
+
+            # Compute combined evidence
+            combined = a.success_count + b.success_count
+
+            candidates.append(
+                MergeCandidate(
+                    id_a=a.id,
+                    id_b=b.id,
+                    output_similarity=out_sim,
+                    input_similarity=0.0,  # Caller can compute if needed
+                    combined_evidence=combined,
+                )
+            )
+
+    return candidates
+
+
+# ---------------------------------------------------------------------------
+# Redundancy detection
+# ---------------------------------------------------------------------------
+
+
+class RedundancyType(Enum):
+    """Classification of redundancy between memories."""
+
+    EXACT_DUPLICATE = "exact_duplicate"
+    NORMALIZED_DUPLICATE = "normalized_duplicate"
+    SEMANTIC_DUPLICATE = "semantic_duplicate"
+    RELATED_BUT_INDEPENDENT = "related_but_independent"
+    GENUINELY_DISTINCT = "genuinely_distinct"
+
+
+@dataclass(frozen=True)
+class RedundancyResult:
+    """Result of redundancy analysis between two memories.
+
+    Attributes:
+        type: Classification of redundancy.
+        should_consolidate: Whether to consolidate.
+        reason: Human-readable explanation.
+        combined_evidence: Total independent evidence if consolidated.
+    """
+
+    type: RedundancyType
+    should_consolidate: bool
+    reason: str
+    combined_evidence: int
+
+
+def analyze_redundancy(
+    a: HybridExample,
+    b: HybridExample,
+    config: LifecycleConfig,
+) -> RedundancyResult:
+    """Analyze redundancy between two memories.
+
+    Classifies the relationship and determines if consolidation is safe.
+
+    Args:
+        a: First memory.
+        b: Second memory.
+        config: Lifecycle configuration.
+
+    Returns:
+        RedundancyResult with classification and recommendation.
+    """
+    # Exact duplicate
+    if a.input_text == b.input_text and a.output == b.output:
+        combined = a.success_count + b.success_count
+        return RedundancyResult(
+            type=RedundancyType.EXACT_DUPLICATE,
+            should_consolidate=True,
+            reason="Exact duplicate — safe to consolidate",
+            combined_evidence=combined,
+        )
+
+    # Normalized duplicate (same meaning, different wording)
+    out_sim = _output_similarity(a.output, b.output)
+    if out_sim >= 0.9:
+        combined = a.success_count + b.success_count
+        return RedundancyResult(
+            type=RedundancyType.NORMALIZED_DUPLICATE,
+            should_consolidate=True,
+            reason=f"Normalized duplicate (output sim={out_sim:.2f}) — safe to consolidate",
+            combined_evidence=combined,
+        )
+
+    # Semantic duplicate (same output, different phrasing)
+    if a.output == b.output:
+        combined = a.success_count + b.success_count
+        return RedundancyResult(
+            type=RedundancyType.SEMANTIC_DUPLICATE,
+            should_consolidate=True,
+            reason="Same output — consolidate to preserve evidence count",
+            combined_evidence=combined,
+        )
+
+    # Related but independent
+    if out_sim >= 0.5:
+        return RedundancyResult(
+            type=RedundancyType.RELATED_BUT_INDEPENDENT,
+            should_consolidate=False,
+            reason=f"Related but different outputs (sim={out_sim:.2f}) — retain separately",
+            combined_evidence=a.success_count + b.success_count,
+        )
+
+    # Genuinely distinct
+    return RedundancyResult(
+        type=RedundancyType.GENUINELY_DISTINCT,
+        should_consolidate=False,
+        reason="Genuinely distinct knowledge — no consolidation needed",
+        combined_evidence=a.success_count + b.success_count,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Archiving
+# ---------------------------------------------------------------------------
+
+
+def is_eligible_for_archive(
+    example: HybridExample,
+    health_score: float,
+    config: LifecycleConfig,
+) -> tuple[bool, str]:
+    """Determine if a memory is eligible for archival.
+
+    Archival rules:
+    - NEVER archive solely because it is old
+    - Archive if health is very low AND evidence is weak
+    - Archive if superseded by stronger knowledge
+    - Archive if explicitly requested
+
+    Args:
+        example: The memory to evaluate.
+        health_score: Current health score [0, 1].
+        config: Lifecycle configuration.
+
+    Returns:
+        Tuple of (eligible, reason).
+    """
+    # Very low health + weak evidence
+    if health_score < config.archive_threshold:
+        total_uses = example.success_count + example.failure_count
+        if total_uses < 3:
+            return True, (
+                f"Very low health ({health_score:.3f}) with insufficient "
+                f"evidence ({total_uses} uses)"
+            )
+
+    # Low confidence after many failures
+    if example.failure_count > example.success_count and example.failure_count >= 3:
+        return True, (
+            f"More failures ({example.failure_count}) than successes "
+            f"({example.success_count})"
+        )
+
+    return False, "Not eligible for archival"
+
+
+def archive_memory(
+    example: HybridExample,
+    reason: str,
+    current_state: MemoryState,
+) -> tuple[MemoryState, LifecycleEvent]:
+    """Transition a memory to ARCHIVED state.
+
+    Args:
+        example: The memory to archive.
+        reason: Reason for archival.
+        current_state: Current lifecycle state.
+
+    Returns:
+        Tuple of (new_state, event) — always ARCHIVED.
+    """
+    event = LifecycleEvent(
+        previous_state=current_state.value,
+        new_state=MemoryState.ARCHIVED.value,
+        reason=reason,
+        timestamp=time.time(),
+        evidence_summary={
+            "success_count": example.success_count,
+            "failure_count": example.failure_count,
+            "weight": example.weight,
+        },
+        related_ids=[example.id],
+        confidence_at_transition=example.weight,
+    )
+    return MemoryState.ARCHIVED, event
