@@ -790,6 +790,7 @@ class LifecycleManager:
 
         self._maintenance_history.append(record)
         self._last_maintenance = start_time
+        self.clear_pending_events()
 
         return record
 
@@ -942,6 +943,16 @@ class LifecycleManager:
             "last_maintenance": self._last_maintenance,
             "events_count": len(self._events),
             "states_count": len(self._states),
+            "maintenance_history": [
+                {
+                    "timestamp": r.timestamp,
+                    "memories_processed": r.memories_processed,
+                    "transitions": r.transitions,
+                    "duration_seconds": r.duration_seconds,
+                    "details": r.details,
+                }
+                for r in self._maintenance_history
+            ],
         }
         (save_path / "lifecycle_metadata.json").write_text(
             json.dumps(metadata, indent=2), encoding="utf-8"
@@ -980,6 +991,17 @@ class LifecycleManager:
         if metadata_file.exists():
             metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
             manager._last_maintenance = metadata.get("last_maintenance", 0.0)
+
+            # Load maintenance history
+            for r_data in metadata.get("maintenance_history", []):
+                record = MaintenanceRecord(
+                    timestamp=r_data["timestamp"],
+                    memories_processed=r_data["memories_processed"],
+                    transitions=r_data["transitions"],
+                    duration_seconds=r_data["duration_seconds"],
+                    details=r_data.get("details", {}),
+                )
+                manager._maintenance_history.append(record)
 
         # Load states
         states_file = load_path / "lifecycle_states.json"

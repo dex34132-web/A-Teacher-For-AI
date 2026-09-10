@@ -317,22 +317,20 @@ class TokenInvertedIndex:
         self._token_count.clear()
 
 
-# Global index instance for merge candidate generation
-_merge_index = TokenInvertedIndex()
-_merge_index_built = False
 
-
-def _build_merge_index(examples: list[HybridExample]) -> None:
-    """Build or rebuild the merge index.
+def _build_merge_index(examples: list[HybridExample]) -> TokenInvertedIndex:
+    """Build a fresh merge index from the given examples.
 
     Args:
         examples: All memories to index.
+
+    Returns:
+        A new TokenInvertedIndex populated with the examples.
     """
-    global _merge_index, _merge_index_built
-    _merge_index.clear()
+    index = TokenInvertedIndex()
     for ex in examples:
-        _merge_index.add(ex.id, ex.input_text)
-    _merge_index_built = True
+        index.add(ex.id, ex.input_text)
+    return index
 
 
 def find_merge_candidates(
@@ -426,16 +424,16 @@ def _find_merge_candidates_indexed(
     Uses token inverted index to find candidates that share input tokens,
     then verifies output similarity for each pair.
     """
-    # Build index
+    # Build local index (no global state)
     id_to_example = {ex.id: ex for ex in examples}
-    _build_merge_index(examples)
+    merge_index = _build_merge_index(examples)
 
     candidates: list[MergeCandidate] = []
     seen_pairs: set[tuple[int, int]] = set()
 
     for ex in examples:
         # Find candidates that share input tokens
-        raw_candidates = _merge_index.find_candidates(
+        raw_candidates = merge_index.find_candidates(
             ex.input_text,
             min_overlap=2,
             exclude_ids={ex.id},
