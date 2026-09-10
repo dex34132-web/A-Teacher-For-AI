@@ -11,6 +11,7 @@ Merging:
 - Never merge genuinely contradictory knowledge
 - Require sufficient semantic similarity + compatible outputs
 - Multi-signal analysis: input similarity, output similarity, evidence quality
+- Token inverted index for O(N·K) candidate generation
 
 Redundancy:
 - Classify: exact duplicate, normalized duplicate, semantic duplicate,
@@ -22,11 +23,14 @@ V2.4.2 Changes:
 - Added input similarity computation
 - Added minimum evidence requirements for merging
 - Improved redundancy detection with input similarity
+- Token inverted index for scalable candidate generation
 """
 
 from __future__ import annotations
 
+import math
 import time
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Callable
@@ -176,6 +180,7 @@ class MergeCandidate:
         output_similarity: How similar the outputs are [0, 1].
         input_similarity: How similar the inputs are [0, 1].
         combined_evidence: Total independent evidence if merged.
+        semantic_similarity: Semantic similarity if available [0, 1], else None.
     """
 
     id_a: int
@@ -183,6 +188,7 @@ class MergeCandidate:
     output_similarity: float
     input_similarity: float
     combined_evidence: int
+    semantic_similarity: float | None = None
 
 
 def _output_similarity(a: str, b: str) -> float:
@@ -215,11 +221,129 @@ def _input_similarity(a: str, b: str) -> float:
     return len(intersection) / len(union)
 
 
+# ---------------------------------------------------------------------------
+# Token inverted index for scalable candidate generation
+# ---------------------------------------------------------------------------
+
+
+class TokenInvertedIndex:
+    """Inverted index for efficient candidate generation.
+
+    Maps tokens to memory IDs, enabling O(N·K) candidate generation
+    instead of O(N²) brute force.
+
+    K is the average number of memories sharing a token with the query.
+    For typical workloads, K << N, making this much faster.
+    """
+
+    def __init__(self) -> None:
+        """Initialize empty index."""
+        self._index: dict[str, set[int]] = defaultdict(set)
+        self._token_count: dict[int, int] = {}
+
+    def add(self, memory_id: int, text: str) -> None:
+        """Add a memory to the index.
+
+        Args:
+            memory_id: The memory's ID.
+            text: The text to index (input_text).
+        """
+        tokens = set(text.lower().split())
+        self._token_count[memory_id] = len(tokens)
+        for token in tokens:
+            self._index[token].add(memory_id)
+
+    def remove(self, memory_id: int, text: str) -> None:
+        """Remove a memory from the index.
+
+        Args:
+            memory_id: The memory's ID.
+            text: The text that was indexed.
+        """
+        tokens = set(text.lower().split())
+        self._token_count.pop(memory_id, None)
+        for token in tokens:
+            if token in self._index:
+                self._index[token].discard(memory_id)
+                if not self._index[token]:
+                    del self._index[token]
+
+    def find_candidates(
+        self,
+        query_text: str,
+        min_overlap: int = 2,
+        exclude_ids: set[int] | None = None,
+    ) -> list[tuple[int, float]]:
+        """Find candidate memories that share tokens with query.
+
+        Args:
+            query_text: The text to find candidates for.
+            min_overlap: Minimum number of shared tokens to consider a candidate.
+            exclude_ids: IDs to exclude from results.
+
+        Returns:
+            List of (memory_id, overlap_ratio) tuples, sorted by overlap descending.
+        """
+        exclude = exclude_ids or set()
+        query_tokens = set(query_text.lower().split())
+        if not query_tokens:
+            return []
+
+        # Count overlapping tokens for each candidate
+        candidate_counts: dict[int, int] = defaultdict(int)
+        for token in query_tokens:
+            if token in self._index:
+                for mid in self._index[token]:
+                    if mid not in exclude:
+                        candidate_counts[mid] += 1
+
+        # Filter by minimum overlap and compute ratio
+        results = []
+        for mid, count in candidate_counts.items():
+            if count >= min_overlap:
+                # Compute overlap ratio (Jaccard-like)
+                mem_tokens = self._token_count.get(mid, 1)
+                union_size = len(query_tokens) + mem_tokens - count
+                ratio = count / union_size if union_size > 0 else 0.0
+                results.append((mid, ratio))
+
+        # Sort by overlap descending
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results
+
+    def clear(self) -> None:
+        """Clear the index."""
+        self._index.clear()
+        self._token_count.clear()
+
+
+# Global index instance for merge candidate generation
+_merge_index = TokenInvertedIndex()
+_merge_index_built = False
+
+
+def _build_merge_index(examples: list[HybridExample]) -> None:
+    """Build or rebuild the merge index.
+
+    Args:
+        examples: All memories to index.
+    """
+    global _merge_index, _merge_index_built
+    _merge_index.clear()
+    for ex in examples:
+        _merge_index.add(ex.id, ex.input_text)
+    _merge_index_built = True
+
+
 def find_merge_candidates(
     examples: list[HybridExample],
     config: LifecycleConfig,
+    use_index: bool = True,
 ) -> list[MergeCandidate]:
     """Find pairs of memories that are candidates for merging.
+
+    Uses token inverted index for O(N·K) candidate generation when use_index=True.
+    Falls back to O(N²) brute force when use_index=False.
 
     Merge candidates must:
     1. Have high output similarity (same underlying knowledge)
@@ -231,18 +355,31 @@ def find_merge_candidates(
     Args:
         examples: All memories to consider.
         config: Lifecycle configuration.
+        use_index: If True, use inverted index for faster generation.
 
     Returns:
         List of MergeCandidate pairs.
     """
+    if not use_index or len(examples) < 50:
+        return _find_merge_candidates_bruteforce(examples, config)
+
+    return _find_merge_candidates_indexed(examples, config)
+
+
+def _find_merge_candidates_bruteforce(
+    examples: list[HybridExample],
+    config: LifecycleConfig,
+) -> list[MergeCandidate]:
+    """O(N²) brute force candidate generation for small datasets."""
     candidates: list[MergeCandidate] = []
+    id_to_example = {ex.id: ex for ex in examples}
 
     for i in range(len(examples)):
         for j in range(i + 1, len(examples)):
             a = examples[i]
             b = examples[j]
 
-            # Check output similarity
+            # Check output similarity first (cheapest check)
             out_sim = _output_similarity(a.output, b.output)
             if out_sim < config.merge_similarity:
                 continue
@@ -263,6 +400,9 @@ def find_merge_candidates(
             ):
                 continue
 
+            # Compute semantic similarity if available
+            sem_sim = compute_semantic_similarity(a, b)
+
             candidates.append(
                 MergeCandidate(
                     id_a=a.id,
@@ -270,10 +410,121 @@ def find_merge_candidates(
                     output_similarity=out_sim,
                     input_similarity=in_sim,
                     combined_evidence=combined,
+                    semantic_similarity=sem_sim,
                 )
             )
 
     return candidates
+
+
+def _find_merge_candidates_indexed(
+    examples: list[HybridExample],
+    config: LifecycleConfig,
+) -> list[MergeCandidate]:
+    """O(N·K) indexed candidate generation for larger datasets.
+
+    Uses token inverted index to find candidates that share input tokens,
+    then verifies output similarity for each pair.
+    """
+    # Build index
+    id_to_example = {ex.id: ex for ex in examples}
+    _build_merge_index(examples)
+
+    candidates: list[MergeCandidate] = []
+    seen_pairs: set[tuple[int, int]] = set()
+
+    for ex in examples:
+        # Find candidates that share input tokens
+        raw_candidates = _merge_index.find_candidates(
+            ex.input_text,
+            min_overlap=2,
+            exclude_ids={ex.id},
+        )
+
+        for other_id, overlap_ratio in raw_candidates:
+            # Avoid duplicate pairs
+            pair = (min(ex.id, other_id), max(ex.id, other_id))
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+
+            other = id_to_example.get(other_id)
+            if other is None:
+                continue
+
+            # Check output similarity (main filter)
+            out_sim = _output_similarity(ex.output, other.output)
+            if out_sim < config.merge_similarity:
+                continue
+
+            # Compute input similarity
+            in_sim = _input_similarity(ex.input_text, other.input_text)
+            if in_sim < config.merge_input_similarity:
+                continue
+
+            # Compute combined evidence
+            combined = ex.success_count + other.success_count
+            if combined < config.merge_min_evidence:
+                continue
+
+            # Don't merge if one has many failures and the other doesn't
+            if (ex.failure_count > 2 and other.failure_count == 0) or (
+                other.failure_count > 2 and ex.failure_count == 0
+            ):
+                continue
+
+            # Compute semantic similarity if available
+            sem_sim = compute_semantic_similarity(ex, other)
+
+            candidates.append(
+                MergeCandidate(
+                    id_a=ex.id,
+                    id_b=other.id,
+                    output_similarity=out_sim,
+                    input_similarity=in_sim,
+                    combined_evidence=combined,
+                    semantic_similarity=sem_sim,
+                )
+            )
+
+    return candidates
+
+
+# ---------------------------------------------------------------------------
+# Semantic similarity for merging
+# ---------------------------------------------------------------------------
+
+
+def compute_semantic_similarity(
+    a: HybridExample,
+    b: HybridExample,
+) -> float | None:
+    """Compute semantic similarity between two memories.
+
+    Uses semantic vectors if available, otherwise returns None.
+
+    Args:
+        a: First memory.
+        b: Second memory.
+
+    Returns:
+        Semantic similarity [0, 1] if both have semantic vectors, else None.
+    """
+    if a.semantic_vector is None or b.semantic_vector is None:
+        return None
+
+    if len(a.semantic_vector) != len(b.semantic_vector):
+        return None
+
+    # Compute cosine similarity
+    dot = sum(x * y for x, y in zip(a.semantic_vector, b.semantic_vector, strict=False))
+    norm_a = math.sqrt(sum(x * x for x in a.semantic_vector))
+    norm_b = math.sqrt(sum(x * x for x in b.semantic_vector))
+
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+
+    return max(0.0, dot / (norm_a * norm_b))
 
 
 # ---------------------------------------------------------------------------
@@ -300,12 +551,14 @@ class RedundancyResult:
         should_consolidate: Whether to consolidate.
         reason: Human-readable explanation.
         combined_evidence: Total independent evidence if consolidated.
+        semantic_similarity: Semantic similarity if available [0, 1], else None.
     """
 
     type: RedundancyType
     should_consolidate: bool
     reason: str
     combined_evidence: int
+    semantic_similarity: float | None = None
 
 
 def analyze_redundancy(
@@ -325,6 +578,9 @@ def analyze_redundancy(
     Returns:
         RedundancyResult with classification and recommendation.
     """
+    # Compute semantic similarity if available
+    sem_sim = compute_semantic_similarity(a, b)
+
     # Exact duplicate
     if a.input_text == b.input_text and a.output == b.output:
         combined = a.success_count + b.success_count
@@ -333,6 +589,7 @@ def analyze_redundancy(
             should_consolidate=True,
             reason="Exact duplicate — safe to consolidate",
             combined_evidence=combined,
+            semantic_similarity=sem_sim,
         )
 
     # Normalized duplicate (same meaning, different wording)
@@ -344,6 +601,7 @@ def analyze_redundancy(
             should_consolidate=True,
             reason=f"Normalized duplicate (output sim={out_sim:.2f}) — safe to consolidate",
             combined_evidence=combined,
+            semantic_similarity=sem_sim,
         )
 
     # Semantic duplicate (same output, different phrasing)
@@ -354,6 +612,7 @@ def analyze_redundancy(
             should_consolidate=True,
             reason="Same output — consolidate to preserve evidence count",
             combined_evidence=combined,
+            semantic_similarity=sem_sim,
         )
 
     # Related but independent
@@ -363,6 +622,7 @@ def analyze_redundancy(
             should_consolidate=False,
             reason=f"Related but different outputs (sim={out_sim:.2f}) — retain separately",
             combined_evidence=a.success_count + b.success_count,
+            semantic_similarity=sem_sim,
         )
 
     # Genuinely distinct
@@ -371,6 +631,7 @@ def analyze_redundancy(
         should_consolidate=False,
         reason="Genuinely distinct knowledge — no consolidation needed",
         combined_evidence=a.success_count + b.success_count,
+        semantic_similarity=sem_sim,
     )
 
 

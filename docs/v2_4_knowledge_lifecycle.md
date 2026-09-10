@@ -11,9 +11,36 @@ V2.4.2 hardens the knowledge lifecycle system from V2.4.0 with:
 - Multi-signal merging (input similarity, output similarity, evidence quality)
 - Deterministic behavior for reproducibility
 - Backward compatibility with V2.4.0 persistence
-- 22 new adversarial tests
+- Token inverted index for O(N·K) merge candidate generation
+- Event-based maintenance triggers
+- Semantic similarity integration for merging
+- Health score precomputation for O(N) maintenance
+- 66 new tests (33 hardening + 14 simulation + 19 adversarial)
 
 **Key principle: NEVER blindly delete knowledge.**
+
+## V2.4.2 FINAL HARDENING Features
+
+### Token Inverted Index
+- Maps tokens to memory IDs for efficient candidate generation
+- O(N·K) complexity instead of O(N²) brute force
+- Automatic fallback to brute-force for small datasets (<50 memories)
+
+### Event-Based Maintenance Triggers
+- Events: NEW_EVIDENCE, REPEATED_SUCCESS, REPEATED_FAILURE, SESSION_COMPLETE
+- Configurable threshold and cooldown
+- Cooldown prevents rapid repeated triggers
+- Pending event IDs tracked for targeted maintenance
+
+### Semantic Similarity Integration
+- Uses semantic vectors when available (from encoder)
+- Falls back to token-level similarity when vectors absent
+- Integrated into merge candidate generation and redundancy analysis
+
+### Health Score Optimization
+- Precomputed data for batch evaluation
+- Output index for O(1) independent evidence lookup
+- Input word cache for faster contradiction detection
 
 ## Lifecycle States
 

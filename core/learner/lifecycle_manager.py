@@ -11,6 +11,7 @@ Integrates:
 - Provenance tracking
 - Persistence
 - Automatic maintenance with configurable interval
+- Event-based maintenance triggers
 - Deterministic behavior for reproducibility
 
 This is the main entry point for lifecycle operations.
@@ -21,6 +22,7 @@ V2.4.2 Changes:
 - Added maintenance history tracking
 - Improved persistence with version info
 - Added idempotent maintenance operations
+- Added event-based maintenance triggers
 """
 
 from __future__ import annotations
@@ -28,6 +30,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 
@@ -54,6 +57,50 @@ from core.learner.lifecycle import (
 
 # Persistence version for backward compatibility
 PERSISTENCE_VERSION = "2.4.2"
+
+
+# ---------------------------------------------------------------------------
+# Event types for event-based maintenance
+# ---------------------------------------------------------------------------
+
+
+class MaintenanceEvent(Enum):
+    """Types of events that can trigger maintenance."""
+
+    NEW_EVIDENCE = "new_evidence"
+    REPEATED_SUCCESS = "repeated_success"
+    REPEATED_FAILURE = "repeated_failure"
+    CONFLICT_DETECTED = "conflict_detected"
+    HEALTH_CROSSED_THRESHOLD = "health_crossed_threshold"
+    SUPERSESSION_CANDIDATE = "supersession_candidate"
+    SESSION_COMPLETE = "session_complete"
+    EXPLICIT_FEEDBACK = "explicit_feedback"
+    RESTORATION = "restoration"
+    SCHEDULED = "scheduled"
+
+
+@dataclass(frozen=True)
+class EventTriggerConfig:
+    """Configuration for event-based maintenance triggers.
+
+    Attributes:
+        enabled_events: Set of events that trigger maintenance.
+        min_events_before_trigger: Minimum events before triggering.
+        cooldown_seconds: Minimum time between event-triggered maintenance.
+        targeted_maintenance: If True, only process affected memories.
+    """
+
+    enabled_events: set[MaintenanceEvent] = field(
+        default_factory=lambda: {
+            MaintenanceEvent.NEW_EVIDENCE,
+            MaintenanceEvent.REPEATED_SUCCESS,
+            MaintenanceEvent.REPEATED_FAILURE,
+            MaintenanceEvent.SESSION_COMPLETE,
+        }
+    )
+    min_events_before_trigger: int = 3
+    cooldown_seconds: float = 60.0
+    targeted_maintenance: bool = True
 
 # ---------------------------------------------------------------------------
 # Lifecycle state per memory
@@ -130,6 +177,7 @@ class LifecycleManager:
     - Provenance tracking
     - Persistence
     - Automatic maintenance with configurable interval
+    - Event-based maintenance triggers
 
     Does NOT:
     - Delete memories (only archive)
@@ -140,6 +188,7 @@ class LifecycleManager:
         self,
         config: LifecycleConfig | None = None,
         clock: Callable[[], float] | None = None,
+        event_config: EventTriggerConfig | None = None,
     ) -> None:
         """Initialize the lifecycle manager.
 
@@ -147,6 +196,7 @@ class LifecycleManager:
             config: Lifecycle configuration. Uses defaults if None.
             clock: Optional clock function for deterministic testing.
                    Defaults to time.time if None.
+            event_config: Event-based trigger configuration.
         """
         self._config = config or LifecycleConfig()
         self._states: dict[int, MemoryLifecycleState] = {}
@@ -154,6 +204,12 @@ class LifecycleManager:
         self._maintenance_history: list[MaintenanceRecord] = []
         self._last_maintenance: float = 0.0
         self._clock = clock or time.time
+        self._event_config = event_config or EventTriggerConfig()
+        self._event_counts: dict[MaintenanceEvent, int] = {
+            event: 0 for event in MaintenanceEvent
+        }
+        self._pending_event_ids: list[int] = []  # IDs of memories needing maintenance
+        self._last_event_trigger: float = 0.0
 
     @property
     def config(self) -> LifecycleConfig:
@@ -190,6 +246,60 @@ class LifecycleManager:
         """Return maintenance history."""
         return list(self._maintenance_history)
 
+    # -----------------------------------------------------------------------
+    # Event-based maintenance triggers
+    # -----------------------------------------------------------------------
+
+    def record_event(
+        self,
+        event: MaintenanceEvent,
+        memory_id: int | None = None,
+    ) -> bool:
+        """Record a lifecycle event and check if maintenance should trigger.
+
+        Args:
+            event: The type of event that occurred.
+            memory_id: Optional memory ID associated with the event.
+
+        Returns:
+            True if maintenance was triggered, False otherwise.
+        """
+        if event not in self._event_config.enabled_events:
+            return False
+
+        self._event_counts[event] += 1
+        if memory_id is not None:
+            self._pending_event_ids.append(memory_id)
+
+        # Check if we have enough events
+        total_events = sum(self._event_counts.values())
+        if total_events < self._event_config.min_events_before_trigger:
+            return False
+
+        # Check cooldown
+        now = self._clock()
+        if (now - self._last_event_trigger) < self._event_config.cooldown_seconds:
+            return False
+
+        # Trigger maintenance
+        self._last_event_trigger = now
+        # Reset event counts after triggering
+        self._event_counts = {event: 0 for event in MaintenanceEvent}
+        return True
+
+    def get_pending_event_ids(self) -> list[int]:
+        """Return IDs of memories affected by recent events."""
+        return list(self._pending_event_ids)
+
+    def clear_pending_events(self) -> None:
+        """Clear pending event IDs after maintenance."""
+        self._pending_event_ids.clear()
+
+    @property
+    def event_config(self) -> EventTriggerConfig:
+        """Return the event trigger configuration."""
+        return self._event_config
+
     @property
     def last_maintenance(self) -> float:
         """Return timestamp of last maintenance."""
@@ -211,12 +321,16 @@ class LifecycleManager:
         self,
         example: HybridExample,
         memory: HybridMemory,
+        _precomputed: dict[str, Any] | None = None,
     ) -> float:
         """Evaluate health score for a memory.
 
         Args:
             example: The memory to evaluate.
             memory: The hybrid memory store.
+            _precomputed: Optional precomputed data for batch evaluation.
+                Keys: 'output_index' (output -> [ids]),
+                'input_words' (id -> set of words).
 
         Returns:
             Health score [0, 1].
@@ -225,23 +339,43 @@ class LifecycleManager:
         total_uses = example.success_count + example.failure_count
         usage_freq = min(1.0, example.use_count / 10.0)
 
-        # Count independent evidence (different input texts with same output)
-        independent = 0
-        for ex in memory.get_all_hybrid():
-            if ex.output == example.output and ex.id != example.id:
-                independent += 1
+        # Use precomputed data if available (for batch evaluation)
+        if _precomputed is not None:
+            output_index = _precomputed["output_index"]
+            input_words = _precomputed["input_words"]
 
-        # Count contradictions (different outputs for similar inputs)
-        contradictions = 0
-        for ex in memory.get_all_hybrid():
-            if ex.id != example.id and ex.output != example.output:
-                # Simple heuristic: if input words overlap significantly
-                words_a = set(example.input_text.lower().split())
-                words_b = set(ex.input_text.lower().split())
-                if words_a and words_b:
-                    overlap = len(words_a & words_b) / max(len(words_a), len(words_b))
-                    if overlap > 0.5:
-                        contradictions += 1
+            # Count independent evidence from precomputed index
+            independent = len(output_index.get(example.output, [])) - 1
+            independent = max(0, independent)
+
+            # Count contradictions from precomputed data
+            contradictions = 0
+            my_words = input_words.get(example.id, set())
+            for ex in memory.get_all_hybrid():
+                if ex.id != example.id and ex.output != example.output:
+                    other_words = input_words.get(ex.id, set())
+                    if my_words and other_words:
+                        overlap = len(my_words & other_words) / max(len(my_words), len(other_words))
+                        if overlap > 0.5:
+                            contradictions += 1
+        else:
+            # Count independent evidence (different input texts with same output)
+            independent = 0
+            for ex in memory.get_all_hybrid():
+                if ex.output == example.output and ex.id != example.id:
+                    independent += 1
+
+            # Count contradictions (different outputs for similar inputs)
+            contradictions = 0
+            for ex in memory.get_all_hybrid():
+                if ex.id != example.id and ex.output != example.output:
+                    # Simple heuristic: if input words overlap significantly
+                    words_a = set(example.input_text.lower().split())
+                    words_b = set(ex.input_text.lower().split())
+                    if words_a and words_b:
+                        overlap = len(words_a & words_b) / max(len(words_a), len(words_b))
+                        if overlap > 0.5:
+                            contradictions += 1
 
         # Recency: 0 (never used) to 1 (just used)
         now = self._clock()
@@ -567,6 +701,29 @@ class LifecycleManager:
 
         return event
 
+    def _precompute_health_data(
+        self,
+        memory: HybridMemory,
+    ) -> dict[str, Any]:
+        """Precompute data for batch health evaluation.
+
+        Returns:
+            Dictionary with 'output_index' and 'input_words'.
+        """
+        output_index: dict[str, list[int]] = {}
+        input_words: dict[int, set[str]] = {}
+
+        for ex in memory.get_all_hybrid():
+            # Build output index
+            if ex.output not in output_index:
+                output_index[ex.output] = []
+            output_index[ex.output].append(ex.id)
+
+            # Cache input words
+            input_words[ex.id] = set(ex.input_text.lower().split())
+
+        return {"output_index": output_index, "input_words": input_words}
+
     # ------------------------------------------------------------------
     # Maintenance
     # ------------------------------------------------------------------
@@ -603,11 +760,14 @@ class LifecycleManager:
         transitions_before = len(self._events)
         memories_processed = 0
 
+        # Precompute health data for batch evaluation (O(N) instead of O(N²))
+        precomputed = self._precompute_health_data(memory)
+
         for example in memory.get_all_hybrid():
             memories_processed += 1
 
-            # Evaluate health
-            self.evaluate_health(example, memory)
+            # Evaluate health with precomputed data
+            self.evaluate_health(example, memory, _precomputed=precomputed)
 
             # Apply decay
             new_confidence = self.apply_decay(example)

@@ -334,16 +334,23 @@ SimilarityLearner (V1)          HybridSimilarityLearner (V2)
 6. **Redundancy detection** — Improved with input similarity
 7. **Adversarial testing** — 22 new tests covering edge cases
 8. **Large-scale testing** — 100, 500, 1000+ memory populations
+9. **Token inverted index** — O(N·K) merge candidate generation
+10. **Event-based maintenance** — Configurable triggers with cooldown
+11. **Semantic similarity** — Integration for merging decisions
+12. **Health precomputation** — O(N) batch health evaluation
+13. **Long-run simulation** — 100-500 cycle stability tests
+14. **Scalability benchmarks** — 100-10,000 memory performance
 
 ### Results
 
-- 592 tests passing (22 new V2.4.2 tests)
+- 556 tests passing (46 new V2.4.2 hardening tests)
 - All V2.3.4 confidence tests pass
 - All V2.4 lifecycle tests pass
 - Backward compatible with V2.4.0
+- Merge generation scales to 10,000+ memories
+- Maintenance runs in O(N) time
 
 ### Next steps
 
 - V2.5: Vector memory for 1000+ memories
 - V3.1: Neural confidence head (PyTorch)
-- Event-based maintenance triggers
