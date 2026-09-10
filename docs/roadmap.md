@@ -313,6 +313,37 @@ SimilarityLearner (V1)          HybridSimilarityLearner (V2)
 
 ### Next steps
 
+- V2.4.2: Lifecycle hardening (completed)
 - V2.5: Vector memory for 1000+ memories
 - V3.1: Neural confidence head (PyTorch)
-- Automatic lifecycle processing (periodic batch)
+
+---
+
+## V2.4.2 — Knowledge Lifecycle Hardening
+
+**Date:** 2026-09-10
+**Status:** COMPLETED
+
+### What was done
+
+1. **Automatic maintenance** — Configurable interval, idempotent execution
+2. **Multi-signal merging** — Input similarity, output similarity, evidence quality
+3. **Deterministic behavior** — Custom clock for reproducible tests
+4. **Backward compatibility** — V2.4.0 persistence loads with defaults
+5. **Provenance tracking** — All mutations traceable with timestamps
+6. **Redundancy detection** — Improved with input similarity
+7. **Adversarial testing** — 22 new tests covering edge cases
+8. **Large-scale testing** — 100, 500, 1000+ memory populations
+
+### Results
+
+- 592 tests passing (22 new V2.4.2 tests)
+- All V2.3.4 confidence tests pass
+- All V2.4 lifecycle tests pass
+- Backward compatible with V2.4.0
+
+### Next steps
+
+- V2.5: Vector memory for 1000+ memories
+- V3.1: Neural confidence head (PyTorch)
+- Event-based maintenance triggers

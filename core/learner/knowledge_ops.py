@@ -1,4 +1,4 @@
-"""Knowledge supersession, merging, and redundancy for V2.4.
+"""Knowledge supersession, merging, and redundancy for V2.4.2.
 
 Supersession:
 - When new knowledge conflicts with old, determine if new genuinely replaces old
@@ -10,11 +10,18 @@ Merging:
 - Preserve provenance (memory IDs of source memories)
 - Never merge genuinely contradictory knowledge
 - Require sufficient semantic similarity + compatible outputs
+- Multi-signal analysis: input similarity, output similarity, evidence quality
 
 Redundancy:
 - Classify: exact duplicate, normalized duplicate, semantic duplicate,
   related but independent, genuinely distinct
 - Preserve independent evidence through consolidation
+
+V2.4.2 Changes:
+- Improved merging with multi-signal analysis
+- Added input similarity computation
+- Added minimum evidence requirements for merging
+- Improved redundancy detection with input similarity
 """
 
 from __future__ import annotations
@@ -22,7 +29,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from core.learner.lifecycle import (
     HealthSignals,
@@ -64,6 +71,7 @@ def analyze_supersession(
     old: HybridExample,
     new: HybridExample,
     config: LifecycleConfig,
+    clock: Callable[[], float] | None = None,
 ) -> SupersessionResult:
     """Analyze whether new knowledge supersedes old knowledge.
 
@@ -77,23 +85,26 @@ def analyze_supersession(
         old: Existing memory.
         new: Newer memory with similar input.
         config: Lifecycle configuration.
+        clock: Optional clock function for deterministic testing.
 
     Returns:
         SupersessionResult with recommendation and explanation.
     """
+    now = (clock or time.time)()
+
     # Compute health for both
     old_signals = HealthSignals(
         success_rate=old.success_rate,
         independent_evidence=old.success_count,
         confidence=old.weight,
-        recency=min(1.0, max(0.0, 1.0 - (time.time() - old.last_used_at) / 86400)),
+        recency=min(1.0, max(0.0, 1.0 - (now - old.last_used_at) / 86400)),
         usage_frequency=min(1.0, old.use_count / 10.0),
     )
     new_signals = HealthSignals(
         success_rate=new.success_rate,
         independent_evidence=new.success_count,
         confidence=new.weight,
-        recency=min(1.0, max(0.0, 1.0 - (time.time() - new.last_used_at) / 86400)),
+        recency=min(1.0, max(0.0, 1.0 - (now - new.last_used_at) / 86400)),
         usage_frequency=min(1.0, new.use_count / 10.0),
     )
 
@@ -189,6 +200,21 @@ def _output_similarity(a: str, b: str) -> float:
     return len(intersection) / len(union)
 
 
+def _input_similarity(a: str, b: str) -> float:
+    """Compute token-level Jaccard similarity between inputs."""
+    if a == b:
+        return 1.0
+    tokens_a = set(a.lower().split())
+    tokens_b = set(b.lower().split())
+    if not tokens_a and not tokens_b:
+        return 1.0
+    if not tokens_a or not tokens_b:
+        return 0.0
+    intersection = tokens_a & tokens_b
+    union = tokens_a | tokens_b
+    return len(intersection) / len(union)
+
+
 def find_merge_candidates(
     examples: list[HybridExample],
     config: LifecycleConfig,
@@ -197,8 +223,10 @@ def find_merge_candidates(
 
     Merge candidates must:
     1. Have high output similarity (same underlying knowledge)
-    2. Not be genuinely contradictory
-    3. Have compatible evidence
+    2. Have sufficient input similarity (related queries)
+    3. Not be genuinely contradictory
+    4. Have sufficient combined evidence
+    5. Have compatible evidence quality
 
     Args:
         examples: All memories to consider.
@@ -219,19 +247,28 @@ def find_merge_candidates(
             if out_sim < config.merge_similarity:
                 continue
 
-            # Don't merge if outputs are genuinely different
-            if out_sim < 0.5:
+            # Check input similarity
+            in_sim = _input_similarity(a.input_text, b.input_text)
+            if in_sim < config.merge_input_similarity:
                 continue
 
             # Compute combined evidence
             combined = a.success_count + b.success_count
+            if combined < config.merge_min_evidence:
+                continue
+
+            # Don't merge if one has many failures and the other doesn't
+            if (a.failure_count > 2 and b.failure_count == 0) or (
+                b.failure_count > 2 and a.failure_count == 0
+            ):
+                continue
 
             candidates.append(
                 MergeCandidate(
                     id_a=a.id,
                     id_b=b.id,
                     output_similarity=out_sim,
-                    input_similarity=0.0,  # Caller can compute if needed
+                    input_similarity=in_sim,
                     combined_evidence=combined,
                 )
             )
@@ -386,6 +423,7 @@ def archive_memory(
     example: HybridExample,
     reason: str,
     current_state: MemoryState,
+    clock: Callable[[], float] | None = None,
 ) -> tuple[MemoryState, LifecycleEvent]:
     """Transition a memory to ARCHIVED state.
 
@@ -393,15 +431,17 @@ def archive_memory(
         example: The memory to archive.
         reason: Reason for archival.
         current_state: Current lifecycle state.
+        clock: Optional clock function for deterministic testing.
 
     Returns:
         Tuple of (new_state, event) — always ARCHIVED.
     """
+    now = (clock or time.time)()
     event = LifecycleEvent(
         previous_state=current_state.value,
         new_state=MemoryState.ARCHIVED.value,
         reason=reason,
-        timestamp=time.time(),
+        timestamp=now,
         evidence_summary={
             "success_count": example.success_count,
             "failure_count": example.failure_count,

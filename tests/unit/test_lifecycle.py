@@ -235,8 +235,8 @@ class TestMerging:
         )
 
     def test_similar_outputs_are_candidates(self):
-        a = self._make_example("sort a list", "sorted(x)")
-        b = self._make_example("sort list items", "sorted(x)")
+        a = self._make_example("sort a list of numbers", "sorted(x)")
+        b = self._make_example("sort list of numbers", "sorted(x)")
         config = LifecycleConfig()
         candidates = find_merge_candidates([a, b], config)
         assert len(candidates) == 1

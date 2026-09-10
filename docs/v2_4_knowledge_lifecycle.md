@@ -1,11 +1,17 @@
-# EVO V2.4 — Knowledge Lifecycle
+# EVO V2.4.2 — Knowledge Lifecycle Hardening
 
 **Date:** 2026-09-10
 **Status:** COMPLETED
+**Previous:** V2.4.0
 
 ## Overview
 
-V2.4 adds a robust knowledge lifecycle system to EVO. Knowledge can now evolve over time through principled state transitions, health evaluation, reinforcement, decay, supersession, merging, redundancy detection, and archival.
+V2.4.2 hardens the knowledge lifecycle system from V2.4.0 with:
+- Automatic maintenance with configurable interval
+- Multi-signal merging (input similarity, output similarity, evidence quality)
+- Deterministic behavior for reproducibility
+- Backward compatibility with V2.4.0 persistence
+- 22 new adversarial tests
 
 **Key principle: NEVER blindly delete knowledge.**
 
@@ -70,11 +76,13 @@ Supersession requires a configurable evidence difference threshold (default 0.2)
 
 ## Knowledge Merging
 
-Safe consolidation:
+Safe consolidation with multi-signal analysis:
 1. Detect memories with same underlying knowledge
-2. Require high output similarity (>0.8)
-3. Never merge genuinely contradictory knowledge
-4. Preserve provenance (memory IDs of source memories)
+2. Require high output similarity (default >0.8)
+3. Require input similarity (default >0.6)
+4. Require minimum combined evidence (default ≥2)
+5. Never merge if one has many failures and other doesn't
+6. Preserve provenance (memory IDs of source memories)
 
 ## Redundancy Detection
 
@@ -145,8 +153,62 @@ config = LifecycleConfig(
     archive_threshold=0.1,     # Health below which archival considered
     uncertainty_threshold=0.2,  # Confidence below which UNCERTAIN
     max_redundancy=5,          # Max similar memories before consolidation
+    maintenance_interval_hours=24.0,  # Hours between maintenance cycles
+    merge_input_similarity=0.6,  # Input similarity for merging
+    merge_min_evidence=2,      # Minimum combined evidence for merging
 )
 ```
+
+## Automatic Maintenance
+
+V2.4.2 adds automatic lifecycle maintenance:
+
+```python
+from core.learner.lifecycle_manager import LifecycleManager
+
+manager = LifecycleManager(config)
+
+# Check if maintenance is due
+if manager.needs_maintenance:
+    record = manager.run_maintenance(memory)
+    print(f"Processed {record.memories_processed} memories")
+
+# Force maintenance (ignore interval)
+record = manager.run_maintenance(memory, force=True)
+
+# Manual trigger
+results = manager.process_all(memory)  # Legacy API
+```
+
+Maintenance is idempotent - running multiple times with no new evidence
+should not repeatedly damage the same memory.
+
+## Deterministic Behavior
+
+V2.4.2 supports deterministic testing with a custom clock:
+
+```python
+clock_value = 1000000.0
+clock = lambda: clock_value
+
+manager = LifecycleManager(config, clock=clock)
+# All operations use the provided clock for reproducibility
+```
+
+## Backward Compatibility
+
+V2.4.2 is backward compatible with:
+- V2.4.0 persisted state (missing fields get defaults)
+- V2.3.4 confidence system (preserved)
+- V1/V2 basic functionality
+
+New persistence fields:
+- `maintenance_interval_hours` (default: 24.0)
+- `merge_input_similarity` (default: 0.6)
+- `merge_min_evidence` (default: 2)
+- `last_reinforced` (per memory)
+- `last_decayed` (per memory)
+- `lifecycle_metadata.json` (version tracking)
 
 ## Usage
 
@@ -179,12 +241,26 @@ if learner._lifecycle:
 
 ## Benchmarks
 
-- 570 tests passing (45 new lifecycle tests)
-- 13 adversarial tests passing
-- Backward compatible with V2.3.4
+- 592 tests passing (22 new V2.4.2 adversarial tests)
+- 13 original adversarial tests passing
+- Backward compatible with V2.3.4 and V2.4.0
+- Tested with 100, 500, and 1000+ memory populations
+
+### Test Coverage
+
+| Category | Tests | Status |
+|----------|-------|--------|
+| Lifecycle core | 32 | ✓ |
+| V2.4 adversarial | 13 | ✓ |
+| V2.4.2 adversarial | 22 | ✓ |
+| Maintenance | 4 | ✓ |
+| Persistence | 3 | ✓ |
+| Deterministic | 2 | ✓ |
+| Provenance | 2 | ✓ |
 
 ## Known Limitations
 
-- Lifecycle processing is not automatic (must be called manually or via batch)
 - Semantic similarity for merging uses token-level Jaccard (not full semantic)
 - No automatic supersession detection (requires explicit comparison)
+- Maintenance interval is time-based, not event-based
+- Large memory sets (1000+) may have O(N²) merge candidate detection

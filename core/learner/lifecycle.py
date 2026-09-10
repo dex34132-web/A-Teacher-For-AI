@@ -1,4 +1,4 @@
-"""Knowledge lifecycle management for V2.4.
+"""Knowledge lifecycle management for V2.4.2.
 
 Manages the lifecycle of learned knowledge through states:
 - ACTIVE: Knowledge currently considered useful and trustworthy
@@ -12,6 +12,14 @@ Design principles:
 - Provenance is preserved across all mutations
 - Strong evidence slows decay
 - Independent evidence is preserved through consolidation
+- Deterministic behavior for reproducibility
+- Idempotent maintenance operations
+
+V2.4.2 Changes:
+- Added maintenance configuration (interval, clock_source)
+- Added deterministic clock for reproducible tests
+- Improved state transition rules with explicit guards
+- Added version tracking for persistence compatibility
 """
 
 from __future__ import annotations
@@ -116,6 +124,10 @@ class LifecycleConfig:
         uncertainty_threshold: Confidence below which state becomes UNCERTAIN
             [0.1, 0.3].
         max_redundancy: Maximum similar memories before consolidation [3, 10].
+        maintenance_interval_hours: Hours between automatic maintenance cycles.
+            Default 24 (daily). Set to 0 to disable automatic maintenance.
+        merge_input_similarity: Minimum input similarity for merge candidates [0.5, 1.0].
+        merge_min_evidence: Minimum combined evidence for merging [1, 5].
     """
 
     decay_rate: float = 0.01
@@ -127,6 +139,9 @@ class LifecycleConfig:
     archive_threshold: float = 0.1
     uncertainty_threshold: float = 0.2
     max_redundancy: int = 5
+    maintenance_interval_hours: float = 24.0
+    merge_input_similarity: float = 0.6
+    merge_min_evidence: int = 2
 
 
 # ---------------------------------------------------------------------------

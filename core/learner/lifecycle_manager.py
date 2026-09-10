@@ -1,4 +1,4 @@
-"""Lifecycle manager for V2.4 knowledge management.
+"""Lifecycle manager for V2.4.2 knowledge management.
 
 Integrates:
 - Lifecycle states (ACTIVE, UNCERTAIN, SUPERSEDED, ARCHIVED)
@@ -10,8 +10,17 @@ Integrates:
 - Archiving
 - Provenance tracking
 - Persistence
+- Automatic maintenance with configurable interval
+- Deterministic behavior for reproducibility
 
 This is the main entry point for lifecycle operations.
+
+V2.4.2 Changes:
+- Added automatic maintenance mechanism
+- Added deterministic clock for testing
+- Added maintenance history tracking
+- Improved persistence with version info
+- Added idempotent maintenance operations
 """
 
 from __future__ import annotations
@@ -20,7 +29,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from core.learner.hybrid_memory import HybridExample, HybridMemory
 from core.learner.knowledge_ops import (
@@ -43,6 +52,9 @@ from core.learner.lifecycle import (
     compute_reinforcement,
 )
 
+# Persistence version for backward compatibility
+PERSISTENCE_VERSION = "2.4.2"
+
 # ---------------------------------------------------------------------------
 # Lifecycle state per memory
 # ---------------------------------------------------------------------------
@@ -60,6 +72,8 @@ class MemoryLifecycleState:
         lifecycle_events: History of state transitions.
         superseded_by: ID of memory that superseded this one (if any).
         merged_from: IDs of memories merged into this one (if any).
+        last_reinforced: Timestamp of last reinforcement.
+        last_decayed: Timestamp of last decay application.
     """
 
     memory_id: int
@@ -69,6 +83,32 @@ class MemoryLifecycleState:
     lifecycle_events: list[LifecycleEvent] = field(default_factory=list)
     superseded_by: int | None = None
     merged_from: list[int] = field(default_factory=list)
+    last_reinforced: float = 0.0
+    last_decayed: float = 0.0
+
+
+# ---------------------------------------------------------------------------
+# Maintenance history
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class MaintenanceRecord:
+    """Record of a maintenance cycle.
+
+    Attributes:
+        timestamp: When maintenance ran.
+        memories_processed: Number of memories processed.
+        transitions: Number of state transitions.
+        duration_seconds: How long maintenance took.
+        details: Summary of what happened.
+    """
+
+    timestamp: float
+    memories_processed: int
+    transitions: int
+    duration_seconds: float
+    details: dict[str, Any] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -89,21 +129,31 @@ class LifecycleManager:
     - Archiving
     - Provenance tracking
     - Persistence
+    - Automatic maintenance with configurable interval
 
     Does NOT:
     - Delete memories (only archive)
     - Modify confidence system (V2.3.4 preserved)
     """
 
-    def __init__(self, config: LifecycleConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: LifecycleConfig | None = None,
+        clock: Callable[[], float] | None = None,
+    ) -> None:
         """Initialize the lifecycle manager.
 
         Args:
             config: Lifecycle configuration. Uses defaults if None.
+            clock: Optional clock function for deterministic testing.
+                   Defaults to time.time if None.
         """
         self._config = config or LifecycleConfig()
         self._states: dict[int, MemoryLifecycleState] = {}
         self._events: list[LifecycleEvent] = []
+        self._maintenance_history: list[MaintenanceRecord] = []
+        self._last_maintenance: float = 0.0
+        self._clock = clock or time.time
 
     @property
     def config(self) -> LifecycleConfig:
@@ -124,7 +174,7 @@ class LifecycleManager:
                 memory_id=memory_id,
                 state=MemoryState.ACTIVE,
                 health_score=0.5,
-                last_health_check=time.time(),
+                last_health_check=self._clock(),
             )
         return self._states[memory_id]
 
@@ -135,6 +185,23 @@ class LifecycleManager:
     def get_events(self) -> list[LifecycleEvent]:
         """Return all lifecycle events."""
         return list(self._events)
+
+    def get_maintenance_history(self) -> list[MaintenanceRecord]:
+        """Return maintenance history."""
+        return list(self._maintenance_history)
+
+    @property
+    def last_maintenance(self) -> float:
+        """Return timestamp of last maintenance."""
+        return self._last_maintenance
+
+    @property
+    def needs_maintenance(self) -> bool:
+        """Check if maintenance is due based on interval."""
+        if self._config.maintenance_interval_hours <= 0:
+            return False
+        elapsed_hours = (self._clock() - self._last_maintenance) / 3600.0
+        return elapsed_hours >= self._config.maintenance_interval_hours
 
     # ------------------------------------------------------------------
     # Health evaluation
@@ -177,7 +244,7 @@ class LifecycleManager:
                         contradictions += 1
 
         # Recency: 0 (never used) to 1 (just used)
-        now = time.time()
+        now = self._clock()
         if example.last_used_at > 0:
             days_since_use = (now - example.last_used_at) / 86400.0
         else:
@@ -226,6 +293,7 @@ class LifecycleManager:
 
         # Update state
         state = self.get_state(example.id)
+        now = self._clock()
         is_uncertain = state.state == MemoryState.UNCERTAIN
         conf_above_threshold = new_confidence > self._config.uncertainty_threshold
         if is_uncertain and conf_above_threshold:
@@ -233,7 +301,7 @@ class LifecycleManager:
                 previous_state=MemoryState.UNCERTAIN.value,
                 new_state=MemoryState.ACTIVE.value,
                 reason=f"Confidence improved ({old_confidence:.3f} -> {new_confidence:.3f})",
-                timestamp=time.time(),
+                timestamp=now,
                 evidence_summary={"new_confidence": new_confidence},
                 related_ids=[example.id],
                 confidence_at_transition=new_confidence,
@@ -242,6 +310,7 @@ class LifecycleManager:
             state.lifecycle_events.append(event)
             self._events.append(event)
 
+        state.last_reinforced = now
         return new_confidence
 
     # ------------------------------------------------------------------
@@ -257,7 +326,7 @@ class LifecycleManager:
         Returns:
             New confidence after decay.
         """
-        now = time.time()
+        now = self._clock()
         if example.last_used_at > 0:
             days_since_use = (now - example.last_used_at) / 86400.0
         else:
@@ -281,7 +350,7 @@ class LifecycleManager:
                 previous_state=MemoryState.ACTIVE.value,
                 new_state=MemoryState.UNCERTAIN.value,
                 reason=f"Confidence decayed ({old_confidence:.3f} -> {new_confidence:.3f})",
-                timestamp=time.time(),
+                timestamp=now,
                 evidence_summary={"days_since_use": days_since_use},
                 related_ids=[example.id],
                 confidence_at_transition=new_confidence,
@@ -299,6 +368,7 @@ class LifecycleManager:
                 state.lifecycle_events.append(event)
                 self._events.append(event)
 
+        state.last_decayed = now
         return new_confidence
 
     # ------------------------------------------------------------------
@@ -344,7 +414,7 @@ class LifecycleManager:
             previous_state=previous.value,
             new_state=MemoryState.SUPERSEDED.value,
             reason=reason,
-            timestamp=time.time(),
+            timestamp=self._clock(),
             related_ids=[old_id, new_id],
             confidence_at_transition=old_state.health_score,
         )
@@ -392,12 +462,13 @@ class LifecycleManager:
         """
         target_state = self.get_state(target_id)
         previous = target_state.state
+        now = self._clock()
 
         event = LifecycleEvent(
             previous_state=previous.value,
             new_state=previous.value,  # State doesn't change on merge
             reason=reason,
-            timestamp=time.time(),
+            timestamp=now,
             related_ids=[target_id] + source_ids,
             confidence_at_transition=target_state.health_score,
         )
@@ -413,7 +484,7 @@ class LifecycleManager:
                 previous_state=source_state.state.value,
                 new_state=MemoryState.ARCHIVED.value,
                 reason=f"Merged into memory {target_id}: {reason}",
-                timestamp=time.time(),
+                timestamp=now,
                 related_ids=[source_id, target_id],
                 confidence_at_transition=source_state.health_score,
             )
@@ -485,7 +556,7 @@ class LifecycleManager:
             previous_state=previous.value,
             new_state=MemoryState.ACTIVE.value,
             reason=reason,
-            timestamp=time.time(),
+            timestamp=self._clock(),
             related_ids=[memory_id],
             confidence_at_transition=state.health_score,
         )
@@ -497,7 +568,89 @@ class LifecycleManager:
         return event
 
     # ------------------------------------------------------------------
-    # Batch processing
+    # Maintenance
+    # ------------------------------------------------------------------
+
+    def run_maintenance(
+        self,
+        memory: HybridMemory,
+        force: bool = False,
+    ) -> MaintenanceRecord:
+        """Run lifecycle maintenance on all memories.
+
+        This is idempotent - running multiple times with no new evidence
+        should not repeatedly damage the same memory.
+
+        Args:
+            memory: The hybrid memory store.
+            force: If True, run even if not due based on interval.
+
+        Returns:
+            MaintenanceRecord with results.
+        """
+        start_time = self._clock()
+
+        # Check if maintenance is due
+        if not force and not self.needs_maintenance:
+            return MaintenanceRecord(
+                timestamp=start_time,
+                memories_processed=0,
+                transitions=0,
+                duration_seconds=0.0,
+                details={"skipped": "not due"},
+            )
+
+        transitions_before = len(self._events)
+        memories_processed = 0
+
+        for example in memory.get_all_hybrid():
+            memories_processed += 1
+
+            # Evaluate health
+            self.evaluate_health(example, memory)
+
+            # Apply decay
+            new_confidence = self.apply_decay(example)
+
+            # Update memory weight (preserving V2.3.4 confidence system)
+            example.weight = new_confidence
+
+        transitions_after = len(self._events)
+        end_time = self._clock()
+
+        record = MaintenanceRecord(
+            timestamp=start_time,
+            memories_processed=memories_processed,
+            transitions=transitions_after - transitions_before,
+            duration_seconds=end_time - start_time,
+            details={
+                "events_total": transitions_after,
+            },
+        )
+
+        self._maintenance_history.append(record)
+        self._last_maintenance = start_time
+
+        return record
+
+    def needs_maintenance_check(self, memory: HybridMemory) -> bool:
+        """Check if any memories need health evaluation.
+
+        Args:
+            memory: The hybrid memory store.
+
+        Returns:
+            True if any memories need evaluation.
+        """
+        now = self._clock()
+        for example in memory.get_all_hybrid():
+            state = self.get_state(example.id)
+            if now - state.last_health_check > 3600:  # 1 hour
+                return True
+        return False
+
+    # ------------------------------------------------------------------
+    # Batch processing (legacy, calls run_maintenance)
     # ------------------------------------------------------------------
 
     def process_all(
@@ -584,6 +737,8 @@ class LifecycleManager:
                 "last_health_check": state.last_health_check,
                 "superseded_by": state.superseded_by,
                 "merged_from": state.merged_from,
+                "last_reinforced": state.last_reinforced,
+                "last_decayed": state.last_decayed,
                 "events": [
                     {
                         "previous_state": e.previous_state,
@@ -613,14 +768,32 @@ class LifecycleManager:
             "archive_threshold": self._config.archive_threshold,
             "uncertainty_threshold": self._config.uncertainty_threshold,
             "max_redundancy": self._config.max_redundancy,
+            "maintenance_interval_hours": self._config.maintenance_interval_hours,
+            "merge_input_similarity": self._config.merge_input_similarity,
+            "merge_min_evidence": self._config.merge_min_evidence,
         }
         (save_path / "lifecycle_config.json").write_text(
             json.dumps(config_data, indent=2), encoding="utf-8"
         )
 
+        # Save metadata with version
+        metadata = {
+            "version": PERSISTENCE_VERSION,
+            "last_maintenance": self._last_maintenance,
+            "events_count": len(self._events),
+            "states_count": len(self._states),
+        }
+        (save_path / "lifecycle_metadata.json").write_text(
+            json.dumps(metadata, indent=2), encoding="utf-8"
+        )
+
     @classmethod
     def load(cls, path: Path) -> LifecycleManager:
         """Load lifecycle state from JSON.
+
+        Supports loading from:
+        - V2.4.2 (current version)
+        - V2.4.0 (backward compatible, missing new fields get defaults)
 
         Args:
             path: Directory path to load from.
@@ -630,13 +803,23 @@ class LifecycleManager:
         """
         load_path = Path(path)
 
-        # Load config
+        # Load config (with backward compatibility for new fields)
         config_data = json.loads(
             (load_path / "lifecycle_config.json").read_text(encoding="utf-8")
         )
+        # Add defaults for fields that may not exist in older versions
+        config_data.setdefault("maintenance_interval_hours", 24.0)
+        config_data.setdefault("merge_input_similarity", 0.6)
+        config_data.setdefault("merge_min_evidence", 2)
         config = LifecycleConfig(**config_data)
 
         manager = cls(config=config)
+
+        # Load metadata if available
+        metadata_file = load_path / "lifecycle_metadata.json"
+        if metadata_file.exists():
+            metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
+            manager._last_maintenance = metadata.get("last_maintenance", 0.0)
 
         # Load states
         states_file = load_path / "lifecycle_states.json"
@@ -651,6 +834,8 @@ class LifecycleManager:
                     last_health_check=data.get("last_health_check", 0.0),
                     superseded_by=data.get("superseded_by"),
                     merged_from=data.get("merged_from", []),
+                    last_reinforced=data.get("last_reinforced", 0.0),
+                    last_decayed=data.get("last_decayed", 0.0),
                 )
                 # Load events
                 for e_data in data.get("events", []):
