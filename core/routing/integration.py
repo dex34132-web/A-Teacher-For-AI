@@ -96,7 +96,6 @@ class EVOIntegrationBridge:
             handler = self._handlers.get(destination.destination_type)
             if handler is None:
                 # No handler registered: no-op (V2.5 routes, V2.6 wires)
-                self._dispatch_count += 1
                 continue
 
             try:

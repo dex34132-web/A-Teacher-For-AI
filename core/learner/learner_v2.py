@@ -57,8 +57,8 @@ from pathlib import Path
 from typing import Any
 
 from core.learner.base import Learner, LearningInput, LearningMode, LearningOutput, LearningStatus
-from core.learner.confidence import ConfidenceConfig, ConfidenceResult, estimate_confidence
 from core.learner.calibration.estimator import estimate_confidence_v232
+from core.learner.confidence import ConfidenceConfig, ConfidenceResult, estimate_confidence
 from core.learner.conflict import (
     Conflict,
     ConflictConfig,
@@ -70,7 +70,7 @@ from core.learner.conflict import (
 from core.learner.feature_extractor import FeatureExtractor, FeatureVector
 from core.learner.hybrid_memory import HybridExample, HybridMemory
 from core.learner.learner_v1 import Prediction
-from core.learner.lifecycle import LifecycleConfig, MemoryState
+from core.learner.lifecycle import LifecycleConfig
 from core.learner.lifecycle_manager import LifecycleManager
 from core.learner.predict_result import PredictResult
 from core.learner.retrieval_scorer import (
@@ -164,7 +164,11 @@ class HybridSimilarityLearner(Learner):
         self._encoder = semantic_encoder
 
         # V2.4: Lifecycle manager (optional)
-        self._lifecycle = LifecycleManager(config=self._lifecycle_config) if self._lifecycle_config is not None else None
+        self._lifecycle = (
+            LifecycleManager(config=self._lifecycle_config)
+            if self._lifecycle_config is not None
+            else None
+        )
 
         # State
         self._total_predictions: int = 0
@@ -268,6 +272,13 @@ class HybridSimilarityLearner(Learner):
             metadata=inp.metadata,
             semantic_vector=semantic_vec,
         )
+
+        # Fire NEW_EVIDENCE event for lifecycle management
+        if self._lifecycle is not None:
+            from core.learner.lifecycle_manager import MaintenanceEvent
+            self._lifecycle.record_event(
+                MaintenanceEvent.NEW_EVIDENCE, example.id
+            )
 
         return LearningOutput(
             status=LearningStatus.UPDATED,
@@ -495,7 +506,7 @@ class HybridSimilarityLearner(Learner):
         independent_evidence_count = len(independent_pairs)
 
             # V2.3: Estimate confidence
-        confidence_result: ConfidenceResult | None = None
+        confidence_result: Any = None
         if self._confidence_config is not None:
             # Build output_similarities from actual blended similarities (not weighted scores)
             # This ensures conflict detection uses true similarity to query, not retrieval weight
@@ -573,6 +584,7 @@ class HybridSimilarityLearner(Learner):
             output=winner,
             confidence=confidence,
             similarities=similarities,
+            raw_similarity=best_similarity,
         )
         return prediction, confidence_result
 
@@ -638,7 +650,7 @@ class HybridSimilarityLearner(Learner):
             return []
 
         # Compute recency scores for evidence gathering
-        now = time.time()
+        now = self._lifecycle._clock() if self._lifecycle is not None else time.time()
         recency_scores: dict[int, float] = {}
         if self._scorer_config is not None:
             for idx, _score in top_k:

@@ -174,8 +174,14 @@ class RoutingCache:
         return len(keys)
 
     def has(self, packet: InformationPacket) -> bool:
-        """Check if a packet has a cached decision."""
-        return self.get(packet) is not None
+        """Check if a packet has a cached decision (no side effects)."""
+        key = compute_cache_key(packet)
+        if not key:
+            return False
+        entry = self._entries.get(key)
+        if entry is None:
+            return False
+        return not (entry.scope and entry.scope != packet.scope)
 
     @property
     def hit_rate(self) -> float:

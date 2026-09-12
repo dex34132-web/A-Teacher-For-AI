@@ -29,10 +29,11 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from core.learner.hybrid_memory import HybridExample, HybridMemory
 from core.learner.knowledge_ops import (
@@ -201,6 +202,7 @@ class LifecycleManager:
         self._config = config or LifecycleConfig()
         self._states: dict[int, MemoryLifecycleState] = {}
         self._events: list[LifecycleEvent] = []
+        self._max_events: int = 10000  # Cap to prevent unbounded memory growth
         self._maintenance_history: list[MaintenanceRecord] = []
         self._last_maintenance: float = 0.0
         self._clock = clock or time.time
@@ -242,6 +244,12 @@ class LifecycleManager:
         """Return all lifecycle events."""
         return list(self._events)
 
+    def _record_event(self, event: LifecycleEvent) -> None:
+        """Append an event with bounded growth."""
+        self._events.append(event)
+        if len(self._events) > self._max_events:
+            self._events = self._events[-self._max_events // 2:]
+
     def get_maintenance_history(self) -> list[MaintenanceRecord]:
         """Return maintenance history."""
         return list(self._maintenance_history)
@@ -270,6 +278,9 @@ class LifecycleManager:
         self._event_counts[event] += 1
         if memory_id is not None:
             self._pending_event_ids.append(memory_id)
+            # Cap to prevent unbounded growth between maintenance cycles
+            if len(self._pending_event_ids) > 10000:
+                self._pending_event_ids = self._pending_event_ids[-5000:]
 
         # Check if we have enough events
         total_events = sum(self._event_counts.values())
@@ -343,21 +354,34 @@ class LifecycleManager:
         if _precomputed is not None:
             output_index = _precomputed["output_index"]
             input_words = _precomputed["input_words"]
+            word_to_ids = _precomputed.get("word_to_ids", {})
+            id_to_output = _precomputed.get("id_to_output", {})
 
             # Count independent evidence from precomputed index
             independent = len(output_index.get(example.output, [])) - 1
             independent = max(0, independent)
 
-            # Count contradictions from precomputed data
+            # Count contradictions using inverted word index (O(K) instead of O(N))
             contradictions = 0
             my_words = input_words.get(example.id, set())
-            for ex in memory.get_all_hybrid():
-                if ex.id != example.id and ex.output != example.output:
-                    other_words = input_words.get(ex.id, set())
-                    if my_words and other_words:
-                        overlap = len(my_words & other_words) / max(len(my_words), len(other_words))
-                        if overlap > 0.5:
-                            contradictions += 1
+            if my_words:
+                # Find candidate contradictions via shared words
+                candidate_ids: set[int] = set()
+                for word in my_words:
+                    candidate_ids.update(word_to_ids.get(word, set()))
+                candidate_ids.discard(example.id)
+
+                for other_id in candidate_ids:
+                    other_output = id_to_output.get(other_id)
+                    if other_output is not None and other_output != example.output:
+                        other_words = input_words.get(other_id, set())
+                        if my_words and other_words:
+                            overlap = (
+                                len(my_words & other_words)
+                                / max(len(my_words), len(other_words))
+                            )
+                            if overlap > 0.5:
+                                contradictions += 1
         else:
             # Count independent evidence (different input texts with same output)
             independent = 0
@@ -421,7 +445,7 @@ class LifecycleManager:
         new_confidence = compute_reinforcement(
             confidence=old_confidence,
             success_count=example.success_count,
-            independent_evidence=example.success_count,
+            independent_evidence=1,  # Each memory is one source of evidence
             config=self._config,
         )
 
@@ -442,7 +466,7 @@ class LifecycleManager:
             )
             state.state = MemoryState.ACTIVE
             state.lifecycle_events.append(event)
-            self._events.append(event)
+            self._record_event(event)
 
         state.last_reinforced = now
         return new_confidence
@@ -491,7 +515,7 @@ class LifecycleManager:
             )
             state.state = MemoryState.UNCERTAIN
             state.lifecycle_events.append(event)
-            self._events.append(event)
+            self._record_event(event)
 
         # Check if eligible for archival
         if new_confidence < self._config.archive_threshold:
@@ -500,7 +524,7 @@ class LifecycleManager:
                 new_state, event = archive_memory(example, reason, state.state)
                 state.state = new_state
                 state.lifecycle_events.append(event)
-                self._events.append(event)
+                self._record_event(event)
 
         state.last_decayed = now
         return new_confidence
@@ -556,7 +580,7 @@ class LifecycleManager:
         old_state.state = MemoryState.SUPERSEDED
         old_state.superseded_by = new_id
         old_state.lifecycle_events.append(event)
-        self._events.append(event)
+        self._record_event(event)
 
         return event
 
@@ -609,7 +633,7 @@ class LifecycleManager:
 
         target_state.merged_from.extend(source_ids)
         target_state.lifecycle_events.append(event)
-        self._events.append(event)
+        self._record_event(event)
 
         # Mark source memories as archived
         for source_id in source_ids:
@@ -624,7 +648,7 @@ class LifecycleManager:
             )
             source_state.state = MemoryState.ARCHIVED
             source_state.lifecycle_events.append(source_event)
-            self._events.append(source_event)
+            self._record_event(source_event)
 
         return event
 
@@ -670,7 +694,7 @@ class LifecycleManager:
         new_state, event = archive_memory(example, reason, state.state)
         state.state = new_state
         state.lifecycle_events.append(event)
-        self._events.append(event)
+        self._record_event(event)
         return event
 
     def restore(self, memory_id: int, reason: str) -> LifecycleEvent:
@@ -697,7 +721,7 @@ class LifecycleManager:
 
         state.state = MemoryState.ACTIVE
         state.lifecycle_events.append(event)
-        self._events.append(event)
+        self._record_event(event)
 
         return event
 
@@ -708,10 +732,12 @@ class LifecycleManager:
         """Precompute data for batch health evaluation.
 
         Returns:
-            Dictionary with 'output_index' and 'input_words'.
+            Dictionary with 'output_index', 'input_words', and 'word_to_ids'.
         """
         output_index: dict[str, list[int]] = {}
         input_words: dict[int, set[str]] = {}
+        word_to_ids: dict[str, set[int]] = {}
+        id_to_output: dict[int, str] = {}
 
         for ex in memory.get_all_hybrid():
             # Build output index
@@ -719,10 +745,19 @@ class LifecycleManager:
                 output_index[ex.output] = []
             output_index[ex.output].append(ex.id)
 
-            # Cache input words
-            input_words[ex.id] = set(ex.input_text.lower().split())
+            # Cache input words and output lookup
+            id_to_output[ex.id] = ex.output
+            words = set(ex.input_text.lower().split())
+            input_words[ex.id] = words
 
-        return {"output_index": output_index, "input_words": input_words}
+            # Build inverted word index for fast contradiction lookup
+            for word in words:
+                if word not in word_to_ids:
+                    word_to_ids[word] = set()
+                word_to_ids[word].add(ex.id)
+
+        return {"output_index": output_index, "input_words": input_words,
+                "word_to_ids": word_to_ids, "id_to_output": id_to_output}
 
     # ------------------------------------------------------------------
     # Maintenance
@@ -828,22 +863,19 @@ class LifecycleManager:
         Returns:
             Summary of processing results.
         """
-        results = {
-            "total": 0,
-            "active": 0,
-            "uncertain": 0,
-            "superseded": 0,
-            "archived": 0,
-            "health_scores": {},
-            "transitions": [],
-        }
+        total = 0
+        active = 0
+        uncertain = 0
+        superseded = 0
+        archived = 0
+        health_scores: dict[int, Any] = {}
 
         for example in memory.get_all_hybrid():
-            results["total"] += 1
+            total += 1
 
             # Evaluate health
             health = self.evaluate_health(example, memory)
-            results["health_scores"][example.id] = health
+            health_scores[example.id] = health
 
             # Apply decay
             new_confidence = self.apply_decay(example)
@@ -854,16 +886,16 @@ class LifecycleManager:
             # Count states
             state = self.get_state(example.id)
             if state.state == MemoryState.ACTIVE:
-                results["active"] += 1
+                active += 1
             elif state.state == MemoryState.UNCERTAIN:
-                results["uncertain"] += 1
+                uncertain += 1
             elif state.state == MemoryState.SUPERSEDED:
-                results["superseded"] += 1
+                superseded += 1
             elif state.state == MemoryState.ARCHIVED:
-                results["archived"] += 1
+                archived += 1
 
         # Record transitions
-        results["transitions"] = [
+        transitions = [
             {
                 "previous": e.previous_state,
                 "new": e.new_state,
@@ -873,7 +905,15 @@ class LifecycleManager:
             for e in self._events[-10:]  # Last 10 events
         ]
 
-        return results
+        return {
+            "total": total,
+            "active": active,
+            "uncertain": uncertain,
+            "superseded": superseded,
+            "archived": archived,
+            "health_scores": health_scores,
+            "transitions": transitions,
+        }
 
     # ------------------------------------------------------------------
     # Persistence

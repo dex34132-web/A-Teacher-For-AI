@@ -236,6 +236,15 @@ class UniversalRouter:
         }:
             self._cache.put(packet, decision)
 
+        # Update context with routing results
+        for dest in decision.destinations:
+            dest_name = dest.name or dest.destination_type.name
+            if dest_name not in self._context.recent_destinations:
+                self._context.recent_destinations.append(dest_name)
+        type_name = packet.information_type.name
+        if type_name not in self._context.recent_types:
+            self._context.recent_types.append(type_name)
+
         return decision
 
     def request_route(

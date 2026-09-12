@@ -16,6 +16,7 @@ J. Persistence cases
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from core.learner.calibration.metrics import CalibrationCase
 
@@ -76,9 +77,18 @@ def _build_high_confidence_cases() -> CalibrationScenario:
         description="High similarity, strong evidence, no conflict",
         training=training,
         test_cases=[
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
-            CalibrationCase(query="sort an array", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
-            CalibrationCase(query="sort items", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
+            CalibrationCase(
+                query="sort an array", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
+            CalibrationCase(
+                query="sort items", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
         ],
         expected_brier_max=0.15,
         expected_ece_max=0.15,
@@ -98,7 +108,7 @@ def _build_unreliable_cases() -> CalibrationScenario:
             ("sort items", "sorted(x)"),
             ("reverse a string", "s[::-1]"),
             ("find max", "max(x)"),
-            ("join strings", "+".join),
+            ("join strings", "joined"),
             ("check membership", "x in y"),
         ],
         feedback=[
@@ -115,10 +125,19 @@ def _build_unreliable_cases() -> CalibrationScenario:
         training=training,
         test_cases=[
             # sort a list has conflicting evidence, confidence should be moderate
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
             # Other queries have clear evidence
-            CalibrationCase(query="reverse a string", expected="s[::-1]", confidence=0.0, predicted="s[::-1]", correct=True),
-            CalibrationCase(query="find max", expected="max(x)", confidence=0.0, predicted="max(x)", correct=True),
+            CalibrationCase(
+                query="reverse a string", expected="s[::-1]",
+                confidence=0.0, predicted="s[::-1]", correct=True,
+            ),
+            CalibrationCase(
+                query="find max", expected="max(x)",
+                confidence=0.0, predicted="max(x)", correct=True,
+            ),
         ],
         expected_brier_max=0.35,
         expected_ece_max=0.35,
@@ -145,11 +164,20 @@ def _build_low_evidence_cases() -> CalibrationScenario:
         training=training,
         test_cases=[
             # Known query, no evidence → low confidence
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
             # Novel query, low similarity → very low confidence
-            CalibrationCase(query="parse JSON", expected="json.loads(x)", confidence=0.0, predicted="", correct=False),
+            CalibrationCase(
+                query="parse JSON", expected="json.loads(x)",
+                confidence=0.0, predicted="", correct=False,
+            ),
             # Another novel query
-            CalibrationCase(query="read CSV", expected="csv.reader(x)", confidence=0.0, predicted="", correct=False),
+            CalibrationCase(
+                query="read CSV", expected="csv.reader(x)",
+                confidence=0.0, predicted="", correct=False,
+            ),
         ],
         expected_brier_max=0.45,
         expected_ece_max=0.45,
@@ -184,10 +212,19 @@ def _build_contradictory_cases() -> CalibrationScenario:
         training=training,
         test_cases=[
             # sort a list has 50/50 split → low confidence
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
             # Other queries are clear
-            CalibrationCase(query="reverse a string", expected="s[::-1]", confidence=0.0, predicted="s[::-1]", correct=True),
-            CalibrationCase(query="find max", expected="max(x)", confidence=0.0, predicted="max(x)", correct=True),
+            CalibrationCase(
+                query="reverse a string", expected="s[::-1]",
+                confidence=0.0, predicted="s[::-1]", correct=True,
+            ),
+            CalibrationCase(
+                query="find max", expected="max(x)",
+                confidence=0.0, predicted="max(x)", correct=True,
+            ),
         ],
         expected_brier_max=0.40,
         expected_ece_max=0.40,
@@ -229,8 +266,14 @@ def _build_consensus_cases() -> CalibrationScenario:
         description="Many independent memories support same answer",
         training=training,
         test_cases=[
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
-            CalibrationCase(query="reverse a string", expected="s[::-1]", confidence=0.0, predicted="s[::-1]", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
+            CalibrationCase(
+                query="reverse a string", expected="s[::-1]",
+                confidence=0.0, predicted="s[::-1]", correct=True,
+            ),
         ],
         expected_brier_max=0.10,
         expected_ece_max=0.10,
@@ -271,9 +314,15 @@ def _build_noisy_cases() -> CalibrationScenario:
         training=training,
         test_cases=[
             # sort a list has one good memory among noise
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
             # Unrelated query should get low confidence
-            CalibrationCase(query="bake cake", expected="recipe", confidence=0.0, predicted="", correct=False),
+            CalibrationCase(
+                query="bake cake", expected="recipe",
+                confidence=0.0, predicted="", correct=False,
+            ),
         ],
         expected_brier_max=0.40,
         expected_ece_max=0.40,
@@ -310,9 +359,18 @@ def _build_recency_cases() -> CalibrationScenario:
         description="Fresh vs old knowledge, reliability vs recency",
         training=training,
         test_cases=[
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
-            CalibrationCase(query="reverse a string", expected="s[::-1]", confidence=0.0, predicted="s[::-1]", correct=True),
-            CalibrationCase(query="find max", expected="max(x)", confidence=0.0, predicted="max(x)", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
+            CalibrationCase(
+                query="reverse a string", expected="s[::-1]",
+                confidence=0.0, predicted="s[::-1]", correct=True,
+            ),
+            CalibrationCase(
+                query="find max", expected="max(x)",
+                confidence=0.0, predicted="max(x)", correct=True,
+            ),
         ],
         expected_brier_max=0.35,
         expected_ece_max=0.35,
@@ -356,8 +414,14 @@ def _build_feedback_cases() -> CalibrationScenario:
         description="Correct, incorrect, repeated, alternating feedback",
         training=training,
         test_cases=[
-            CalibrationCase(query="sort a list", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
-            CalibrationCase(query="reverse a string", expected="s[::-1]", confidence=0.0, predicted="s[::-1]", correct=True),
+            CalibrationCase(
+                query="sort a list", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
+            CalibrationCase(
+                query="reverse a string", expected="s[::-1]",
+                confidence=0.0, predicted="s[::-1]", correct=True,
+            ),
         ],
         expected_brier_max=0.30,
         expected_ece_max=0.30,
@@ -394,11 +458,20 @@ def _build_distribution_shift_cases() -> CalibrationScenario:
         training=training,
         test_cases=[
             # Close to training → moderate confidence
-            CalibrationCase(query="sort integers", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="sort integers", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
             # Far from training → low confidence
-            CalibrationCase(query="arrange numbers ascending", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="arrange numbers ascending", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
             # Very different vocabulary
-            CalibrationCase(query="order elements numerically", expected="sorted(x)", confidence=0.0, predicted="sorted(x)", correct=True),
+            CalibrationCase(
+                query="order elements numerically", expected="sorted(x)",
+                confidence=0.0, predicted="sorted(x)", correct=True,
+            ),
         ],
         expected_brier_max=0.45,
         expected_ece_max=0.45,
@@ -424,7 +497,7 @@ def build_all_scenarios() -> list[CalibrationScenario]:
     ]
 
 
-def run_scenario(scenario: CalibrationScenario, learner_factory) -> list[CalibrationCase]:
+def run_scenario(scenario: CalibrationScenario, learner_factory: Any) -> list[CalibrationCase]:
     """Run a calibration scenario and return cases with actual confidence values.
 
     Args:
@@ -462,8 +535,3 @@ def run_scenario(scenario: CalibrationScenario, learner_factory) -> list[Calibra
             },
         ))
     return results
-
-
-def __init__(self):
-    """Initialize calibration package."""
-    pass

@@ -171,7 +171,7 @@ def create_discard_decision(
     """Create a discard routing decision."""
     return RoutingDecision(
         packet_id=packet_id,
-        destinations=(Destination(destination_type=DestinationType.DISCARD),),
+        destinations=(Destination(destination_type=DestinationType.DISCARD, name="discard"),),
         strategy=RoutingStrategy.DISCARD,
         reason=reason,
         policy_applied=policy,

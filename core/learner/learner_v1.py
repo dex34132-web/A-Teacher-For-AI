@@ -42,11 +42,13 @@ class Prediction:
         output: The predicted output/label.
         confidence: Confidence score in [0, 1].
         similarities: Top similar examples used for prediction.
+        raw_similarity: The base similarity score before confidence computation.
     """
 
     output: str
     confidence: float
     similarities: list[tuple[str, float]] = field(default_factory=list)
+    raw_similarity: float = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -255,6 +257,7 @@ class SimilarityLearner(Learner):
         # Factor 4: Average similarity of supporting examples
         sims = supporting_sims.get(winner, [])
         avg_sim = sum(sims) / len(sims) if sims else 0.0
+        best_sim = max(sims) if sims else 0.0
 
         # Combine factors: geometric-mean-like combination
         # All factors in [0, 1]; result is in [0, 1]
@@ -274,6 +277,7 @@ class SimilarityLearner(Learner):
             output=winner,
             confidence=confidence,
             similarities=similarities,
+            raw_similarity=best_sim,
         )
 
     def feedback(

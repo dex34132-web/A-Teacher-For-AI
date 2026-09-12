@@ -325,7 +325,9 @@ def detect_conflict_count(
     # Filter to only relevant outputs if similarities provided
     if similarities is not None:
         filtered = [
-            (out, sim) for out, sim in zip(outputs, similarities, strict=False) if sim > relevance_threshold
+            (out, sim)
+            for out, sim in zip(outputs, similarities, strict=False)
+            if sim > relevance_threshold
         ]
         if not filtered:
             return 0
@@ -421,9 +423,9 @@ def estimate_confidence(
         similarity, success_count, failure_count, config.prior_strength
     )
 
-    # 2. Evidence factor (blending similarity with evidence)
+    # 2. Evidence factor (blending base rate with evidence strength)
     total_uses = success_count + failure_count
-    evidence_factor = similarity if total_uses == 0 else 0.3 * similarity + 0.7 * evidence_strength
+    evidence_factor = 1.0 if total_uses == 0 else 0.3 + 0.7 * evidence_strength
 
     # 3. Agreement bonus
     raw_agreement = compute_agreement(

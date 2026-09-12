@@ -415,6 +415,14 @@ class RoutingPipeline:
                 strategy = RoutingStrategy.DIRECT
                 destinations = (Destination(destination_type=DestinationType.KNOWLEDGE),)
 
+            elif itype == InformationType.EXPERIENCE:
+                strategy = RoutingStrategy.DIRECT
+                destinations = (Destination(destination_type=DestinationType.LEARNING),)
+
+            elif itype == InformationType.KNOWLEDGE:
+                strategy = RoutingStrategy.DIRECT
+                destinations = (Destination(destination_type=DestinationType.KNOWLEDGE),)
+
             else:
                 strategy = RoutingStrategy.DIRECT
                 destinations = (Destination(destination_type=DestinationType.EVO_CONTEXT),)
@@ -434,7 +442,7 @@ class RoutingPipeline:
             reason=reason,
             priority=final_priority,
             cost_estimates=(cost,),
-            policy_applied=policy.name if policy else "",
+            policy_applied=getattr(policy, "name", "") if policy else "",
             deferred=deferred,
             rejected=rejected,
             rejection_reason=reason if rejected else "",

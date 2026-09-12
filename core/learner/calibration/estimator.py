@@ -61,7 +61,6 @@ class ConfidenceEstimatorResult:
     uncertainty_state: str = "uncertain"
     probability: float = 0.0
     band: str = "minimal"
-    components: dict[str, Any] = None  # type: ignore[assignment]
     components: dict[str, Any] = field(default_factory=dict)
 
 
@@ -303,7 +302,9 @@ def estimate_confidence_v232(
 
     # 9. Independence bonus — multiple independent memories strengthen confidence
     independence_bonus = _compute_independence_bonus(
-        independent_evidence_count, config.independence_bonus_weight, config.max_independent_evidence
+        independent_evidence_count,
+        config.independence_bonus_weight,
+        config.max_independent_evidence,
     )
 
     # 10. Final confidence
@@ -321,7 +322,9 @@ def estimate_confidence_v232(
     total_uses = success_count + failure_count
     if conflict_count > 1:
         uncertainty_state = "conflicted"
-    elif total_uses < config.min_evidence_samples and similarity < 0.5:
+    elif (  # noqa: SIM114 — branches are semantically distinct
+        total_uses < config.min_evidence_samples and similarity < 0.5
+    ):
         uncertainty_state = "insufficient_evidence"
     elif raw_confidence < 0.3 or evidence_strength < 0.3:
         uncertainty_state = "insufficient_evidence"

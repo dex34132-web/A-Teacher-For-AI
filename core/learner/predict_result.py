@@ -80,7 +80,7 @@ class PredictResult:
         """The base similarity score (V2.3)."""
         if self.confidence_result is not None:
             return self.confidence_result.similarity
-        return self.prediction.confidence
+        return self.prediction.raw_similarity
 
     @property
     def uncertainty_state(self) -> str:
@@ -108,11 +108,19 @@ class PredictResult:
         if self.confidence_result is not None:
             return self.confidence_result.components
         # Fallback for V2.2 path
-        evidence_val = getattr(self.confidence_result, "evidence_quality", None) if self.confidence_result else None
+        evidence_val = (
+            getattr(self.confidence_result, "evidence_quality", None)
+            if self.confidence_result
+            else None
+        )
         if evidence_val is None:
-            evidence_val = getattr(self.confidence_result, "evidence_factor", 0.0) if self.confidence_result else 0.0
+            evidence_val = (
+                getattr(self.confidence_result, "evidence_factor", 0.0)
+                if self.confidence_result
+                else 0.0
+            )
         return {
-            "similarity": round(self.prediction.confidence, 4),
+            "similarity": round(self.prediction.raw_similarity, 4),
             "conflict_penalty": round(self.conflict_confidence_penalty, 4),
             "evidence_quality": evidence_val,
         }
@@ -200,7 +208,7 @@ class PredictResult:
                 evidence_val = getattr(cr, "evidence_factor", 0.0)
             result["confidence_components"] = {
                 "evidence_strength": round(cr.evidence_strength, 4),
-                "evidence_quality": round(evidence_val, 4),
+                "evidence_quality": round(evidence_val, 4) if evidence_val is not None else 0.0,
                 "agreement_bonus": round(cr.agreement_bonus, 4),
                 "novelty_penalty": round(cr.novelty_penalty, 4),
                 "supporting_count": cr.supporting_count,

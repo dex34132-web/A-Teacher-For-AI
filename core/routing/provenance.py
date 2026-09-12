@@ -171,11 +171,20 @@ class ProvenanceTracker:
         self._records.append(provenance)
         if len(self._records) > self._max_history:
             self._records = self._records[-self._max_history:]
+            self._rebuild_by_packet()
 
         packet_id = provenance.packet_id
         if packet_id not in self._by_packet:
             self._by_packet[packet_id] = []
         self._by_packet[packet_id].append(provenance.decision_id)
+
+    def _rebuild_by_packet(self) -> None:
+        """Rebuild _by_packet index from current records."""
+        self._by_packet.clear()
+        for r in self._records:
+            if r.packet_id not in self._by_packet:
+                self._by_packet[r.packet_id] = []
+            self._by_packet[r.packet_id].append(r.decision_id)
 
     def get_for_packet(self, packet_id: str) -> list[RoutingProvenance]:
         """Get all provenance records for a packet."""

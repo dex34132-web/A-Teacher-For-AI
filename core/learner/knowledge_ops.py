@@ -31,9 +31,10 @@ from __future__ import annotations
 import math
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from core.learner.lifecycle import (
     HealthSignals,
@@ -206,12 +207,13 @@ def _output_similarity(a: str, b: str) -> float:
     return len(intersection) / len(union)
 
 
-def _input_similarity(a: str, b: str) -> float:
+def _input_similarity(a: str, b: str, stop_tokens: set[str] | None = None) -> float:
     """Compute token-level Jaccard similarity between inputs."""
     if a == b:
         return 1.0
-    tokens_a = set(a.lower().split())
-    tokens_b = set(b.lower().split())
+    stops = stop_tokens or set()
+    tokens_a = set(a.lower().split()) - stops
+    tokens_b = set(b.lower().split()) - stops
     if not tokens_a and not tokens_b:
         return 1.0
     if not tokens_a or not tokens_b:
@@ -273,6 +275,7 @@ class TokenInvertedIndex:
         query_text: str,
         min_overlap: int = 2,
         exclude_ids: set[int] | None = None,
+        stop_tokens: set[str] | None = None,
     ) -> list[tuple[int, float]]:
         """Find candidate memories that share tokens with query.
 
@@ -280,12 +283,14 @@ class TokenInvertedIndex:
             query_text: The text to find candidates for.
             min_overlap: Minimum number of shared tokens to consider a candidate.
             exclude_ids: IDs to exclude from results.
+            stop_tokens: High-frequency tokens to skip (they reduce selectivity).
 
         Returns:
             List of (memory_id, overlap_ratio) tuples, sorted by overlap descending.
         """
         exclude = exclude_ids or set()
-        query_tokens = set(query_text.lower().split())
+        stops = stop_tokens or set()
+        query_tokens = set(query_text.lower().split()) - stops
         if not query_tokens:
             return []
 
@@ -333,6 +338,32 @@ def _build_merge_index(examples: list[HybridExample]) -> TokenInvertedIndex:
     return index
 
 
+def _compute_stop_tokens(index: TokenInvertedIndex, max_df: float = 0.5) -> set[str]:
+    """Compute high-frequency tokens to exclude from candidate matching.
+
+    Tokens appearing in more than max_df fraction of indexed documents
+    are non-selective and degrade index performance.
+
+    Args:
+        index: The built inverted index.
+        max_df: Maximum document frequency (0.0-1.0) before a token is considered a stop word.
+
+    Returns:
+        Set of stop tokens to skip during candidate matching.
+    """
+    n = len(index._token_count)
+    if n == 0:
+        return set()
+    threshold = int(max_df * n)
+    stops = {token for token, doc_ids in index._index.items() if len(doc_ids) > threshold}
+    # Don't filter tokens if it would remove ALL tokens from every document
+    # (e.g., all inputs are identical — need at least some tokens for matching)
+    non_stop_tokens = set(index._index.keys()) - stops
+    if not non_stop_tokens:
+        return set()
+    return stops
+
+
 def find_merge_candidates(
     examples: list[HybridExample],
     config: LifecycleConfig,
@@ -358,8 +389,16 @@ def find_merge_candidates(
     Returns:
         List of MergeCandidate pairs.
     """
+    # Compute stop tokens for the entire dataset (used by both paths for consistency)
+    # Only for datasets large enough that stop tokens are meaningful
+    if len(examples) >= 50:
+        temp_index = _build_merge_index(examples)
+        stop_tokens = _compute_stop_tokens(temp_index, max_df=0.5)
+    else:
+        stop_tokens = set()
+
     if not use_index or len(examples) < 50:
-        return _find_merge_candidates_bruteforce(examples, config)
+        return _find_merge_candidates_bruteforce(examples, config, stop_tokens)
 
     return _find_merge_candidates_indexed(examples, config)
 
@@ -367,10 +406,10 @@ def find_merge_candidates(
 def _find_merge_candidates_bruteforce(
     examples: list[HybridExample],
     config: LifecycleConfig,
+    stop_tokens: set[str] | None = None,
 ) -> list[MergeCandidate]:
     """O(N²) brute force candidate generation for small datasets."""
     candidates: list[MergeCandidate] = []
-    id_to_example = {ex.id: ex for ex in examples}
 
     for i in range(len(examples)):
         for j in range(i + 1, len(examples)):
@@ -383,7 +422,7 @@ def _find_merge_candidates_bruteforce(
                 continue
 
             # Check input similarity
-            in_sim = _input_similarity(a.input_text, b.input_text)
+            in_sim = _input_similarity(a.input_text, b.input_text, stop_tokens)
             if in_sim < config.merge_input_similarity:
                 continue
 
@@ -427,19 +466,21 @@ def _find_merge_candidates_indexed(
     # Build local index (no global state)
     id_to_example = {ex.id: ex for ex in examples}
     merge_index = _build_merge_index(examples)
+    stop_tokens = _compute_stop_tokens(merge_index, max_df=0.5)
 
     candidates: list[MergeCandidate] = []
     seen_pairs: set[tuple[int, int]] = set()
 
     for ex in examples:
-        # Find candidates that share input tokens
+        # Find candidates that share input tokens (excluding stop tokens)
         raw_candidates = merge_index.find_candidates(
             ex.input_text,
-            min_overlap=2,
+            min_overlap=1,
             exclude_ids={ex.id},
+            stop_tokens=stop_tokens,
         )
 
-        for other_id, overlap_ratio in raw_candidates:
+        for other_id, _overlap_ratio in raw_candidates:
             # Avoid duplicate pairs
             pair = (min(ex.id, other_id), max(ex.id, other_id))
             if pair in seen_pairs:
@@ -455,8 +496,8 @@ def _find_merge_candidates_indexed(
             if out_sim < config.merge_similarity:
                 continue
 
-            # Compute input similarity
-            in_sim = _input_similarity(ex.input_text, other.input_text)
+            # Compute input similarity (with stop token filtering)
+            in_sim = _input_similarity(ex.input_text, other.input_text, stop_tokens)
             if in_sim < config.merge_input_similarity:
                 continue
 
