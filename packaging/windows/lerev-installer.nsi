@@ -23,35 +23,40 @@ RequestExecutionLevel user
 Section "Install"
     SetOutPath "$INSTDIR"
 
-    ; Check Python
-    nsExec::ExecToStack 'python --version'
-    Pop $0
-    ${If} $0 != 0
-        MessageBox MB_OK "Python 3.11+ is required but not found.$\n$\nPlease install Python from https://www.python.org/downloads/"
-        Abort
-    ${EndIf}
+    ; Copy lerev.exe
+    File "dist\lerev.exe"
 
-    ; Install Lerev via pip
-    nsExec::ExecToStack 'pip install lerev'
+    ; Add to PATH
+    EnVar::AddValue "PATH" "$INSTDIR"
     Pop $0
-    ${If} $0 != 0
-        MessageBox MB_OK "Failed to install Lerev via pip.$\n$\nPlease check your Python installation."
-        Abort
-    ${EndIf}
 
     ; Run lerev install to register OpenCode plugin
-    nsExec::ExecToStack 'lerev install'
+    nsExec::ExecToStack '"$INSTDIR\lerev.exe" install'
     Pop $0
 
     ; Write uninstaller
     WriteUninstaller "$INSTDIR\uninstall.exe"
+
+    ; Add to Programs Menu
+    CreateDirectory "$SMPROGRAMS\Lerev"
+    CreateShortCut "$SMPROGRAMS\Lerev\Lerev.lnk" "$INSTDIR\lerev.exe"
+    CreateShortCut "$SMPROGRAMS\Lerev\Uninstall.lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "Uninstall"
     ; Run lerev uninstall to deregister OpenCode plugin
-    nsExec::ExecToStack 'lerev uninstall'
+    nsExec::ExecToStack '"$INSTDIR\lerev.exe" uninstall'
 
-    ; Remove installer files only
+    ; Remove from PATH
+    EnVar::RemoveValue "PATH" "$INSTDIR"
+
+    ; Remove files
+    Delete "$INSTDIR\lerev.exe"
     Delete "$INSTDIR\uninstall.exe"
     RMDir "$INSTDIR"
+
+    ; Remove Programs Menu
+    Delete "$SMPROGRAMS\Lerev\Lerev.lnk"
+    Delete "$SMPROGRAMS\Lerev\Uninstall.lnk"
+    RMDir "$SMPROGRAMS\Lerev"
 SectionEnd
