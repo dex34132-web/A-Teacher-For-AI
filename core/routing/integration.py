@@ -1,8 +1,8 @@
-"""Integration bridge between EVO V2.5 and existing V2.4.2 subsystems.
+"""Integration bridge between Lerev V2.5 and existing V2.4.2 subsystems.
 
 The distinction:
     V2.5 decides WHERE information should go.
-    Existing EVO subsystems decide WHAT should happen to that information.
+    Existing Lerev subsystems decide WHAT should happen to that information.
 
 This bridge connects routing destinations to existing V2.4.2 capability
 providers without rebuilding them: confidence estimation, conflict
@@ -48,7 +48,7 @@ class CapabilityProvider(Protocol):
 # ---------------------------------------------------------------------------
 
 
-class EVOIntegrationBridge:
+class LerevIntegrationBridge:
     """Wires routing decisions to V2.4.2 capability providers.
 
     No global mutable state. The bridge is constructed per-integration

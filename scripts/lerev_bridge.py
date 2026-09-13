@@ -1,4 +1,4 @@
-"""EVO bridge — development fallback wrapper.
+"""Lerev bridge — development fallback wrapper.
 
 This is the development fallback bridge. For installed usage,
 use `python -m lerev.bridge` instead.

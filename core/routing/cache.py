@@ -1,4 +1,4 @@
-"""Caching and batching for EVO V2.5 routing.
+"""Caching and batching for Lerev V2.5 routing.
 
 Supports routing-result caching, repeated-request detection,
 batching, and deferred processing.

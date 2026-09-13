@@ -1,4 +1,4 @@
-"""Efficiency controller for EVO V2.5 routing.
+"""Efficiency controller for Lerev V2.5 routing.
 
 Decides whether operations should be executed, deferred, batched,
 simplified, or rejected based on expected value vs cost.

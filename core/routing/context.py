@@ -1,4 +1,4 @@
-"""Context awareness for EVO V2.5 routing.
+"""Context awareness for Lerev V2.5 routing.
 
 Tracks the current routing context to enable context-aware routing
 decisions. The context abstraction includes current task, context size,

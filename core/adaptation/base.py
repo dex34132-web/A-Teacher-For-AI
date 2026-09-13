@@ -21,7 +21,7 @@ class AdaptationStrategy(Enum):
     """High-level adaptation strategy."""
 
     GRADIENT = auto()
-    EVOLUTIONARY = auto()
+    LerevLUTIONARY = auto()
     META_LEARNING = auto()
     HEURISTIC = auto()
 

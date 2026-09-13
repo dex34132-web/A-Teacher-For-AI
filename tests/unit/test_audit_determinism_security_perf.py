@@ -1,6 +1,6 @@
 """Audit tests: determinism, concurrency, security, and performance.
 
-Comprehensive test suite verifying the EVO system is deterministic,
+Comprehensive test suite verifying the Lerev system is deterministic,
 concurrent-safe, secure against injection, and performant at scale.
 """
 

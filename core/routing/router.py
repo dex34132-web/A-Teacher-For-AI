@@ -1,8 +1,8 @@
-"""Universal Router for EVO V2.5.
+"""Universal Router for Lerev V2.5.
 
 The UniversalRouter is the main entry point for agent-agnostic routing.
 It orchestrates the routing pipeline and provides the contracts that
-future adapters can use to connect any AI system to EVO.
+future adapters can use to connect any AI system to Lerev.
 
 V2.5 boundary:
 - Routes information
@@ -32,10 +32,10 @@ from core.routing.telemetry import TelemetryEvent, TelemetryRecord, TelemetryRec
 
 
 class UniversalRouter:
-    """Agent-agnostic routing layer for EVO V2.5.
+    """Agent-agnostic routing layer for Lerev V2.5.
 
     The router accepts information packets from any AI system and routes
-    them to the appropriate EVO subsystems based on type, priority,
+    them to the appropriate Lerev subsystems based on type, priority,
     cost, context, and policy.
 
     This class does not implement any specific agent, model, or harness.
@@ -90,7 +90,7 @@ class UniversalRouter:
             dest.destination_type: dest
             for dest in (
                 Destination(destination_type=DestinationType.AGENT_CONTEXT, name="agent_context"),
-                Destination(destination_type=DestinationType.EVO_CONTEXT, name="evo_context"),
+                Destination(destination_type=DestinationType.LEREV_CONTEXT, name="lerev_context"),
                 Destination(destination_type=DestinationType.LEARNING, name="learning"),
                 Destination(destination_type=DestinationType.RETRIEVAL, name="retrieval"),
                 Destination(destination_type=DestinationType.KNOWLEDGE, name="knowledge"),

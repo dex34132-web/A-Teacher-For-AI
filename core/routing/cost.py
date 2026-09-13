@@ -1,4 +1,4 @@
-"""Cost model for EVO V2.5 routing.
+"""Cost model for Lerev V2.5 routing.
 
 Explicitly treats agent interaction as a resource with measurable costs.
 Supports estimated, measured, and unknown cost states.

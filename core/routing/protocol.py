@@ -1,7 +1,7 @@
-"""Agent-as-Semantic-Router protocol for EVO V2.5.
+"""Agent-as-Semantic-Router protocol for Lerev V2.5.
 
-Allows an AI agent to communicate routing intent directly to EVO.
-EVO does not perform expensive semantic reasoning when the connected
+Allows an AI agent to communicate routing intent directly to Lerev.
+Lerev does not perform expensive semantic reasoning when the connected
 AI agent already understands the meaning of its own actions.
 
 Principles:
@@ -161,7 +161,7 @@ def format_protocol_prompt() -> str:
     Costs fewer than 100 tokens when included in an agent's context.
     """
     return (
-        "EVO Routing Protocol: send JSON with keys:\n"
+        "Lerev Routing Protocol: send JSON with keys:\n"
         "- operation: need_context | need_knowledge | report_observation | "
         "report_outcome | report_feedback | store_candidate | request_relevant_info\n"
         "- payload: <text content>\n"

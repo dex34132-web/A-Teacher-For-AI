@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-13
 **Status:** Design
-**Product Name:** Lerev (renamed from EVO)
+**Product Name:** Lerev (renamed from Lerev)
 
 ---
 
@@ -25,8 +25,8 @@ After installation, OpenCode must be able to use Lerev from **any project direct
 
 ### Backward Compatibility
 
-- `.evo/memory/` directories remain readable during transition
-- `EVO_HOME` env var still supported (fallback)
+- `.lerev/memory/` directories remain readable during transition
+- `LEREV_HOME` env var still supported (fallback)
 - Internal Python modules (`core/`, `core/routing/v26/`) keep existing names
 
 ---
@@ -69,7 +69,7 @@ lerev/
 ├── cli.py               # argparse CLI
 ├── config.py            # LEREV_HOME, paths, OpenCode config discovery
 ├── discovery.py         # Bridge discovery (4-tier cascade)
-├── bridge.py            # Bridge protocol (extracted from scripts/evo_bridge.py)
+├── bridge.py            # Bridge protocol (extracted from scripts/lerev_bridge.py)
 └── plugin_source.py     # TypeScript plugin source (bundled as string)
 ```
 
@@ -85,7 +85,7 @@ lerev/
 | `lerev/discovery.py` | CREATE | Bridge discovery cascade |
 | `lerev/bridge.py` | CREATE | Bridge protocol (importable) |
 | `lerev/plugin_source.py` | CREATE | Bundled TypeScript plugin |
-| `scripts/evo_bridge.py` | MODIFY | Thin wrapper importing from `lerev.bridge` |
+| `scripts/lerev_bridge.py` | MODIFY | Thin wrapper importing from `lerev.bridge` |
 | `.opencode/plugins/evo.ts` | MODIFY | Add discovery cascade |
 | `packaging/windows/` | CREATE | NSIS installer script |
 | `packaging/chocolatey/` | CREATE | Chocolatey nuspec |
@@ -108,7 +108,7 @@ lerev/
 1. LEREV_HOME env var → {LEREV_HOME}/lerev/bridge.py
 2. `lerev-bridge` on PATH → execute directly
 3. Installed module → python -m lerev.bridge
-4. Dev fallback → {worktree}/scripts/evo_bridge.py
+4. Dev fallback → {worktree}/scripts/lerev_bridge.py
 ```
 
 ### TypeScript Plugin Changes
@@ -118,7 +118,7 @@ The plugin will implement the cascade:
 ```typescript
 async function discoverBridge(worktree: string): Promise<{python: string, bridgePath: string} | null> {
   // Tier 1: LEREV_HOME
-  const lerevHome = process.env.LEREV_HOME || process.env.EVO_HOME
+  const lerevHome = process.env.LEREV_HOME || process.env.LEREV_HOME
   if (lerevHome) {
     const bridgePath = resolve(lerevHome, "lerev", "bridge.py")
     if (await fileExists(bridgePath)) return { python: await findPython(), bridgePath }
@@ -136,7 +136,7 @@ async function discoverBridge(worktree: string): Promise<{python: string, bridge
   }
 
   // Tier 4: Dev fallback
-  const devBridge = resolve(worktree, "scripts", "evo_bridge.py")
+  const devBridge = resolve(worktree, "scripts", "lerev_bridge.py")
   if (await fileExists(devBridge)) return { python: python ?? "python3", bridgePath: devBridge }
 
   return null

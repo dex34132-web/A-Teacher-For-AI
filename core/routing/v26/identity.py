@@ -1,4 +1,4 @@
-"""Universal identity abstractions for EVO V2.6.
+"""Universal identity abstractions for Lerev V2.6.
 
 Provides stable, serializable, deterministic identity primitives for
 agents, projects, and sessions. Identity must NOT depend on any specific

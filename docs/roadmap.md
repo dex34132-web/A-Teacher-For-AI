@@ -327,7 +327,7 @@ SimilarityLearner (V1)          HybridSimilarityLearner (V2)
 ### What was done
 
 1. **Information model** — Frozen `InformationPacket` with 14 `InformationType` enums, 5 `SensitivityLevel`s, 4 `SourceType`s
-2. **Destinations** — 13 pre-built destinations mapping to existing EVO subsystems + extensible custom
+2. **Destinations** — 13 pre-built destinations mapping to existing Lerev subsystems + extensible custom
 3. **Routing pipeline** — 9-stage deterministic pipeline: Normalize → Classify → Scope → Security → Prioritize → Cost → Policy → Route → Telemetry
 4. **Routing strategies** — DIRECT, CONDITIONAL, DEFERRED, BATCHED, DISCARD, MULTI_DESTINATION
 5. **Priority system** — 5-level priority with configurable boosts
@@ -341,7 +341,7 @@ SimilarityLearner (V1)          HybridSimilarityLearner (V2)
 13. **Telemetry** — Event recording, latency stats, bounded history
 14. **Agent protocol** — JSON-serializable `RoutingIntent`, `< 100 token` protocol prompt
 15. **V2.6 contracts** — `AgentRoutingContract` and `DestinationHandler` ABCs declared
-16. **V2.4.2 integration bridge** — `EVOIntegrationBridge` with `connect_learning_memory()` and `connect_lifecycle()`
+16. **V2.4.2 integration bridge** — `LerevIntegrationBridge` with `connect_learning_memory()` and `connect_lifecycle()`
 
 ### Results
 

@@ -1,4 +1,4 @@
-"""Telemetry and observability for EVO V2.5 routing.
+"""Telemetry and observability for Lerev V2.5 routing.
 
 Structured observability for routing decisions, latency, destination
 usage, deferred operations, rejected operations, cost estimates,

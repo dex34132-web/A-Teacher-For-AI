@@ -1,4 +1,4 @@
-"""Comprehensive tests for EVO V2.5 Universal Routing & Intelligence Layer.
+"""Comprehensive tests for Lerev V2.5 Universal Routing & Intelligence Layer.
 
 Covers:
 - Information model (InformationPacket, types, sensitivity)
@@ -73,7 +73,7 @@ from core.routing.information import (
     SourceType,
 )
 from core.routing.integration import (
-    EVOIntegrationBridge,
+    LerevIntegrationBridge,
     make_collector_handler,
     make_noop_handler,
 )
@@ -736,7 +736,7 @@ class TestRoutingPipeline:
         dec = pipe.route(pkt)
         assert dec.strategy == RoutingStrategy.DIRECT
         assert dec.has_destination(DestinationType.AGENT_CONTEXT) or \
-               dec.has_destination(DestinationType.EVO_CONTEXT)
+               dec.has_destination(DestinationType.LEREV_CONTEXT)
 
     def test_route_observation(self) -> None:
         pipe = RoutingPipeline()
@@ -942,7 +942,7 @@ class TestRoutingIntent:
 
     def test_protocol_prompt(self) -> None:
         prompt = format_protocol_prompt()
-        assert "EVO Routing Protocol" in prompt
+        assert "Lerev Routing Protocol" in prompt
         assert "operation" in prompt
 
 
@@ -966,19 +966,19 @@ class TestV2_6Contracts:
 
 class TestIntegrationBridge:
     def test_bridge_creation(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         stats = bridge.get_stats()
         assert stats["dispatch_count"] == 0
 
     def test_dispatch_to_no_handler(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         pkt = InformationPacket(content="test")
         dec = create_direct_decision(pkt.id, LEARNING)
         ok = bridge.dispatch(pkt, dec)
         assert ok is True
 
     def test_dispatch_to_handler(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         sink: list[InformationPacket] = []
         bridge.register_handler(DestinationType.LEARNING, make_collector_handler(sink))
         pkt = InformationPacket(content="test")
@@ -994,7 +994,7 @@ class TestIntegrationBridge:
         handler(pkt, dec)
 
     def test_handler_error(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
 
         def bad_handler(pkt: InformationPacket, dec: RoutingDecision) -> None:
             raise ValueError("fail")
@@ -1007,7 +1007,7 @@ class TestIntegrationBridge:
         assert bridge.get_stats()["error_count"] == 1
 
     def test_clear(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         bridge.register_handler(DestinationType.LEARNING, make_noop_handler())
         bridge.clear()
         assert len(bridge._handlers) == 0
@@ -1284,7 +1284,7 @@ class TestV242Integration:
         from core.learner.hybrid_memory import HybridMemory
 
         memory = HybridMemory()
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         bridge.connect_learning_memory(memory)
 
         pkt = InformationPacket(
@@ -1300,7 +1300,7 @@ class TestV242Integration:
         from core.learner.lifecycle_manager import LifecycleManager
 
         mgr = LifecycleManager()
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         bridge.connect_lifecycle(mgr)
 
         pkt = InformationPacket(
@@ -1352,8 +1352,8 @@ class TestGlobalStateIsolation:
         assert c2.size == 0
 
     def test_two_bridges_independent(self) -> None:
-        b1 = EVOIntegrationBridge()
-        b2 = EVOIntegrationBridge()
+        b1 = LerevIntegrationBridge()
+        b2 = LerevIntegrationBridge()
         b1.register_handler(DestinationType.LEARNING, make_noop_handler())
         assert len(b1._handlers) == 1
         assert len(b2._handlers) == 0

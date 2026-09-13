@@ -1,4 +1,4 @@
-# EVO V2.4.2 — Knowledge Lifecycle Hardening
+# Lerev V2.4.2 — Knowledge Lifecycle Hardening
 
 **Date:** 2026-09-10
 **Status:** COMPLETED

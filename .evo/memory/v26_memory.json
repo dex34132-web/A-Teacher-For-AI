@@ -1,0 +1,34 @@
+{
+  "version": "2.6.0",
+  "entries": [
+    {
+      "memory_id": "be41bdb25c684dfe",
+      "content": "Observation: end-to-end proof of V2.6 memory | Outcome: SUCCESS",
+      "kind": "EPISODIC",
+      "scope": {
+        "agent": {
+          "agent_id": "opencode",
+          "adapter": "opencode"
+        },
+        "project": {
+          "project_id": "e2e-test",
+          "name": "e2e-test"
+        },
+        "session": {
+          "session_id": "e2e-session",
+          "project_id": "e2e-test",
+          "agent_id": "opencode"
+        }
+      },
+      "timestamp": 1789279348.409352,
+      "source": "agent",
+      "tags": [
+        "outcome:success"
+      ],
+      "confidence": 0.5,
+      "metadata": {},
+      "parent_id": null,
+      "promoted_from": null
+    }
+  ]
+}

@@ -26,18 +26,20 @@ class TestBridgeDiscovery:
         assert result.tier == "LEREV_HOME"
         assert result.bridge_path == str(bridge_file)
 
-    def test_tier1_evo_home_fallback(self, tmp_path: Path) -> None:
-        """Tier 1: EVO_HOME env var as fallback."""
+    def test_tier1_evo_home_env_fallback(self, tmp_path: Path) -> None:
+        """Tier 1: EVO_HOME env var as fallback (backward compat)."""
         bridge_dir = tmp_path / "lerev"
         bridge_dir.mkdir()
         bridge_file = bridge_dir / "bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
-        with patch.dict(os.environ, {"EVO_HOME": str(tmp_path)}, clear=False):
-            # Remove LEREV_HOME if set
-            env = os.environ.copy()
-            env.pop("LEREV_HOME", None)
-            with patch.dict(os.environ, env, clear=True):
+        # Clear LEREV_HOME so EVO_HOME is the fallback
+        env = os.environ.copy()
+        env.pop("LEREV_HOME", None)
+        env["EVO_HOME"] = str(tmp_path)
+        with patch.dict(os.environ, env, clear=True):
+            # Mock importlib.util.find_spec to fail so Tier 3 doesn't succeed
+            with patch("importlib.util.find_spec", return_value=None):
                 result = discover_bridge(str(tmp_path))
 
         assert result is not None
@@ -47,7 +49,7 @@ class TestBridgeDiscovery:
         """Tier 4: Development fallback."""
         scripts_dir = tmp_path / "scripts"
         scripts_dir.mkdir()
-        bridge_file = scripts_dir / "evo_bridge.py"
+        bridge_file = scripts_dir / "lerev_bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
         with patch.dict(os.environ, {}, clear=True):
@@ -61,7 +63,7 @@ class TestBridgeDiscovery:
         """Returns None when no bridge is found."""
         with patch.dict(os.environ, {}, clear=True):
             discover_bridge(str(tmp_path))
-        # May still find dev fallback if scripts/evo_bridge.py exists in worktree
+        # May still find dev fallback if scripts/lerev_bridge.py exists in worktree
         # This test verifies the cascade works, not that it always fails
 
     def test_bridge_discovery_dataclass(self) -> None:

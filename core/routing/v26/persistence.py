@@ -1,4 +1,4 @@
-"""Persistent storage for EVO V2.6 long-term memory.
+"""Persistent storage for Lerev V2.6 long-term memory.
 
 Provides scope-isolated, versioned, atomic JSON persistence for
 V2.6 memory entries. Handles malformed/truncated state safely.

@@ -1,6 +1,6 @@
-"""Integration tests for the EVO V2.6 ↔ OpenCode bridge.
+"""Integration tests for the Lerev V2.6 ↔ OpenCode bridge.
 
-Tests the actual bridge CLI (scripts/evo_bridge.py) as a subprocess,
+Tests the actual bridge CLI (scripts/lerev_bridge.py) as a subprocess,
 verifying the full V2.6 memory pipeline through the real integration boundary.
 
 These tests exercise:
@@ -25,7 +25,7 @@ from pathlib import Path
 # Helpers
 # ---------------------------------------------------------------------------
 
-BRIDGE = str(Path(__file__).resolve().parent.parent.parent / "scripts" / "evo_bridge.py")
+BRIDGE = str(Path(__file__).resolve().parent.parent.parent / "scripts" / "lerev_bridge.py")
 PYTHON = sys.executable
 
 

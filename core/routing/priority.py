@@ -1,4 +1,4 @@
-"""Priority system for EVO V2.5 routing.
+"""Priority system for Lerev V2.5 routing.
 
 Defines priority levels and configuration for routing decisions.
 Priority influences routing, processing, and deferral decisions.

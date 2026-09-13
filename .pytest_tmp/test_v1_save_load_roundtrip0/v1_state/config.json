@@ -1,0 +1,5 @@
+{
+  "k": 5,
+  "min_confidence": 0.1,
+  "feedback_weight_delta": 0.2
+}

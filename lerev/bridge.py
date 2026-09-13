@@ -84,7 +84,7 @@ def _handle_status(req: dict[str, Any]) -> dict[str, Any]:
     checks["lerev"] = "available"
 
     try:
-        from core.routing.integration import EVOIntegrationBridge  # noqa: F401
+        from core.routing.integration import LerevIntegrationBridge  # noqa: F401
         checks["v2_5"] = "available"
     except Exception:
         checks["v2_5"] = "not_importable"

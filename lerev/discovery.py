@@ -36,11 +36,11 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     Tier 1: LEREV_HOME / EVO_HOME env var
     Tier 2: lerev-bridge on PATH
     Tier 3: python -m lerev.bridge
-    Tier 4: Dev fallback ({worktree}/scripts/evo_bridge.py)
+    Tier 4: Dev fallback ({worktree}/scripts/lerev_bridge.py)
     """
     python = _find_python()
 
-    # Tier 1: LEREV_HOME / EVO_HOME env var
+    # Tier 1: LEREV_HOME / EVO_HOME env var (EVO_HOME is legacy fallback)
     lerev_home = os.environ.get("LEREV_HOME") or os.environ.get("EVO_HOME")
     if lerev_home:
         bridge_path = str(Path(lerev_home) / "lerev" / "bridge.py")
@@ -79,7 +79,7 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
             pass
 
     # Tier 4: Dev fallback
-    dev_bridge = str(Path(worktree) / "scripts" / "evo_bridge.py")
+    dev_bridge = str(Path(worktree) / "scripts" / "lerev_bridge.py")
     if _file_exists(dev_bridge):
         return BridgeDiscovery(
             python=python or "python3",

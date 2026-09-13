@@ -16,9 +16,9 @@
 - Existing 2056 tests must continue passing
 - V2.6 core must NOT be modified
 - V2.5 routing semantics must NOT be modified
-- Product name: Lerev (renamed from EVO)
-- Memory dir: `.lerev/memory/` (`.evo/memory/` still readable)
-- Env var: `LEREV_HOME` (`EVO_HOME` still supported as fallback)
+- Product name: Lerev (renamed from Lerev)
+- Memory dir: `.lerev/memory/` (`.lerev/memory/` still readable)
+- Env var: `LEREV_HOME` (`LEREV_HOME` still supported as fallback)
 - No HTTP daemon
 - No memory through CLI arguments
 - No global memory merging
@@ -214,13 +214,13 @@ class TestBridgeDiscovery:
         assert result.bridge_path == str(bridge_file)
 
     def test_tier1_evo_home_fallback(self, tmp_path: Path) -> None:
-        """Tier 1: EVO_HOME env var as fallback."""
+        """Tier 1: LEREV_HOME env var as fallback."""
         bridge_dir = tmp_path / "lerev"
         bridge_dir.mkdir()
         bridge_file = bridge_dir / "bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
-        with patch.dict(os.environ, {"EVO_HOME": str(tmp_path)}, clear=False):
+        with patch.dict(os.environ, {"LEREV_HOME": str(tmp_path)}, clear=False):
             # Remove LEREV_HOME if set
             env = os.environ.copy()
             env.pop("LEREV_HOME", None)
@@ -234,7 +234,7 @@ class TestBridgeDiscovery:
         """Tier 4: Development fallback."""
         scripts_dir = tmp_path / "scripts"
         scripts_dir.mkdir()
-        bridge_file = scripts_dir / "evo_bridge.py"
+        bridge_file = scripts_dir / "lerev_bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
         with patch.dict(os.environ, {}, clear=True):
@@ -248,7 +248,7 @@ class TestBridgeDiscovery:
         """Returns None when no bridge is found."""
         with patch.dict(os.environ, {}, clear=True):
             result = discover_bridge(str(tmp_path))
-        # May still find dev fallback if scripts/evo_bridge.py exists in worktree
+        # May still find dev fallback if scripts/lerev_bridge.py exists in worktree
         # This test verifies the cascade works, not that it always fails
 
     def test_bridge_discovery_dataclass(self) -> None:
@@ -302,15 +302,15 @@ def _file_exists(path: str) -> bool:
 def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     """Discover the Lerev bridge using a 4-tier cascade.
 
-    Tier 1: LEREV_HOME / EVO_HOME env var
+    Tier 1: LEREV_HOME / LEREV_HOME env var
     Tier 2: lerev-bridge on PATH
     Tier 3: python -m lerev.bridge
-    Tier 4: Dev fallback ({worktree}/scripts/evo_bridge.py)
+    Tier 4: Dev fallback ({worktree}/scripts/lerev_bridge.py)
     """
     python = _find_python()
 
-    # Tier 1: LEREV_HOME / EVO_HOME env var
-    lerev_home = os.environ.get("LEREV_HOME") or os.environ.get("EVO_HOME")
+    # Tier 1: LEREV_HOME / LEREV_HOME env var
+    lerev_home = os.environ.get("LEREV_HOME") or os.environ.get("LEREV_HOME")
     if lerev_home:
         bridge_path = str(Path(lerev_home) / "lerev" / "bridge.py")
         if _file_exists(bridge_path):
@@ -348,7 +348,7 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
             pass
 
     # Tier 4: Dev fallback
-    dev_bridge = str(Path(worktree) / "scripts" / "evo_bridge.py")
+    dev_bridge = str(Path(worktree) / "scripts" / "lerev_bridge.py")
     if _file_exists(dev_bridge):
         return BridgeDiscovery(
             python=python or "python3",
@@ -618,15 +618,15 @@ git commit -m "feat: add config module with OpenCode config discovery"
 
 **Files:**
 - Create: `lerev/bridge.py`
-- Modify: `scripts/evo_bridge.py` (thin wrapper)
+- Modify: `scripts/lerev_bridge.py` (thin wrapper)
 
 **Interfaces:**
-- Produces: `lerev.bridge.main()` — same protocol as `scripts/evo_bridge.py`
+- Produces: `lerev.bridge.main()` — same protocol as `scripts/lerev_bridge.py`
 - Consumes: `core.routing.v26.*` (existing, unchanged)
 
 - [ ] **Step 1: Create lerev/bridge.py**
 
-This extracts the bridge logic from `scripts/evo_bridge.py` into an importable module. The existing `scripts/evo_bridge.py` becomes a thin wrapper.
+This extracts the bridge logic from `scripts/lerev_bridge.py` into an importable module. The existing `scripts/lerev_bridge.py` becomes a thin wrapper.
 
 ```python
 """Lerev bridge — importable entry point for the bridge protocol.
@@ -716,7 +716,7 @@ def _handle_status(req: dict[str, Any]) -> dict[str, Any]:
     checks["lerev"] = "available"
 
     try:
-        from core.routing.integration import EVOIntegrationBridge  # noqa: F401
+        from core.routing.integration import LerevIntegrationBridge  # noqa: F401
         checks["v2_5"] = "available"
     except Exception:
         checks["v2_5"] = "not_importable"
@@ -934,12 +934,12 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Update scripts/evo_bridge.py to be a thin wrapper**
+- [ ] **Step 2: Update scripts/lerev_bridge.py to be a thin wrapper**
 
-Replace the contents of `scripts/evo_bridge.py` with:
+Replace the contents of `scripts/lerev_bridge.py` with:
 
 ```python
-"""EVO bridge — development fallback wrapper.
+"""Lerev bridge — development fallback wrapper.
 
 This is the development fallback bridge. For installed usage,
 use `python -m lerev.bridge` instead.
@@ -970,7 +970,7 @@ Expected: All tests PASS
 - [ ] **Step 4: Commit**
 
 ```bash
-git add lerev/bridge.py scripts/evo_bridge.py
+git add lerev/bridge.py scripts/lerev_bridge.py
 git commit -m "feat: extract bridge into importable lerev.bridge module"
 ```
 
@@ -1064,8 +1064,8 @@ interface BridgeInfo {
 async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
   const python = await findPython()
 
-  // Tier 1: LEREV_HOME / EVO_HOME env var
-  const lerevHome = process.env.LEREV_HOME || process.env.EVO_HOME
+  // Tier 1: LEREV_HOME / LEREV_HOME env var
+  const lerevHome = process.env.LEREV_HOME || process.env.LEREV_HOME
   if (lerevHome) {
     const bridgePath = resolve(lerevHome, "lerev", "bridge.py")
     if (fileExists(bridgePath)) {
@@ -1093,7 +1093,7 @@ async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
   }
 
   // Tier 4: Dev fallback
-  const devBridge = resolve(worktree, "scripts", "evo_bridge.py")
+  const devBridge = resolve(worktree, "scripts", "lerev_bridge.py")
   if (fileExists(devBridge)) {
     return { python: python ?? "python3", bridgePath: devBridge, tier: "dev_fallback" }
   }
@@ -1656,7 +1656,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
 
     checks = []
 
-    # EVO runtime
+    # Lerev runtime
     try:
         from core.routing.v26.memory_manager import MemoryManager  # noqa: F401
         print("Lerev runtime          PASS")

@@ -1,4 +1,4 @@
-# EVO Pre-V2.6 Zero-Debt Certification
+# Lerev Pre-V2.6 Zero-Debt Certification
 
 **Date:** September 12, 2026
 **Status:** PERFECT PRE-V2.6 BASELINE

@@ -63,7 +63,7 @@ from core.routing.information import (
     SourceType,
 )
 from core.routing.integration import (
-    EVOIntegrationBridge,
+    LerevIntegrationBridge,
     make_collector_handler,
     make_noop_handler,
 )
@@ -356,7 +356,7 @@ class TestSourceType:
         vals = list(SourceType)
         assert len(vals) == 5
         names = {e.name for e in vals}
-        assert names == {"AGENT", "EVO", "USER", "EXTERNAL", "UNKNOWN"}
+        assert names == {"AGENT", "Lerev", "USER", "EXTERNAL", "UNKNOWN"}
 
 
 # --- 1.7 DestinationType ---
@@ -991,7 +991,7 @@ class TestRoutingPipeline:
             priority=2,
         )
         d = pipe.route(p)
-        assert d.has_destination(DestinationType.EVO_CONTEXT)
+        assert d.has_destination(DestinationType.LEREV_CONTEXT)
 
     def test_route_observation(self):
         pipe = RoutingPipeline()
@@ -1229,12 +1229,12 @@ class TestContracts:
         assert hasattr(DestinationHandler, "__abstractmethods__")
 
 
-# --- 1.27 EVOIntegrationBridge ---
+# --- 1.27 LerevIntegrationBridge ---
 
 
 class TestIntegrationBridge:
     def test_dispatch_no_handler(self):
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         p = _make_packet(content="test")
         d = RoutingDecision(
             packet_id="p1",
@@ -1244,7 +1244,7 @@ class TestIntegrationBridge:
         assert result is True
 
     def test_dispatch_handler_error(self):
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
 
         def bad_handler(pkt, dec):
             raise RuntimeError("oops")
@@ -1263,7 +1263,7 @@ class TestIntegrationBridge:
         assert stats["error_count"] == 1
 
     def test_dispatch_success(self):
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         collected: list[InformationPacket] = []
         bridge.register_handler(
             DestinationType.RETRIEVAL,
@@ -1279,7 +1279,7 @@ class TestIntegrationBridge:
         assert len(collected) == 1
 
     def test_connect_learning_memory(self):
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         mock_mem = MagicMock()
         mock_mem.add = MagicMock()
         bridge.connect_learning_memory(mock_mem)
@@ -1295,7 +1295,7 @@ class TestIntegrationBridge:
         mock_mem.add.assert_called_once()
 
     def test_connect_lifecycle(self):
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         mock_mgr = MagicMock()
         mock_mgr.record_event = MagicMock()
         bridge.connect_lifecycle(mock_mgr)
@@ -1312,7 +1312,7 @@ class TestIntegrationBridge:
         mock_mgr.record_event.assert_called_once()
 
     def test_clear(self):
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         bridge.register_handler(
             DestinationType.RETRIEVAL, make_noop_handler()
         )
@@ -2203,7 +2203,7 @@ class TestV25BridgeIntegration:
         v1.learn(
             LearningInput(observation={"input": "test", "output": "result"})
         )
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         bridge.connect_learning_memory(v1.memory)
         p = InformationPacket(
             content="new experience",
@@ -2221,7 +2221,7 @@ class TestV25BridgeIntegration:
         from core.learner.lifecycle_manager import LifecycleManager
 
         mgr = LifecycleManager()
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         bridge.connect_lifecycle(mgr)
         p = InformationPacket(
             content="outcome",

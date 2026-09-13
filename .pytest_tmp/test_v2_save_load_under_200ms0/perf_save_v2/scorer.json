@@ -1,0 +1,7 @@
+{
+  "has_scorer": false,
+  "quality_weight": 0.0,
+  "recency_weight": 0.0,
+  "recency_half_life": 0.0,
+  "diversity_threshold": 1.0
+}

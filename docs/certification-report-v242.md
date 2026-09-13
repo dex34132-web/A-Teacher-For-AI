@@ -1,4 +1,4 @@
-# EVO V2.4.2 — 9/10 Certification Report
+# Lerev V2.4.2 — 9/10 Certification Report
 
 **Date:** 2026-09-10
 **Auditor:** Independent certification pass

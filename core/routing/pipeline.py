@@ -1,11 +1,11 @@
-"""Universal Router for EVO V2.5.
+"""Universal Router for Lerev V2.5.
 
 The core router orchestrates routing operations. It is agent-agnostic
 and does not depend on any specific AI model or agent architecture.
 
 The key principle:
     Let the agent do the semantic thinking.
-    Let EVO make the routing structured, efficient, safe, explainable,
+    Let Lerev make the routing structured, efficient, safe, explainable,
     and cheap.
 """
 
@@ -393,7 +393,7 @@ class RoutingPipeline:
                 if pc <= Priority.HIGH.value:
                     destinations = (Destination(destination_type=DestinationType.AGENT_CONTEXT),)
                 else:
-                    destinations = (Destination(destination_type=DestinationType.EVO_CONTEXT),)
+                    destinations = (Destination(destination_type=DestinationType.LEREV_CONTEXT),)
 
             elif itype == InformationType.OUTCOME:
                 strategy = RoutingStrategy.DIRECT
@@ -425,7 +425,7 @@ class RoutingPipeline:
 
             else:
                 strategy = RoutingStrategy.DIRECT
-                destinations = (Destination(destination_type=DestinationType.EVO_CONTEXT),)
+                destinations = (Destination(destination_type=DestinationType.LEREV_CONTEXT),)
 
         # Apply priority from config
         if policy and hasattr(policy, 'apply_priority'):

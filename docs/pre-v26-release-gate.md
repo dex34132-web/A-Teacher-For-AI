@@ -1,4 +1,4 @@
-# EVO Pre-V2.6 Release Gate Audit
+# Lerev Pre-V2.6 Release Gate Audit
 
 **Date:** September 11, 2026
 **Auditor:** Independent Automated Audit

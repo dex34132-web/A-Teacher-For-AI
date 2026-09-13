@@ -1,4 +1,4 @@
-"""Episodic experience abstraction for EVO V2.6.
+"""Episodic experience abstraction for Lerev V2.6.
 
 Represents agent experiences as first-class objects that can be stored,
 retrieved, and potentially promoted into learned knowledge.

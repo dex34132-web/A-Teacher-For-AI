@@ -24,7 +24,7 @@ from core.routing.information import (
     SensitivityLevel,
     SourceType,
 )
-from core.routing.integration import EVOIntegrationBridge, make_noop_handler
+from core.routing.integration import LerevIntegrationBridge, make_noop_handler
 from core.routing.pipeline import RoutingPipeline
 from core.routing.priority import Priority, PriorityConfig
 from core.routing.provenance import ProvenanceTracker, RoutingProvenance
@@ -250,7 +250,7 @@ class TestBugMissingExperienceRouting:
             info_type=InformationType.EXPERIENCE,
         )
         decision = pipe.route(pkt)
-        # Should route to LEARNING, not just EVO_CONTEXT
+        # Should route to LEARNING, not just LEREV_CONTEXT
         assert decision.has_destination(DestinationType.LEARNING), (
             f"EXPERIENCE should route to LEARNING, got: {[d.name for d in decision.destinations]}"
         )
@@ -276,7 +276,7 @@ class TestBugExceptionSwallowing:
     """Handler exceptions should be logged, not silently swallowed."""
 
     def test_handler_exception_recorded(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
 
         def failing_handler(pkt: InformationPacket, dec: RoutingDecision) -> None:
             raise RuntimeError("intentional failure")
@@ -300,7 +300,7 @@ class TestBugNoOpDispatchCounted:
     """Dispatches to unregistered handlers should not increment dispatch count."""
 
     def test_no_handler_not_counted(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         pkt = _make_packet(content="test")
         dec = RoutingDecision(packet_id="p1", destinations=(Destination(destination_type=DestinationType.LEARNING),))
 
@@ -312,7 +312,7 @@ class TestBugNoOpDispatchCounted:
         )
 
     def test_with_handler_counted(self) -> None:
-        bridge = EVOIntegrationBridge()
+        bridge = LerevIntegrationBridge()
         bridge.register_handler(DestinationType.LEARNING, make_noop_handler())
         pkt = _make_packet(content="test")
         dec = RoutingDecision(packet_id="p1", destinations=(Destination(destination_type=DestinationType.LEARNING),))

@@ -1,8 +1,8 @@
-"""Central memory manager for EVO V2.6.
+"""Central memory manager for Lerev V2.6.
 
 Coordinates the V2.6 read/write paths:
 - Memory request validation and scope enforcement
-- Retrieval coordination (via existing EVO systems)
+- Retrieval coordination (via existing Lerev systems)
 - Confidence filtering
 - Context budget enforcement
 - Experience capture
@@ -11,7 +11,7 @@ Coordinates the V2.6 read/write paths:
 
 Design principles:
 - Does NOT replace V2.3 confidence, V2.2 conflict, V2.4.2 lifecycle, V2.5 routing
-- Coordinates existing EVO systems rather than rebuilding them
+- Coordinates existing Lerev systems rather than rebuilding them
 - No global mutable state
 - Deterministic and auditable
 """
@@ -256,7 +256,7 @@ class MemoryManager:
     ) -> tuple[bool, str]:
         """Check if an experience is a candidate for promotion.
 
-        Uses existing EVO mechanisms (confidence, evidence, lifecycle)
+        Uses existing Lerev mechanisms (confidence, evidence, lifecycle)
         to determine promotion readiness.
 
         Args:

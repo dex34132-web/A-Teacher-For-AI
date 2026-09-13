@@ -1,4 +1,4 @@
-"""V2.6 interface contracts for EVO V2.5 routing.
+"""V2.6 interface contracts for Lerev V2.5 routing.
 
 Defines the clean interface contracts that V2.6 (long-term memory and
 deep agent connection) will later implement. V2.5 does NOT implement
@@ -26,13 +26,13 @@ class AgentRoutingContract(ABC):
     """The universal contract that future agent adapters (V2.6+) implement.
 
     These methods define the minimal surface an adapter must expose to
-    connect any AI system to EVO. V2.5 only declares them; it does not
+    connect any AI system to Lerev. V2.5 only declares them; it does not
     ship any concrete adapter.
     """
 
     @abstractmethod
     def submit_information(self, packet: InformationPacket) -> RoutingDecision:
-        """Submit information for routing through EVO."""
+        """Submit information for routing through Lerev."""
         ...
 
     @abstractmethod
@@ -42,7 +42,7 @@ class AgentRoutingContract(ABC):
         limit: int = 10,
         scope: str | None = None,
     ) -> list[InformationPacket]:
-        """Request relevant information from EVO."""
+        """Request relevant information from Lerev."""
         ...
 
     @abstractmethod

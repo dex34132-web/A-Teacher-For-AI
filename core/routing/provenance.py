@@ -1,4 +1,4 @@
-"""Provenance tracking for EVO V2.5 routing.
+"""Provenance tracking for Lerev V2.5 routing.
 
 Records compact provenance for every important routing decision.
 Explains why information was routed, where, which policy applied,

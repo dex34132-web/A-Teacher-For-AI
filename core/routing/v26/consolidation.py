@@ -1,4 +1,4 @@
-"""Session/experience consolidation for EVO V2.6.
+"""Session/experience consolidation for Lerev V2.6.
 
 Consolidation processes episodic experiences into more durable forms,
 potentially promoting them to learned knowledge.

@@ -130,7 +130,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
 
     checks = []
 
-    # EVO runtime
+    # Lerev runtime
     try:
         from core.routing.v26.memory_manager import MemoryManager  # noqa: F401
 

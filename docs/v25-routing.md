@@ -1,15 +1,15 @@
-# EVO V2.5 — Universal Agent Routing & Intelligence Layer
+# Lerev V2.5 — Universal Agent Routing & Intelligence Layer
 
 ## Overview
 
-EVO V2.5 introduces a **universal, agent-agnostic routing and intelligence layer** that transforms EVO from a direct-consumption learning engine into a **universal intelligence routing system**. It connects any AI system (agents, copilots, assistants, tools, IDEs, CLIs) to EVO's learning, knowledge, and lifecycle subsystems through a structured, efficient, safe, and explainable routing layer.
+Lerev V2.5 introduces a **universal, agent-agnostic routing and intelligence layer** that transforms Lerev from a direct-consumption learning engine into a **universal intelligence routing system**. It connects any AI system (agents, copilots, assistants, tools, IDEs, CLIs) to Lerev's learning, knowledge, and lifecycle subsystems through a structured, efficient, safe, and explainable routing layer.
 
-**Core principle**: Let the agent do the semantic thinking. Let EVO make the routing structured, efficient, safe, explainable, and cheap.
+**Core principle**: Let the agent do the semantic thinking. Let Lerev make the routing structured, efficient, safe, explainable, and cheap.
 
 ## Architecture
 
 ```
-Any AI System                    EVO V2.5 Universal Router
+Any AI System                    Lerev V2.5 Universal Router
  ┌─────────────┐              ┌─────────────────────────────────────┐
  │  Agent      │              │  INFORMATION MODEL                  │
  │  (Any AI)   │              │  InformationPacket (frozen, typed)  │
@@ -38,7 +38,7 @@ Any AI System                    EVO V2.5 Universal Router
                                     │  DESTINATIONS                       │
                                     │                                     │
                                     │  AGENT_CONTEXT  (immediate)         │
-                                    │  EVO_CONTEXT    (immediate)         │
+                                    │  LEREV_CONTEXT    (immediate)         │
                                     │  LEARNING       (deferred)          │
                                     │  RETRIEVAL      (deferred)          │
                                     │  KNOWLEDGE      (deferred)          │
@@ -210,7 +210,7 @@ class DestinationHandler(ABC):
 ### V2.4.2 Integration Bridge
 
 ```python
-bridge = EVOIntegrationBridge()
+bridge = LerevIntegrationBridge()
 
 # Connect to existing subsystems
 bridge.connect_learning_memory(hybrid_memory)
@@ -255,7 +255,7 @@ bridge.dispatch(packet, decision)
 | `core/routing/router.py` | UniversalRouter (main entry point) |
 | `core/routing/protocol.py` | AgentOperation, RoutingIntent, protocol prompt |
 | `core/routing/contracts.py` | AgentRoutingContract ABC, DestinationHandler ABC |
-| `core/routing/integration.py` | EVOIntegrationBridge, convenience handlers |
+| `core/routing/integration.py` | LerevIntegrationBridge, convenience handlers |
 
 ## Tests
 

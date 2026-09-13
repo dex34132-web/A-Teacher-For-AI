@@ -1,6 +1,6 @@
-"""Routing destinations for EVO V2.5.
+"""Routing destinations for Lerev V2.5.
 
-Defines where information can be routed within EVO. Destinations are
+Defines where information can be routed within Lerev. Destinations are
 extensible and agent-agnostic. The same destination types work for
 coding agents, general agents, hosted models, and local models.
 """
@@ -15,13 +15,13 @@ from typing import Any
 class DestinationType(Enum):
     """Built-in routing destinations.
 
-    These are the standard destinations within EVO. Custom destinations
+    These are the standard destinations within Lerev. Custom destinations
     can be registered by extending the system.
     """
 
     # Agent interaction
     AGENT_CONTEXT = auto()  # Return to agent as context
-    EVO_CONTEXT = auto()  # Internal EVO context
+    LEREV_CONTEXT = auto()  # Internal Lerev context
 
     # Learning & knowledge
     LEARNING = auto()  # Route to learning subsystem
@@ -97,7 +97,7 @@ class Destination:
 # ---------------------------------------------------------------------------
 
 AGENT_CONTEXT = Destination(destination_type=DestinationType.AGENT_CONTEXT, name="agent_context")
-EVO_CONTEXT = Destination(destination_type=DestinationType.EVO_CONTEXT, name="evo_context")
+LEREV_CONTEXT = Destination(destination_type=DestinationType.LEREV_CONTEXT, name="lerev_context")
 LEARNING = Destination(destination_type=DestinationType.LEARNING, name="learning")
 RETRIEVAL = Destination(destination_type=DestinationType.RETRIEVAL, name="retrieval")
 KNOWLEDGE = Destination(destination_type=DestinationType.KNOWLEDGE, name="knowledge")
@@ -113,7 +113,7 @@ BATCH = Destination(destination_type=DestinationType.BATCH, name="batch")
 # Default destination registry
 DEFAULT_DESTINATIONS: list[Destination] = [
     AGENT_CONTEXT,
-    EVO_CONTEXT,
+    LEREV_CONTEXT,
     LEARNING,
     RETRIEVAL,
     KNOWLEDGE,

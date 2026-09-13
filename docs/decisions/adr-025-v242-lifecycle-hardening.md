@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-10
 **Status:** Accepted
-**Deciders:** EVO Team
+**Deciders:** Lerev Team
 
 ## Context
 

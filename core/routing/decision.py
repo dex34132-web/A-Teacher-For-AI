@@ -1,4 +1,4 @@
-"""Routing decision model for EVO V2.5.
+"""Routing decision model for Lerev V2.5.
 
 Defines the structured output of routing decisions, including strategies,
 cost estimation, and multi-destination support.

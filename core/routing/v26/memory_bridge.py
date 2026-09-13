@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from core.routing.integration import EVOIntegrationBridge
+from core.routing.integration import LerevIntegrationBridge
 from core.routing.v26.experience import Experience
 from core.routing.v26.identity import AgentIdentity, MemoryScope
 from core.routing.v26.memory_manager import MemoryManager
@@ -34,7 +34,7 @@ class V26Bridge:
     def __init__(
         self,
         manager: MemoryManager,
-        integration_bridge: EVOIntegrationBridge | None = None,
+        integration_bridge: LerevIntegrationBridge | None = None,
     ) -> None:
         """Initialize the V2.6 bridge.
 
@@ -59,7 +59,7 @@ class V26Bridge:
     ) -> MemoryResponse:
         """Request memory from V2.6 through the bridge.
 
-        This is the primary read interface for agents connecting to EVO.
+        This is the primary read interface for agents connecting to Lerev.
 
         Args:
             agent: Requesting agent identity.

@@ -1,4 +1,4 @@
-"""Security policy for EVO V2.6 long-term memory.
+"""Security policy for Lerev V2.6 long-term memory.
 
 Enforces agent/project/session isolation, validates memory requests,
 validates stored content, and ensures instruction/data boundaries.

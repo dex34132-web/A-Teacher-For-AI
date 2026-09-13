@@ -1,8 +1,8 @@
-"""Universal information model for EVO V2.5.
+"""Universal information model for Lerev V2.5.
 
 Defines the normalized representation of information flowing through
 the routing layer. InformationPackets are the fundamental unit that
-agents submit to EVO for routing and processing.
+agents submit to Lerev for routing and processing.
 
 Design principles:
 - Agent-agnostic: does not assume coding, chat, or any specific domain
@@ -56,7 +56,7 @@ class SourceType(Enum):
     """Where the information originated."""
 
     AGENT = auto()  # From the connected AI agent
-    EVO = auto()  # From EVO itself (internal)
+    Lerev = auto()  # From Lerev itself (internal)
     USER = auto()  # From a human user
     EXTERNAL = auto()  # From an external system
     UNKNOWN = auto()  # Source not identified
@@ -88,10 +88,10 @@ class SensitivityLevel(Enum):
 
 @dataclass(frozen=True, slots=True)
 class InformationPacket:
-    """A normalized unit of information for routing through EVO.
+    """A normalized unit of information for routing through Lerev.
 
     This is the fundamental input to the V2.5 routing system. Agents
-    submit InformationPackets, and EVO routes them to appropriate
+    submit InformationPackets, and Lerev routes them to appropriate
     destinations based on type, priority, cost, and policy.
 
     Attributes:

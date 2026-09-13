@@ -100,7 +100,7 @@ async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
   }
 
   // Tier 4: Dev fallback
-  const devBridge = resolve(worktree, "scripts", "evo_bridge.py")
+  const devBridge = resolve(worktree, "scripts", "lerev_bridge.py")
   if (fileExists(devBridge)) {
     return { python: python ?? "python3", bridgePath: devBridge, tier: "dev_fallback" }
   }

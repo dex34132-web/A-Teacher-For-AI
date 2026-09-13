@@ -1,0 +1,14 @@
+{
+  "decay_rate": 0.01,
+  "decay_min": 0.1,
+  "reinforcement_strength": 0.03,
+  "independence_bonus": 0.02,
+  "supersession_threshold": 0.2,
+  "merge_similarity": 0.8,
+  "archive_threshold": 0.1,
+  "uncertainty_threshold": 0.2,
+  "max_redundancy": 5,
+  "maintenance_interval_hours": 24.0,
+  "merge_input_similarity": 0.6,
+  "merge_min_evidence": 2
+}
