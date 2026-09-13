@@ -219,3 +219,189 @@ class TestClear:
         count = store.clear(scope=scope)
         assert count == 2
         assert store.size == 1
+
+
+# ---------------------------------------------------------------------------
+# Semantic retrieval via query(extractor=...)
+# ---------------------------------------------------------------------------
+
+
+class TestSemanticQuery:
+    """Tests proving semantic ranking is used through MemoryStore.query()."""
+
+    def test_semantic_ranking_via_store_query(self) -> None:
+        """When extractor is provided, query() uses TF-IDF cosine ranking."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("the cat sat on the mat"))
+        store.store(_make_entry("dogs are friendly animals"))
+        store.store(_make_entry("the feline rested on the rug"))
+
+        extractor = FeatureExtractor()
+        extractor.fit("the cat sat on the mat")
+        extractor.fit("dogs are friendly animals")
+        extractor.fit("the feline rested on the rug")
+
+        results = store.query(query_text="cat on mat", extractor=extractor, limit=3)
+        # Semantic ranking: "cat on mat" should rank higher than "dogs"
+        contents = [r.content for r in results]
+        assert contents.index("the cat sat on the mat") < contents.index("dogs are friendly animals")
+
+    def test_semantic_ranking_with_scope_filter(self) -> None:
+        """Scope filtering still works when semantic ranking is active."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("python programming guide", agent_id="a1"))
+        store.store(_make_entry("java programming guide", agent_id="a2"))
+        store.store(_make_entry("python web development", agent_id="a1"))
+
+        extractor = FeatureExtractor()
+        for e in store.query():
+            extractor.fit(e.content)
+
+        scope = _make_scope("a1")
+        results = store.query(scope=scope, query_text="python", extractor=extractor, limit=5)
+        # Only a1 entries returned, ranked by relevance
+        assert all(r.scope.agent.agent_id == "a1" for r in results)
+        assert len(results) == 2
+
+    def test_semantic_ranking_with_kind_filter(self) -> None:
+        """Kind filtering still works when semantic ranking is active."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("machine learning basics", kind=MemoryKind.EPISODIC))
+        store.store(_make_entry("deep learning fundamentals", kind=MemoryKind.LEARNED))
+
+        extractor = FeatureExtractor()
+        extractor.fit("machine learning basics")
+        extractor.fit("deep learning fundamentals")
+
+        results = store.query(kind=MemoryKind.LEARNED, query_text="learning", extractor=extractor)
+        assert len(results) == 1
+        assert results[0].kind == MemoryKind.LEARNED
+
+    def test_semantic_ranking_with_confidence_filter(self) -> None:
+        """Confidence filtering still works when semantic ranking is active."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("high confidence entry", confidence=0.9))
+        store.store(_make_entry("low confidence entry", confidence=0.2))
+
+        extractor = FeatureExtractor()
+        extractor.fit("high confidence entry")
+        extractor.fit("low confidence entry")
+
+        results = store.query(minimum_confidence=0.5, query_text="confidence", extractor=extractor)
+        assert len(results) == 1
+        assert results[0].content == "high confidence entry"
+
+    def test_semantic_ranking_with_tags_filter(self) -> None:
+        """Tag filtering still works when semantic ranking is active."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("tagged entry about cats", tags=frozenset({"animal", "pets"})))
+        store.store(_make_entry("tagged entry about dogs", tags=frozenset({"animal"})))
+        store.store(_make_entry("untagged entry about cats", tags=frozenset()))
+
+        extractor = FeatureExtractor()
+        extractor.fit("tagged entry about cats")
+        extractor.fit("tagged entry about dogs")
+        extractor.fit("untagged entry about cats")
+
+        results = store.query(tags=frozenset({"animal"}), query_text="cats", extractor=extractor)
+        # Only tagged entries with "animal" tag returned
+        assert all(frozenset({"animal"}).issubset(r.tags) for r in results)
+
+    def test_semantic_ranking_deterministic(self) -> None:
+        """Same query through store.query() produces same ranking."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("alpha programming language"))
+        store.store(_make_entry("beta programming language"))
+        store.store(_make_entry("unrelated content"))
+
+        extractor = FeatureExtractor()
+        for e in store.query():
+            extractor.fit(e.content)
+
+        r1 = store.query(query_text="alpha", extractor=extractor, limit=3)
+        r2 = store.query(query_text="alpha", extractor=extractor, limit=3)
+        assert [r.content for r in r1] == [r.content for r in r2]
+
+    def test_fallback_to_substring_when_no_extractor(self) -> None:
+        """Without extractor, query() falls back to substring matching."""
+        store = MemoryStore()
+        store.store(_make_entry("Python is great"))
+        store.store(_make_entry("JavaScript is fast"))
+        store.store(_make_entry("I like Python programming"))
+
+        results = store.query(query_text="Python")
+        assert len(results) == 2
+        contents = [r.content for r in results]
+        assert "Python is great" in contents
+        assert "I like Python programming" in contents
+
+    def test_empty_query_returns_all_filtered(self) -> None:
+        """Empty query_text returns all entries matching other filters."""
+        store = MemoryStore()
+        store.store(_make_entry("a"))
+        store.store(_make_entry("b"))
+        results = store.query()
+        assert len(results) == 2
+
+    def test_empty_query_with_extractor_returns_all(self) -> None:
+        """Empty query_text with extractor still returns all (no ranking)."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("a"))
+        store.store(_make_entry("b"))
+        extractor = FeatureExtractor()
+        results = store.query(query_text="", extractor=extractor)
+        assert len(results) == 2
+
+    def test_no_matches_returns_empty(self) -> None:
+        """Query that matches nothing returns empty list."""
+        store = MemoryStore()
+        store.store(_make_entry("hello world"))
+        results = store.query(query_text="nonexistent_xyz")
+        assert results == []
+
+    def test_semantic_no_matches_returns_low_score(self) -> None:
+        """Semantic query for unrelated content returns entry with low score."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("hello world"))
+        extractor = FeatureExtractor()
+        extractor.fit("hello world")
+        # Unrelated query still returns entry but with low relevance (ranking behavior)
+        results = store.query(query_text="nonexistent_xyz", extractor=extractor)
+        # Semantic ranking returns all entries (sorted by relevance), not filtered
+        assert len(results) == 1
+
+    def test_semantic_unrelated_query_ranks_lower(self) -> None:
+        """Unrelated queries should rank entries lower than related queries."""
+        from core.learner.feature_extractor import FeatureExtractor
+
+        store = MemoryStore()
+        store.store(_make_entry("python programming language"))
+        store.store(_make_entry("the weather is nice"))
+
+        extractor = FeatureExtractor()
+        extractor.fit("python programming language")
+        extractor.fit("the weather is nice")
+
+        # Related query should return entries in expected order
+        results_related = store.query(query_text="python", extractor=extractor, limit=2)
+        assert results_related[0].content == "python programming language"
+
+        # Unrelated query should still return both entries but reorder
+        results_unrelated = store.query(query_text="cooking recipe", extractor=extractor, limit=2)
+        assert len(results_unrelated) == 2  # both returned

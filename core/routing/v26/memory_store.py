@@ -12,8 +12,14 @@ Design principles:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from core.routing.v26.identity import MemoryScope
 from core.routing.v26.memory_types import MemoryEntry, MemoryKind
+
+if TYPE_CHECKING:
+    from core.learner.feature_extractor import FeatureExtractor
+    from core.learner.semantic_encoder import SemanticEncoder
 
 
 class MemoryStore:
@@ -70,6 +76,8 @@ class MemoryStore:
         minimum_confidence: float = 0.0,
         tags: frozenset[str] | None = None,
         query_text: str = "",
+        extractor: FeatureExtractor | None = None,
+        encoder: SemanticEncoder | None = None,
     ) -> list[MemoryEntry]:
         """Query memory entries with filtering.
 
@@ -80,16 +88,20 @@ class MemoryStore:
             minimum_confidence: Minimum confidence threshold.
             tags: Required tags (all must match).
             query_text: Simple substring match on content.
+            extractor: TF-IDF feature extractor for semantic ranking.
+                When provided with a non-empty query_text, entries are
+                ranked by TF-IDF cosine similarity instead of substring
+                matching.
+            encoder: Optional semantic encoder for blended ranking.
 
         Returns:
-            List of matching entries, most recent first.
+            List of matching entries. When extractor is provided with a
+            non-empty query_text, results are ranked by relevance
+            descending. Otherwise, most recent first.
         """
-        results: list[MemoryEntry] = []
-
+        # Collect candidates matching scope/kind/confidence/tags filters
+        candidates: list[MemoryEntry] = []
         for entry in reversed(self._entries.values()):
-            if len(results) >= limit:
-                break
-
             # Scope filter
             if scope is not None:
                 if entry.scope.agent.agent_id != scope.agent.agent_id:
@@ -119,11 +131,28 @@ class MemoryStore:
             if tags and not tags.issubset(entry.tags):
                 continue
 
-            # Simple text filter
-            if query_text and query_text.lower() not in entry.content.lower():
-                continue
+            candidates.append(entry)
 
-            results.append(entry)
+        if not candidates:
+            return []
+
+        # Apply text filtering/ranking
+        if query_text and extractor is not None:
+            from core.routing.v26.semantic_retrieval import scored_query
+
+            # Semantic ranking: score candidates by TF-IDF similarity
+            results = scored_query(
+                candidates, query_text, extractor, encoder=encoder, limit=limit
+            )
+        elif query_text:
+            # Fallback: substring matching (legacy behavior)
+            query_lower = query_text.lower()
+            results = [
+                e for e in candidates if query_lower in e.content.lower()
+            ][:limit]
+        else:
+            # No query text: return filtered candidates, most recent first
+            results = candidates[:limit]
 
         return results
 
