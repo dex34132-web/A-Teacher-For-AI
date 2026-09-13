@@ -141,11 +141,10 @@ class TestNSISInstaller:
         content = Path("packaging/windows/lerev-installer.nsi").read_text()
         assert 'Name "Lerev"' in content
 
-    def test_installer_no_path_manipulation(self) -> None:
-        """Installer does not manipulate PATH."""
+    def test_installer_adds_to_path(self) -> None:
+        """Installer adds lerev to PATH for standalone exe."""
         content = Path("packaging/windows/lerev-installer.nsi").read_text()
-        assert "EnVar::AddValue" not in content
-        assert "EnVar::RemoveValue" not in content
+        assert "EnVar::AddValue" in content
 
 
 class TestLinuxInstaller:

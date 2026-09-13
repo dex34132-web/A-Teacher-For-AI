@@ -87,6 +87,64 @@
       "metadata": {},
       "parent_id": null,
       "promoted_from": null
+    },
+    {
+      "memory_id": "00d447e00f424cdf",
+      "content": "Observation: test memory for verification | Outcome: SUCCESS",
+      "kind": "EPISODIC",
+      "scope": {
+        "agent": {
+          "agent_id": "opencode",
+          "adapter": "opencode"
+        },
+        "project": {
+          "project_id": "test",
+          "name": "test"
+        },
+        "session": {
+          "session_id": "test",
+          "project_id": "test",
+          "agent_id": "opencode"
+        }
+      },
+      "timestamp": 1789326417.929136,
+      "source": "agent",
+      "tags": [
+        "outcome:success"
+      ],
+      "confidence": 0.5,
+      "metadata": {},
+      "parent_id": null,
+      "promoted_from": null
+    },
+    {
+      "memory_id": "2622f423766b40b9",
+      "content": "Observation: lifecycle test | Outcome: SUCCESS",
+      "kind": "EPISODIC",
+      "scope": {
+        "agent": {
+          "agent_id": "opencode",
+          "adapter": "opencode"
+        },
+        "project": {
+          "project_id": "test",
+          "name": "test"
+        },
+        "session": {
+          "session_id": "test",
+          "project_id": "test",
+          "agent_id": "opencode"
+        }
+      },
+      "timestamp": 1789326475.553298,
+      "source": "agent",
+      "tags": [
+        "outcome:success"
+      ],
+      "confidence": 0.5,
+      "metadata": {},
+      "parent_id": null,
+      "promoted_from": null
     }
   ]
 }
