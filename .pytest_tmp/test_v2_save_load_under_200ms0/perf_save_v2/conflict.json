@@ -1,8 +1,0 @@
-{
-  "has_conflict_detection": false,
-  "input_similarity_threshold": 0.75,
-  "output_equality_threshold": 0.0,
-  "evidence_margin": 0.1,
-  "context_similarity_threshold": 0.9,
-  "min_evidence_samples": 3
-}
