@@ -256,6 +256,35 @@ def _handle_recall(req: dict[str, Any]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# New orchestrator-based commands
+# ---------------------------------------------------------------------------
+
+_orchestrator = None
+
+def _get_orchestrator():
+    global _orchestrator
+    if _orchestrator is None:
+        from core.routing.v26.factory import create_orchestrator
+        _orchestrator = create_orchestrator()
+    return _orchestrator
+
+def _dispatch_to_orchestrator(tool_name, req):
+    orch = _get_orchestrator()
+    params = {k: v for k, v in req.items() if k != "command"}
+    result = orch.dispatch(tool_name, **params)
+    return {"ok": result.success, "result": result.data, "errors": result.errors}
+
+def _handle_learn(req): return _dispatch_to_orchestrator("lerev_remember", req)
+def _handle_diagnose(req): return _dispatch_to_orchestrator("lerev_diagnose", req)
+def _handle_conflict(req): return _dispatch_to_orchestrator("lerev_conflict", req)
+def _handle_confidence(req): return _dispatch_to_orchestrator("lerev_confidence", req)
+def _handle_deduplicate(req): return _dispatch_to_orchestrator("lerev_deduplicate", req)
+def _handle_lifecycle(req): return _dispatch_to_orchestrator("lerev_lifecycle", req)
+def _handle_search(req): return _dispatch_to_orchestrator("lerev_search", req)
+def _handle_knowledge(req): return _dispatch_to_orchestrator("lerev_knowledge", req)
+
+
+# ---------------------------------------------------------------------------
 # Command dispatch
 # ---------------------------------------------------------------------------
 
@@ -263,6 +292,14 @@ _COMMANDS = {
     "status": _handle_status,
     "remember": _handle_remember,
     "recall": _handle_recall,
+    "learn": _handle_learn,
+    "diagnose": _handle_diagnose,
+    "conflict": _handle_conflict,
+    "confidence": _handle_confidence,
+    "deduplicate": _handle_deduplicate,
+    "lifecycle": _handle_lifecycle,
+    "search": _handle_search,
+    "knowledge": _handle_knowledge,
 }
 
 
