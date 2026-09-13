@@ -398,6 +398,262 @@ const LEREV: Plugin = async (ctx) => {
           }
         },
       }),
+
+      lerev_conflict: tool({
+        description:
+          "Detect conflicts between incoming content and stored memories. Returns conflicting memories with similarity scores.",
+        args: {
+          content: tool.schema
+            .string()
+            .describe("New content to check for conflicts"),
+          project: tool.schema
+            .string()
+            .optional()
+            .describe("Project scope"),
+          session: tool.schema
+            .string()
+            .optional()
+            .describe("Session scope"),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "Lerev Conflict", output: "Lerev: unavailable." }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "conflict",
+            worktree: context.worktree,
+            agent: "opencode",
+            project: args.project ?? context.worktree.split(/[/\\]/).pop() ?? "unknown",
+            session: args.session ?? context.sessionID,
+            content: args.content,
+          })
+          if (!resp.ok) {
+            return { title: "Lerev Conflict — Failed", output: `Error: ${(resp as any).error?.message}` }
+          }
+          const conflicts = (resp as any).result?.conflicts ?? (resp as any).conflicts ?? []
+          if (conflicts.length === 0) {
+            return { title: "Lerev Conflict", output: "No conflicts detected." }
+          }
+          const lines = conflicts.map((c: any, i: number) =>
+            `${i + 1}. [${c.type ?? "unknown"}] sim=${(c.similarity ?? 0).toFixed(2)}: ${(c.content ?? "").slice(0, 100)}`
+          )
+          return {
+            title: "Lerev Conflict",
+            output: `Found ${conflicts.length} conflict(s):\n${lines.join("\n")}`,
+            metadata: { conflicts },
+          }
+        },
+      }),
+
+      lerev_confidence: tool({
+        description:
+          "Compute confidence score for a prediction or memory. Returns score, band, and detailed factors.",
+        args: {
+          content: tool.schema.string().describe("Content to evaluate"),
+          prediction: tool.schema.string().optional().describe("Predicted output"),
+          evidence_count: tool.schema.number().optional().describe("Number of supporting evidence (default: 1)"),
+          conflict_count: tool.schema.number().optional().describe("Number of conflicts (default: 0)"),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "Lerev Confidence", output: "Lerev: unavailable." }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "confidence",
+            worktree: context.worktree,
+            content: args.content,
+            prediction: args.prediction ?? "",
+            evidence_count: args.evidence_count ?? 1,
+            conflict_count: args.conflict_count ?? 0,
+          })
+          if (!resp.ok) {
+            return { title: "Lerev Confidence — Failed", output: `Error: ${(resp as any).error?.message}` }
+          }
+          const result = (resp as any).result ?? resp
+          return {
+            title: "Lerev Confidence",
+            output: `Confidence: ${(result.confidence ?? 0).toFixed(3)} [${result.band ?? "unknown"}]`,
+            metadata: result,
+          }
+        },
+      }),
+
+      lerev_search: tool({
+        description:
+          "Search memories by semantic similarity using TF-IDF ranking. Returns ranked results.",
+        args: {
+          query: tool.schema.string().describe("Search query"),
+          limit: tool.schema.number().min(1).max(100).optional().describe("Max results (default: 10)"),
+          project: tool.schema.string().optional().describe("Project scope"),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "Lerev Search", output: "Lerev: unavailable." }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "search",
+            worktree: context.worktree,
+            agent: "opencode",
+            project: args.project ?? context.worktree.split(/[/\\]/).pop() ?? "unknown",
+            query: args.query,
+            limit: args.limit ?? 10,
+          })
+          if (!resp.ok) {
+            return { title: "Lerev Search — Failed", output: `Error: ${(resp as any).error?.message}` }
+          }
+          const memories = (resp as any).result?.memories ?? (resp as any).memories ?? []
+          if (memories.length === 0) {
+            return { title: "Lerev Search", output: "No matching memories found." }
+          }
+          const lines = memories.map((m: any, i: number) =>
+            `${i + 1}. [${m.kind}] (conf=${(m.confidence ?? 0).toFixed(2)}) ${m.content}`
+          )
+          return {
+            title: "Lerev Search",
+            output: `Found ${memories.length} result(s):\n${lines.join("\n")}`,
+            metadata: { memories },
+          }
+        },
+      }),
+
+      lerev_deduplicate: tool({
+        description:
+          "Find and optionally merge duplicate/similar memories. Returns list of duplicates with similarity scores.",
+        args: {
+          content: tool.schema.string().describe("Content to check for duplicates"),
+          project: tool.schema.string().optional().describe("Project scope"),
+          threshold: tool.schema.number().optional().describe("Similarity threshold (0-1, default: 0.85)"),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "Lerev Deduplicate", output: "Lerev: unavailable." }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "deduplicate",
+            worktree: context.worktree,
+            agent: "opencode",
+            project: args.project ?? context.worktree.split(/[/\\]/).pop() ?? "unknown",
+            content: args.content,
+            threshold: args.threshold ?? 0.85,
+          })
+          if (!resp.ok) {
+            return { title: "Lerev Deduplicate — Failed", output: `Error: ${(resp as any).error?.message}` }
+          }
+          const result = (resp as any).result ?? resp
+          const dups = result.duplicates ?? []
+          if (dups.length === 0) {
+            return { title: "Lerev Deduplicate", output: "No duplicates found." }
+          }
+          const lines = dups.map((d: any, i: number) =>
+            `${i + 1}. sim=${(d.similarity ?? 0).toFixed(2)}: ${(d.content ?? "").slice(0, 100)}`
+          )
+          return {
+            title: "Lerev Deduplicate",
+            output: `Found ${dups.length} duplicate(s):\n${lines.join("\n")}`,
+            metadata: { duplicates: dups },
+          }
+        },
+      }),
+
+      lerev_knowledge: tool({
+        description:
+          "Extract learnings and knowledge patterns from consolidated memories.",
+        args: {
+          project: tool.schema.string().optional().describe("Project scope"),
+          session: tool.schema.string().optional().describe("Session scope"),
+          min_occurrences: tool.schema.number().optional().describe("Minimum occurrences to extract (default: 3)"),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "Lerev Knowledge", output: "Lerev: unavailable." }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "knowledge",
+            worktree: context.worktree,
+            agent: "opencode",
+            project: args.project ?? context.worktree.split(/[/\\]/).pop() ?? "unknown",
+            session: args.session ?? context.sessionID,
+            min_occurrences: args.min_occurrences ?? 3,
+          })
+          if (!resp.ok) {
+            return { title: "Lerev Knowledge — Failed", output: `Error: ${(resp as any).error?.message}` }
+          }
+          const result = (resp as any).result ?? resp
+          return {
+            title: "Lerev Knowledge",
+            output: `Knowledge extraction: promoted=${result.promoted_count ?? 0}, retained=${result.retained_count ?? 0}`,
+            metadata: result,
+          }
+        },
+      }),
+
+      lerev_lifecycle: tool({
+        description:
+          "Manage memory lifecycle: score, decay, promote, or archive memories.",
+        args: {
+          action: tool.schema
+            .enum(["score", "decay", "promote", "archive"])
+            .describe("Lifecycle action to perform"),
+          memory_id: tool.schema
+            .string()
+            .optional()
+            .describe("Memory ID to operate on (required for promote/archive)"),
+          project: tool.schema.string().optional().describe("Project scope"),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "Lerev Lifecycle", output: "Lerev: unavailable." }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "lifecycle",
+            worktree: context.worktree,
+            action: args.action,
+            memory_id: args.memory_id ?? "",
+            project: args.project ?? "",
+          })
+          if (!resp.ok) {
+            return { title: "Lerev Lifecycle — Failed", output: `Error: ${(resp as any).error?.message}` }
+          }
+          const result = (resp as any).result ?? resp
+          return {
+            title: "Lerev Lifecycle",
+            output: `Action '${args.action}' completed: ${JSON.stringify(result)}`,
+            metadata: result,
+          }
+        },
+      }),
+
+      lerev_diagnose: tool({
+        description:
+          "Full system diagnostics: health, stats, pipeline status.",
+        args: {
+          detail: tool.schema
+            .enum(["summary", "full"])
+            .optional()
+            .describe("Detail level (default: summary)"),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "Lerev Diagnose", output: "Lerev: unavailable." }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "diagnose",
+            worktree: context.worktree,
+            detail: args.detail ?? "summary",
+          })
+          if (!resp.ok) {
+            return { title: "Lerev Diagnose — Failed", output: `Error: ${(resp as any).error?.message}` }
+          }
+          const result = (resp as any).result ?? resp
+          const health = result.health ?? {}
+          const lines = Object.entries(health).map(([k, v]) => `  ${k}: ${v}`)
+          return {
+            title: "Lerev Diagnose",
+            output: `System Health:\n${lines.join("\n")}`,
+            metadata: result,
+          }
+        },
+      }),
     },
   }
 }
