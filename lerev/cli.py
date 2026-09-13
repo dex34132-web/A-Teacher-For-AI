@@ -58,6 +58,7 @@ def _cmd_status(args: argparse.Namespace) -> None:
 def _cmd_install(args: argparse.Namespace) -> None:
     """Install Lerev globally for OpenCode."""
     config = LerevConfig()
+    force = getattr(args, "force", False)
 
     print("Lerev Installer")
     print("----------------------------")
@@ -75,8 +76,8 @@ def _cmd_install(args: argparse.Namespace) -> None:
     print(f"OpenCode config: {config_file}")
 
     # Check if already registered
-    if config.is_lerev_registered():
-        print("Lerev is already registered. Nothing to do.")
+    if config.is_lerev_registered() and not force:
+        print("Lerev is already registered. Use --force to reinstall.")
         return
 
     # Install plugin
@@ -253,7 +254,8 @@ def main() -> None:
 
     subparsers.add_parser("version", help="Print Lerev version")
     subparsers.add_parser("status", help="Show Lerev status")
-    subparsers.add_parser("install", help="Install Lerev globally for OpenCode")
+    install_parser = subparsers.add_parser("install", help="Install Lerev globally for OpenCode")
+    install_parser.add_argument("--force", action="store_true", help="Force reinstall even if already registered")
     subparsers.add_parser("doctor", help="Run Lerev diagnostics")
     subparsers.add_parser("uninstall", help="Uninstall Lerev from OpenCode")
 
