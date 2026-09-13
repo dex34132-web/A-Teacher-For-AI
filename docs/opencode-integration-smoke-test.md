@@ -28,7 +28,7 @@ Expected output:
 
 ```
 Lerev V2.6 Component Status:
-  evo: available
+  lerev: available
   v2_5: available
   v2_6: available
   persistence: available
@@ -122,8 +122,8 @@ Expected: Empty response (budget too small to return anything).
 ## Files
 
 ```
-.opencode/plugins/evo.ts          — OpenCode plugin (TypeScript)
-scripts/lerev_bridge.py              — Python bridge CLI
-.lerev/memory/v26_memory.json       — Runtime memory storage (gitignored)
-tests/integration/test_opencode_bridge.py — Integration tests
+lerev/plugin_source.py           — Bundled TypeScript plugin source
+.opencode/plugins/lerev.ts       — Development copy of OpenCode plugin
+scripts/lerev_bridge.py          — Development fallback bridge
+.lerev/memory/v26_memory.json    — Runtime memory storage (gitignored)
 ```

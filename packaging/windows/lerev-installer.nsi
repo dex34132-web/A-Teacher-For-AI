@@ -39,25 +39,19 @@ Section "Install"
         Abort
     ${EndIf}
 
-    ; Run lerev install
+    ; Run lerev install to register OpenCode plugin
     nsExec::ExecToStack 'lerev install'
     Pop $0
 
     ; Write uninstaller
     WriteUninstaller "$INSTDIR\uninstall.exe"
-
-    ; Add to PATH (per-user)
-    EnVar::AddValue "PATH" "$INSTDIR"
 SectionEnd
 
 Section "Uninstall"
-    ; Run lerev uninstall
+    ; Run lerev uninstall to deregister OpenCode plugin
     nsExec::ExecToStack 'lerev uninstall'
 
-    ; Remove from PATH
-    EnVar::RemoveValue "PATH" "$INSTDIR"
-
-    ; Remove files
-    RMDir /r "$INSTDIR"
+    ; Remove installer files only
     Delete "$INSTDIR\uninstall.exe"
+    RMDir "$INSTDIR"
 SectionEnd

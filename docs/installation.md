@@ -1,6 +1,15 @@
 # Lerev Installation
 
-## Windows — Recommended GUI Installer
+## Development (local)
+
+```powershell
+git clone https://github.com/dkshs/lerev.git
+cd lerev
+pip install -e .
+lerev install
+```
+
+## Windows — GUI Installer
 
 Download `Lerev-Setup.exe` and run it.
 
@@ -59,18 +68,6 @@ pip3 install --user lerev
 lerev install
 ```
 
-## npm (for OpenCode plugin only)
-
-```bash
-npm install -g lerev
-```
-
-Or in your project:
-
-```bash
-npm install lerev
-```
-
 ## Verifying Installation
 
 ```bash
@@ -80,15 +77,29 @@ lerev doctor
 Expected output:
 
 ```
-Lerev Doctor
-────────────────────────────
-Lerev runtime          PASS
-Python/runtime         3.12 OK
-Bridge                 PASS (tier: installed_module)
-OpenCode               PASS
-Plugin registration   PASS
-Plugin resolution     PASS
-Memory storage         SKIP — no memory data yet
+LEREV DOCTOR
+========================================
 
-Result: READY
+  [PASS] Python runtime: 3.12.1
+  [PASS] LEREV package: v2.6.0
+  [PASS] V2.6 memory system: available
+  [PASS] V2.5 routing: available
+  [PASS] Bridge: tier=installed_module
+  [PASS] OpenCode config: /home/user/.config/opencode/opencode.jsonc
+  [PASS] Plugin registered: yes
+  [PASS] Plugin file: /home/user/.config/opencode/node_modules/lerev
+  [PASS] Project memory: no data yet (will be created)
+
+RESULT: LEREV IS READY
 ```
+
+## Status
+
+| Platform | Status |
+|----------|--------|
+| PyPI | release-ready, not published |
+| npm | release-ready, not published |
+| Chocolatey | release-ready, not published |
+| Homebrew | release-ready, not published |
+| Windows installer | release-ready, not built |
+| Linux installer | release-ready |

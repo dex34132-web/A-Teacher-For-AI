@@ -11,7 +11,7 @@ If no bridge is found:
 
 ## Plugin not loading
 
-1. Check `~/.config/opencode/opencode.jsonc` has Lerev in the `plugin` array
+1. Check `~/.config/opencode/opencode.jsonc` has `~/.config/opencode/node_modules/lerev` in the `plugin` array
 2. Check `~/.config/opencode/node_modules/lerev/lerev.ts` exists
 3. Restart OpenCode
 
@@ -47,3 +47,9 @@ Lerev supports spaces in installation paths. If you encounter issues:
 1. Use a path without spaces
 2. Quote paths in commands
 3. Report the issue at https://github.com/dkshs/lerev/issues
+
+## Cross-platform notes
+
+- On Windows, `python` is used; on macOS/Linux, `python3` is preferred
+- The bridge discovery cascade: LEREV_HOME → PATH → installed module → dev fallback
+- `.lerev/memory/` is per-project; global installation does not share memory

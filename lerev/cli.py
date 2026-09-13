@@ -125,74 +125,86 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     config = LerevConfig()
     bridge = discover_bridge(".")
 
-    print("Lerev Doctor")
-    print("----------------------------")
+    print("LEREV DOCTOR")
+    print("=" * 40)
+    print("")
 
-    checks = []
+    results: list[tuple[str, bool, str]] = []
 
-    # Lerev runtime
+    # 1. Python version
+    py_ok = sys.version_info >= (3, 11)
+    py_msg = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    if not py_ok:
+        py_msg += " (requires 3.11+)"
+    results.append(("Python runtime", py_ok, py_msg))
+
+    # 2. Lerev package importable
+    try:
+        from lerev import __version__ as lerev_ver  # noqa: F401
+        results.append(("LEREV package", True, f"v{lerev_ver}"))
+    except Exception as exc:
+        results.append(("LEREV package", False, str(exc)))
+
+    # 3. V2.6 memory system
     try:
         from core.routing.v26.memory_manager import MemoryManager  # noqa: F401
+        from core.routing.v26.persistence import ScopeIsolatedStorage  # noqa: F401
+        from core.routing.v26.security import V26SecurityPolicy  # noqa: F401
+        results.append(("V2.6 memory system", True, "available"))
+    except Exception as exc:
+        results.append(("V2.6 memory system", False, str(exc)))
 
-        print("Lerev runtime          PASS")
-        checks.append(True)
-    except Exception:
-        print("Lerev runtime          FAIL - core.routing.v26 not importable")
-        checks.append(False)
+    # 4. V2.5 routing
+    try:
+        from core.routing.integration import LerevIntegrationBridge  # noqa: F401
+        results.append(("V2.5 routing", True, "available"))
+    except Exception as exc:
+        results.append(("V2.5 routing", False, str(exc)))
 
-    # Python
-    print(f"Python/runtime         {sys.version_info.major}.{sys.version_info.minor} OK")
-    checks.append(True)
-
-    # Bridge
+    # 5. Bridge discovery
     if bridge:
-        print(f"Bridge                 PASS (tier: {bridge.tier})")
-        checks.append(True)
+        results.append(("Bridge", True, f"tier={bridge.tier}"))
     else:
-        print("Bridge                 FAIL - no bridge found")
-        checks.append(False)
+        results.append(("Bridge", False, "no bridge found"))
 
-    # OpenCode
+    # 6. OpenCode config
     config_file = config.opencode_config_file()
-    if config_file and config_file.exists():
-        print("OpenCode               PASS")
-        checks.append(True)
-    else:
-        print("OpenCode               FAIL - config not found")
-        checks.append(False)
+    opencode_found = config_file is not None and config_file.exists()
+    results.append(("OpenCode config", opencode_found,
+                     str(config_file) if opencode_found else "not found"))
 
-    # Plugin registration
-    if config.is_lerev_registered():
-        print("Plugin registration   PASS")
-        checks.append(True)
-    else:
-        print("Plugin registration   FAIL - not registered")
-        checks.append(False)
+    # 7. Plugin registration
+    registered = config.is_lerev_registered()
+    results.append(("Plugin registered", registered,
+                     "yes" if registered else "not in opencode.jsonc"))
 
-    # Plugin resolution
+    # 8. Plugin file
     plugin_dir = config.lerev_plugin_dir()
-    if plugin_dir.exists():
-        print("Plugin resolution     PASS")
-        checks.append(True)
-    else:
-        print("Plugin resolution     FAIL - plugin directory not found")
-        checks.append(False)
+    plugin_exists = plugin_dir.exists()
+    results.append(("Plugin file", plugin_exists,
+                     str(plugin_dir) if plugin_exists else "not found"))
 
-    # Memory storage
+    # 9. Memory directory
     memory_dir = Path(".lerev") / "memory"
     legacy_dir = Path(".evo") / "memory"
-    if memory_dir.exists() or legacy_dir.exists():
-        print("Memory storage         PASS")
-        checks.append(True)
-    else:
-        print("Memory storage         SKIP - no memory data yet")
-        checks.append(True)
+    mem_exists = memory_dir.exists() or legacy_dir.exists()
+    results.append(("Project memory", True,
+                     "exists" if mem_exists else "no data yet (will be created)"))
+
+    # Print results
+    for name, ok, detail in results:
+        status = "PASS" if ok else "FAIL"
+        print(f"  [{status}] {name}: {detail}")
 
     print("")
-    if all(checks):
-        print("Result: READY")
+    passed = sum(1 for _, ok, _ in results if ok)
+    total = len(results)
+    if passed == total:
+        print("RESULT: LEREV IS READY")
     else:
-        print("Result: NOT READY - fix issues above")
+        failed = total - passed
+        print(f"RESULT: {failed} issue(s) found — fix them above")
+    print("")
 
 
 def _cmd_uninstall(args: argparse.Namespace) -> None:

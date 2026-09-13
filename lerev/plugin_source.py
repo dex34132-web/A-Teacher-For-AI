@@ -80,9 +80,11 @@ async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
     }
   }
 
-  // Tier 2: lerev-bridge on PATH
+  // Tier 2: lerev-bridge on PATH (cross-platform)
   try {
-    const bridgeCmd = execSync("where lerev-bridge", { windowsHide: true, timeout: 3000 })
+    const isWin = process.platform === "win32"
+    const whereCmd = isWin ? "where lerev-bridge" : "which lerev-bridge"
+    const bridgeCmd = execSync(whereCmd, { windowsHide: true, timeout: 3000 })
       .toString().trim()
     if (bridgeCmd) {
       return { python: "", bridgePath: bridgeCmd, tier: "PATH" }

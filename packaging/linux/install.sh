@@ -5,7 +5,7 @@ LEREV_VERSION="2.6.0"
 INSTALL_DIR="${HOME}/.local/bin"
 
 echo "Lerev Installer"
-echo "────────────────────────────"
+echo "-----------------------------"
 
 # Detect OS
 OS=$(uname -s)
@@ -34,13 +34,20 @@ fi
 echo "Installing Lerev..."
 pip3 install --user lerev
 
-# Ensure ~/.local/bin is on PATH
-if [[ ":${PATH}:" != *":${INSTALL_DIR}:"* ]]; then
-    echo "Adding ${INSTALL_DIR} to PATH..."
-    echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "${HOME}/.bashrc"
-    echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "${HOME}/.zshrc" 2>/dev/null || true
-    export PATH="${INSTALL_DIR}:${PATH}"
-fi
+# Ensure ~/.local/bin is on PATH (POSIX-compatible)
+case ":${PATH}:" in
+    *":${INSTALL_DIR}:"*) ;;
+    *)
+        echo "Adding ${INSTALL_DIR} to PATH..."
+        if [ -f "${HOME}/.bashrc" ]; then
+            echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "${HOME}/.bashrc"
+        fi
+        if [ -f "${HOME}/.zshrc" ]; then
+            echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "${HOME}/.zshrc"
+        fi
+        export PATH="${INSTALL_DIR}:${PATH}"
+        ;;
+esac
 
 # Register with OpenCode
 if command -v lerev >/dev/null 2>&1; then
