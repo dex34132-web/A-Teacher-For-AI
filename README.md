@@ -1,116 +1,99 @@
 # Lerev
 
-Universal AI-agent learning and long-term memory system.
+A cross-harness AI learning and adaptation engine for coding agents.
 
-Lerev makes AI coding agents remember, learn, and improve across sessions. Install once, use everywhere.
+## What This Is
 
-## What Lerev Does
+Lerev is a modular system that enables AI coding agents to learn, adapt, and improve over time. It provides persistent memory, feedback learning, knowledge acquisition, and pattern detection across multiple coding harnesses.
 
-AI coding agents are stateless — they forget everything between sessions. Lerev gives them persistent, project-scoped memory that survives restarts.
+## What Problem It Solves
 
-- **Long-term memory**: Agents remember past decisions, patterns, and outcomes
-- **Project isolation**: Each project's memories are completely separate
-- **Session awareness**: Memories are tagged with session and agent context
-- **Security**: Injection detection and instruction/data boundary enforcement
-- **Universal**: Works with OpenCode, Claude Code, Codex, and future agents
+AI coding agents today are stateless - they don't learn from past interactions, don't retain knowledge across sessions, and can't adapt to individual developer preferences or project patterns. Lerev adds a learning layer that makes agents more effective over time.
+
+## Architecture Philosophy
+
+- **Harness-agnostic core**: Lerev works identically across OpenCode, Claude Code, Codex, and future platforms
+- **Modular design**: Every component is replaceable and independently testable
+- **Stable interfaces**: Adapters communicate with core through well-defined contracts
+- **No premature complexity**: Start simple, add complexity only when needed
+- **Measurable learning**: Every improvement can be benchmarked
+
+## Platform Priorities
+
+1. **OpenCode** - First-class support (primary development platform)
+2. **Claude Code** - Second priority
+3. **Codex** - Third priority
+4. **Other harnesses** - Future adapters
+
+## Current Development Stage
+
+**Phase 1 - Basic Learning Prototype** (Complete)
+
+- SimilarityLearner implemented (TF-IDF + cosine similarity + weighted voting)
+- ExampleMemory with feedback-driven weight updates
+- FeatureExtractor with incremental vocabulary
+- Save/load persistence
+- Benchmark suite passing (9/9 tests)
 
 ## Quick Start
 
 ```bash
-pip install lerev
-lerev install
-```
-
-Then start OpenCode in any project — Lerev connects automatically.
-
-## Installation
-
-### pip (all platforms)
-
-```bash
-pip install lerev
-lerev install
-```
-
-### Development
-
-```bash
+# Clone the repository
 git clone https://github.com/dkshs/lerev.git
 cd lerev
-pip install -e .
-lerev install
-```
 
-### Other methods
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 
-See [docs/installation.md](docs/installation.md) for Windows installer, Chocolatey, Homebrew, and Linux shell installer.
-
-## CLI Commands
-
-```bash
-lerev --help        # Show available commands
-lerev version       # Print version
-lerev status        # Show installation status
-lerev doctor        # Run diagnostics
-lerev install       # Register OpenCode plugin
-lerev uninstall     # Remove OpenCode plugin
-```
-
-## How It Works
-
-```
-OpenCode / Claude Code / Codex
-        │
-        ▼
-TypeScript Lerev plugin (auto-discovered)
-        │
-        │ JSON over stdin/stdout
-        ▼
-Python bridge
-        │
-        ▼
-Lerev V2.6 memory engine
-        │
-        ├── MemoryManager
-        ├── Security (injection detection, scope validation)
-        ├── Persistence (project-scoped JSON storage)
-        ├── Experience (episodic/semantic memory)
-        └── MemoryStore (retrieval and ranking)
-```
-
-Memory is stored per-project in `.lerev/memory/` and is never shared between projects.
-
-## Architecture
-
-```
-V2.4.2 → Knowledge + lifecycle
-V2.5   → Universal Agent Routing & Intelligence Layer
-V2.6   → Long-Term Memory + Deep Agent Connection
-```
-
-### Project Structure
-
-```
-lerev/              # Python package (CLI, bridge, plugin source)
-core/               # V2.5 routing + V2.6 memory engine
-adapters/           # Agent-specific integrations
-storage/            # Persistence backends
-web/                # Web access abstractions
-packaging/          # Windows, Chocolatey, Homebrew, Linux
-docs/               # Documentation
-tests/              # Test suite (2145+ tests)
-```
-
-## Development
-
-```bash
+# Install in development mode
 pip install -e ".[dev]"
-pytest                          # Run all tests
-ruff check .                    # Lint
-mypy core/                      # Type check
-python -m lerev doctor          # Verify installation
+
+# Run tests
+pytest
+
+# Run type checks
+mypy core/
+
+# Run linter
+ruff check .
 ```
+
+## Project Structure
+
+```
+lerev/
+├── core/           # Harness-agnostic learning engine
+│   ├── learner/    # Learning algorithms
+│   ├── memory/     # Memory storage and retrieval
+│   ├── evaluator/  # Performance measurement
+│   ├── adaptation/ # Behavior modification
+│   └── knowledge/  # Knowledge acquisition
+├── lerev/          # Python package (CLI, bridge, plugin source)
+├── web/            # Web access abstractions
+├── adapters/       # Harness-specific integrations
+├── storage/        # Persistence backends
+├── experiments/    # Experimental algorithms
+├── benchmarks/     # Performance benchmarks
+├── tests/          # Test suite
+├── docs/           # Documentation
+├── packaging/      # Windows, Chocolatey, Homebrew, Linux
+└── scripts/        # Development utilities
+```
+
+## Design Principles
+
+1. Modular architecture
+2. Core engine must not depend on any specific harness
+3. Harness adapters communicate with core through stable interfaces
+4. Web access must be an abstraction, not hardcoded to one provider
+5. Memory must be replaceable
+6. Learning algorithms must be replaceable
+7. Every important component must be testable independently
+8. Experimental algorithms must not destabilize the main implementation
+9. All learning behavior should be measurable
+10. Avoid premature complexity
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
