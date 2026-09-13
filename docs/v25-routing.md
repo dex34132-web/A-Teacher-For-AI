@@ -15,7 +15,7 @@ Any AI System                    Lerev V2.5 Universal Router
  │  (Any AI)   │              │  InformationPacket (frozen, typed)  │
  │             │   Protocol   │  InformationType (14 types)         │
  │  "task done"│─────────────>│  SensitivityLevel (5 levels)        │
- │  "observe"  │              │  SourceType (AGENT/EVO/USER/EXT)    │
+ │  "observe"  │              │  SourceType (AGENT/LEREV/USER/EXT)   │
  │  "feedback" │              └──────────────┬──────────────────────┘
  └─────────────┘                             │
                                               ▼

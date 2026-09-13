@@ -2,7 +2,7 @@
   "version": "2.6.0",
   "entries": [
     {
-      "memory_id": "7251a272e8bf4f95",
+      "memory_id": "df122b0e317a4ae9",
       "content": "updated",
       "kind": "EPISODIC",
       "scope": {
@@ -10,7 +10,7 @@
           "agent_id": "a1"
         }
       },
-      "timestamp": 1789291426.400717,
+      "timestamp": 1789291979.023588,
       "source": "agent",
       "tags": [],
       "confidence": 0.5,
