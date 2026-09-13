@@ -18,15 +18,6 @@ AI coding agents today are stateless - they don't learn from past interactions, 
 - **No premature complexity**: Start simple, add complexity only when needed
 - **Measurable learning**: Every improvement can be benchmarked
 
-## Platform Priorities
-
-1. **OpenCode** - First-class support (primary development platform)
-2. **Claude Code** - Second priority
-3. **Codex** - Third priority
-4. **Other harnesses** - Future adapters
-
-## Current Development Stage
-
 **Phase 1 - Basic Learning Prototype** (Complete)
 
 - SimilarityLearner implemented (TF-IDF + cosine similarity + weighted voting)

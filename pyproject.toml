@@ -3,18 +3,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ai-learning-engine"
-version = "0.1.0"
-description = "A cross-harness AI learning and adaptation engine"
+name = "lerev"
+version = "2.6.0"
+description = "Universal agent learning and memory system"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
-    { name = "AI Learning Engine Contributors" },
+    { name = "Lerev Contributors" },
 ]
-keywords = ["ai", "machine-learning", "coding-agent", "harness", "adaptation"]
+keywords = ["ai", "machine-learning", "coding-agent", "harness", "memory", "learning"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -31,6 +31,9 @@ dependencies = [
     "pydantic>=2.0,<3.0",
 ]
 
+[project.scripts]
+lerev = "lerev.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
@@ -46,21 +49,18 @@ web = [
 semantic = [
     "fastembed>=0.8.0",
 ]
-opencode = [
-    # OpenCode-specific dependencies will go here
-]
 all = [
-    "ai-learning-engine[dev,web,semantic]",
+    "lerev[dev,web,semantic]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/user/ai-learning-engine"
-Documentation = "https://github.com/user/ai-learning-engine/tree/main/docs"
-Repository = "https://github.com/user/ai-learning-engine"
-Issues = "https://github.com/user/ai-learning-engine/issues"
+Homepage = "https://github.com/dkshs/lerev"
+Documentation = "https://github.com/dkshs/lerev/tree/main/docs"
+Repository = "https://github.com/dkshs/lerev"
+Issues = "https://github.com/dkshs/lerev/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["core", "web", "adapters", "storage"]
+packages = ["core", "web", "adapters", "storage", "lerev"]
 
 [tool.ruff]
 line-length = 100
