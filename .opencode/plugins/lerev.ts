@@ -1,6 +1,6 @@
 import { tool } from "@opencode-ai/plugin/tool"
 import type { Plugin } from "@opencode-ai/plugin"
-import { execFile } from "node:child_process"
+import { execFile, spawn } from "node:child_process"
 import { promisify } from "node:util"
 import { resolve } from "node:path"
 import { existsSync } from "node:fs"
@@ -108,6 +108,8 @@ async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
 
 /**
  * Invoke the Lerev bridge with a JSON request.
+ * Uses spawn with explicit stdin piping instead of execFile to avoid
+ * Windows buffering issues where execFile with input option hangs.
  */
 async function invokeBridge(
   python: string,
@@ -115,48 +117,68 @@ async function invokeBridge(
   request: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   const json = JSON.stringify(request)
+  const args = bridgePath === "-m lerev.bridge"
+    ? ["-m", "lerev.bridge"]
+    : [bridgePath]
 
-  // Handle module invocation
-  if (bridgePath === "-m lerev.bridge") {
-    try {
-      const { stdout, stderr } = await execFileAsync(python, ["-m", "lerev.bridge"], {
-        input: json,
-        timeout: 30000,
-        windowsHide: true,
-        maxBuffer: 1024 * 1024,
+  return new Promise((resolve) => {
+    const child = spawn(python, args, {
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    })
+
+    let stdout = ""
+    let stderr = ""
+    child.stdout.on("data", (data: Buffer) => { stdout += data })
+    child.stderr.on("data", (data: Buffer) => { stderr += data })
+
+    child.stdin.write(json)
+    child.stdin.end()
+
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM")
+      resolve({
+        ok: false,
+        error: { type: "bridge_error", message: "bridge process timed out after 30s" },
       })
+    }, 30000)
+
+    child.on("close", (code, signal) => {
+      clearTimeout(timer)
+      if (signal === "SIGTERM" || code !== 0) {
+        resolve({
+          ok: false,
+          error: {
+            type: "bridge_error",
+            message: `bridge process exited with code ${code}, signal ${signal}`,
+            stderr: stderr || undefined,
+          },
+        })
+        return
+      }
       if (stderr) console.error("[lerev bridge stderr]", stderr)
       if (!stdout.trim()) {
-        return { ok: false, error: { type: "protocol", message: "empty bridge response" } }
+        resolve({ ok: false, error: { type: "protocol", message: "empty bridge response" } })
+        return
       }
-      return JSON.parse(stdout.trim())
-    } catch (err: any) {
-      return {
+      try {
+        resolve(JSON.parse(stdout.trim()))
+      } catch {
+        resolve({
+          ok: false,
+          error: { type: "protocol", message: "invalid JSON from bridge" },
+        })
+      }
+    })
+
+    child.on("error", (err: Error) => {
+      clearTimeout(timer)
+      resolve({
         ok: false,
         error: { type: "bridge_error", message: err?.message ?? String(err) },
-      }
-    }
-  }
-
-  // Handle direct script invocation
-  try {
-    const { stdout, stderr } = await execFileAsync(python, [bridgePath], {
-      input: json,
-      timeout: 30000,
-      windowsHide: true,
-      maxBuffer: 1024 * 1024,
+      })
     })
-    if (stderr) console.error("[lerev bridge stderr]", stderr)
-    if (!stdout.trim()) {
-      return { ok: false, error: { type: "protocol", message: "empty bridge response" } }
-    }
-    return JSON.parse(stdout.trim())
-  } catch (err: any) {
-    return {
-      ok: false,
-      error: { type: "bridge_error", message: err?.message ?? String(err) },
-    }
-  }
+  })
 }
 
 const LEREV: Plugin = async (ctx) => {
