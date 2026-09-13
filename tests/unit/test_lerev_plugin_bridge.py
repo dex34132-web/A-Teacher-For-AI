@@ -23,10 +23,17 @@ class TestPluginSource:
         assert "discoverBridge" in TS_PLUGIN_SOURCE
 
     def test_contains_tools(self) -> None:
-        """Plugin source defines all three tools."""
+        """Plugin source defines all 10 tools."""
         assert "lerev_status" in TS_PLUGIN_SOURCE
         assert "lerev_remember" in TS_PLUGIN_SOURCE
         assert "lerev_recall" in TS_PLUGIN_SOURCE
+        assert "lerev_conflict" in TS_PLUGIN_SOURCE
+        assert "lerev_confidence" in TS_PLUGIN_SOURCE
+        assert "lerev_search" in TS_PLUGIN_SOURCE
+        assert "lerev_deduplicate" in TS_PLUGIN_SOURCE
+        assert "lerev_knowledge" in TS_PLUGIN_SOURCE
+        assert "lerev_lifecycle" in TS_PLUGIN_SOURCE
+        assert "lerev_diagnose" in TS_PLUGIN_SOURCE
 
     def test_cross_platform_bridge_discovery(self) -> None:
         """Plugin uses cross-platform PATH detection."""
@@ -66,6 +73,13 @@ class TestBridgeProtocol:
         assert "status" in _COMMANDS
         assert "remember" in _COMMANDS
         assert "recall" in _COMMANDS
+        assert "conflict" in _COMMANDS
+        assert "confidence" in _COMMANDS
+        assert "search" in _COMMANDS
+        assert "deduplicate" in _COMMANDS
+        assert "knowledge" in _COMMANDS
+        assert "lifecycle" in _COMMANDS
+        assert "diagnose" in _COMMANDS
 
     def test_bridge_handles_malformed_json(self) -> None:
         """Bridge handles malformed JSON input."""

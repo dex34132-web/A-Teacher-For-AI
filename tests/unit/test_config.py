@@ -72,27 +72,19 @@ class TestLerevConfig:
         assert result is not None
         assert result["plugin"] == ["test-plugin"]
 
-    def test_is_lerev_registered(self, tmp_path: Path) -> None:
-        """Checks if Lerev is already registered."""
-        config_dir = tmp_path / ".config" / "opencode"
-        config_dir.mkdir(parents=True)
-        config_file = config_dir / "opencode.jsonc"
-        config_file.write_text(
-            json.dumps({"plugin": ["~/.config/opencode/node_modules/lerev"]}),
-            encoding="utf-8",
-        )
+    def test_is_lerev_installed(self, tmp_path: Path) -> None:
+        """Checks if Lerev plugin file exists."""
+        plugins_dir = tmp_path / ".config" / "opencode" / "plugins"
+        plugins_dir.mkdir(parents=True)
+        plugin_file = plugins_dir / "lerev.ts"
+        plugin_file.write_text("// test", encoding="utf-8")
 
         with patch("lerev.config.Path.home", return_value=tmp_path):
             config = LerevConfig()
-            assert config.is_lerev_registered() is True
+            assert config.is_lerev_installed() is True
 
-    def test_is_lerev_not_registered(self, tmp_path: Path) -> None:
-        """Returns False when Lerev not registered."""
-        config_dir = tmp_path / ".config" / "opencode"
-        config_dir.mkdir(parents=True)
-        config_file = config_dir / "opencode.jsonc"
-        config_file.write_text('{"plugin": ["other-plugin"]}', encoding="utf-8")
-
+    def test_is_lerev_not_installed(self, tmp_path: Path) -> None:
+        """Returns False when Lerev plugin file does not exist."""
         with patch("lerev.config.Path.home", return_value=tmp_path):
             config = LerevConfig()
-            assert config.is_lerev_registered() is False
+            assert config.is_lerev_installed() is False

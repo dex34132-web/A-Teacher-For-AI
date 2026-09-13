@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -28,7 +27,7 @@ def _cmd_status(args: argparse.Namespace) -> None:
     print(f"Version: {__version__}")
 
     # Plugin status
-    if config.is_lerev_registered():
+    if config.is_lerev_installed():
         print("Plugin: installed")
     else:
         print("Plugin: not installed")
@@ -75,39 +74,20 @@ def _cmd_install(args: argparse.Namespace) -> None:
 
     print(f"OpenCode config: {config_file}")
 
-    # Check if already registered
-    if config.is_lerev_registered() and not force:
-        print("Lerev is already registered. Use --force to reinstall.")
+    # Check if already installed
+    plugin_file = config.lerev_plugin_file()
+    if plugin_file.exists() and not force:
+        print(f"Lerev is already installed at: {plugin_file}")
+        print("Use --force to reinstall.")
         return
 
-    # Install plugin
-    plugin_dir = config.lerev_plugin_dir()
-    plugin_dir.mkdir(parents=True, exist_ok=True)
+    # Create plugins directory (auto-discovery)
+    plugins_dir = config.opencode_plugins_dir()
+    plugins_dir.mkdir(parents=True, exist_ok=True)
 
     # Write TypeScript plugin
-    plugin_file = plugin_dir / "lerev.ts"
     plugin_file.write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
     print(f"Plugin installed: {plugin_file}")
-
-    # Write package.json for the plugin
-    pkg_json = plugin_dir / "package.json"
-    pkg_json.write_text(
-        json.dumps({"dependencies": {"@opencode-ai/plugin": "1.18.30"}}, indent=2),
-        encoding="utf-8",
-    )
-
-    # Register in OpenCode config
-    opencode_config = config.read_opencode_config()
-    if opencode_config is None:
-        opencode_config = {"plugin": []}
-
-    plugins = opencode_config.get("plugin", [])
-    entry = config.plugin_entry_path()
-    if entry not in plugins:
-        plugins.append(entry)
-        opencode_config["plugin"] = plugins
-        config.write_opencode_config(opencode_config)
-        print(f"Registered in OpenCode config: {entry}")
 
     # Verify bridge
     bridge = discover_bridge(".")
@@ -174,18 +154,13 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     results.append(("OpenCode config", opencode_found,
                      str(config_file) if opencode_found else "not found"))
 
-    # 7. Plugin registration
-    registered = config.is_lerev_registered()
-    results.append(("Plugin registered", registered,
-                     "yes" if registered else "not in opencode.jsonc"))
-
-    # 8. Plugin file
-    plugin_dir = config.lerev_plugin_dir()
-    plugin_exists = plugin_dir.exists()
+    # 7. Plugin file
+    plugin_file = config.lerev_plugin_file()
+    plugin_exists = plugin_file.exists()
     results.append(("Plugin file", plugin_exists,
-                     str(plugin_dir) if plugin_exists else "not found"))
+                     str(plugin_file) if plugin_exists else "not found"))
 
-    # 9. Memory directory
+    # 8. Memory directory
     memory_dir = Path(".lerev") / "memory"
     legacy_dir = Path(".evo") / "memory"
     mem_exists = memory_dir.exists() or legacy_dir.exists()
@@ -215,28 +190,18 @@ def _cmd_uninstall(args: argparse.Namespace) -> None:
     print("Lerev Uninstaller")
     print("----------------------------")
 
-    # Remove plugin directory
-    plugin_dir = config.lerev_plugin_dir()
-    if plugin_dir.exists():
+    # Remove plugin file from auto-discovery directory
+    plugin_file = config.lerev_plugin_file()
+    if plugin_file.exists():
+        plugin_file.unlink()
+        print(f"Removed plugin: {plugin_file}")
+
+    # Also clean up old node_modules location if it exists
+    old_plugin_dir = config.opencode_config_dir() / "node_modules" / "lerev"
+    if old_plugin_dir.exists():
         import shutil
-
-        shutil.rmtree(plugin_dir)
-        print(f"Removed plugin: {plugin_dir}")
-
-    # Remove from OpenCode config
-    config_file = config.opencode_config_file()
-    if config_file and config_file.exists():
-        opencode_config = config.read_opencode_config()
-        if opencode_config:
-            plugins = opencode_config.get("plugin", [])
-            entry = config.plugin_entry_path()
-            new_plugins = [p for p in plugins if entry not in str(p)]
-            if len(new_plugins) < len(plugins):
-                opencode_config["plugin"] = new_plugins
-                config.write_opencode_config(opencode_config)
-                print(f"Removed from OpenCode config: {entry}")
-            else:
-                print("Lerev not found in OpenCode config.")
+        shutil.rmtree(old_plugin_dir)
+        print(f"Removed old plugin directory: {old_plugin_dir}")
 
     print("")
     print("Uninstall complete.")
@@ -255,7 +220,7 @@ def main() -> None:
     subparsers.add_parser("version", help="Print Lerev version")
     subparsers.add_parser("status", help="Show Lerev status")
     install_parser = subparsers.add_parser("install", help="Install Lerev globally for OpenCode")
-    install_parser.add_argument("--force", action="store_true", help="Force reinstall even if already registered")
+    install_parser.add_argument("--force", action="store_true", help="Force reinstall even if already installed")
     subparsers.add_parser("doctor", help="Run Lerev diagnostics")
     subparsers.add_parser("uninstall", help="Uninstall Lerev from OpenCode")
 

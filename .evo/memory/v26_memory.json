@@ -29,6 +29,64 @@
       "metadata": {},
       "parent_id": null,
       "promoted_from": null
+    },
+    {
+      "memory_id": "acad53d2908e47f1",
+      "content": "Observation: Testing if bridge works | Action: Ran status command | Outcome: SUCCESS",
+      "kind": "EPISODIC",
+      "scope": {
+        "agent": {
+          "agent_id": "opencode",
+          "adapter": "opencode"
+        },
+        "project": {
+          "project_id": "test",
+          "name": "test"
+        },
+        "session": {
+          "session_id": "test-session",
+          "project_id": "test",
+          "agent_id": "opencode"
+        }
+      },
+      "timestamp": 1789318931.257392,
+      "source": "agent",
+      "tags": [
+        "outcome:success"
+      ],
+      "confidence": 0.5,
+      "metadata": {},
+      "parent_id": null,
+      "promoted_from": null
+    },
+    {
+      "memory_id": "4af6c444b1264055",
+      "content": "Observation: bridge test memory | Outcome: NEUTRAL",
+      "kind": "EPISODIC",
+      "scope": {
+        "agent": {
+          "agent_id": "opencode",
+          "adapter": "opencode"
+        },
+        "project": {
+          "project_id": "test",
+          "name": "test"
+        },
+        "session": {
+          "session_id": "test",
+          "project_id": "test",
+          "agent_id": "opencode"
+        }
+      },
+      "timestamp": 1789320715.053535,
+      "source": "agent",
+      "tags": [
+        "outcome:neutral"
+      ],
+      "confidence": 0.5,
+      "metadata": {},
+      "parent_id": null,
+      "promoted_from": null
     }
   ]
 }

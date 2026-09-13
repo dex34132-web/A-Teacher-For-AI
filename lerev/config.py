@@ -26,13 +26,13 @@ class LerevConfig:
         """Return the OpenCode global config file path."""
         return self.opencode_config_dir() / "opencode.jsonc"
 
-    def opencode_node_modules(self) -> Path:
-        """Return the OpenCode global node_modules directory."""
-        return self.opencode_config_dir() / "node_modules"
+    def opencode_plugins_dir(self) -> Path:
+        """Return the OpenCode auto-discovery plugins directory."""
+        return self.opencode_config_dir() / "plugins"
 
-    def lerev_plugin_dir(self) -> Path:
-        """Return the directory where the Lerev plugin should be installed."""
-        return self.opencode_node_modules() / self.plugin_dir_name
+    def lerev_plugin_file(self) -> Path:
+        """Return the path to the Lerev TypeScript plugin file."""
+        return self.opencode_plugins_dir() / f"{self.plugin_dir_name}.ts"
 
     def read_opencode_config(self) -> dict[str, Any] | None:
         """Read the OpenCode global config file."""
@@ -53,21 +53,9 @@ class LerevConfig:
             encoding="utf-8",
         )
 
-    def is_lerev_registered(self) -> bool:
-        """Check if Lerev is already registered in OpenCode config."""
-        config = self.read_opencode_config()
-        if config is None:
-            return False
-        plugins = config.get("plugin", [])
-        lerev_marker = f"~/.config/opencode/node_modules/{self.plugin_dir_name}"
-        return any(
-            self.plugin_dir_name in str(p) or lerev_marker in str(p)
-            for p in plugins
-        )
-
-    def plugin_entry_path(self) -> str:
-        """Return the plugin entry string for OpenCode config."""
-        return f"~/.config/opencode/node_modules/{self.plugin_dir_name}"
+    def is_lerev_installed(self) -> bool:
+        """Check if Lerev plugin file exists in the auto-discovery directory."""
+        return self.lerev_plugin_file().is_file()
 
 
 def get_opencode_config_path() -> Path | None:

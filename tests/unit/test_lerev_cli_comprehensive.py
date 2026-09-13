@@ -85,39 +85,49 @@ class TestCLIStatus:
 class TestCLIInstall:
     """Test CLI install command."""
 
-    def test_install_idempotent(self, tmp_path: Path) -> None:
-        """lerev install is idempotent."""
+    def test_install_writes_plugin(self, tmp_path: Path) -> None:
+        """lerev install writes plugin to auto-discovery directory."""
         config_dir = tmp_path / ".config" / "opencode"
         config_dir.mkdir(parents=True)
         config_file = config_dir / "opencode.jsonc"
         config_file.write_text('{"plugin": []}', encoding="utf-8")
-        nm_dir = config_dir / "node_modules"
-        nm_dir.mkdir(parents=True)
+        plugins_dir = config_dir / "plugins"
 
         with (
             patch("sys.argv", ["lerev", "install"]),
             patch("lerev.cli.LerevConfig") as MockConfig,
         ):
             config = MockConfig.return_value
-            config.is_lerev_registered.return_value = False
-            config.lerev_plugin_dir.return_value = nm_dir / "lerev"
+            config.is_lerev_installed.return_value = False
+            config.opencode_plugins_dir.return_value = plugins_dir
+            config.lerev_plugin_file.return_value = plugins_dir / "lerev.ts"
             config.opencode_config_file.return_value = config_file
-            config.read_opencode_config.return_value = {"plugin": []}
-            config.write_opencode_config = lambda c: config_file.write_text(
-                json.dumps(c), encoding="utf-8"
-            )
-            config.plugin_entry_path.return_value = "~/.config/opencode/node_modules/lerev"
             main()
 
-        # Run again - should report already registered
+        assert (plugins_dir / "lerev.ts").exists()
+
+    def test_install_skip_existing(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """lerev install skips if already installed."""
+        config_dir = tmp_path / ".config" / "opencode"
+        config_dir.mkdir(parents=True)
+        config_file = config_dir / "opencode.jsonc"
+        config_file.write_text('{"plugin": []}', encoding="utf-8")
+        plugins_dir = config_dir / "plugins"
+        plugins_dir.mkdir(parents=True)
+        (plugins_dir / "lerev.ts").write_text("// existing", encoding="utf-8")
+
         with (
             patch("sys.argv", ["lerev", "install"]),
             patch("lerev.cli.LerevConfig") as MockConfig,
         ):
             config = MockConfig.return_value
-            config.is_lerev_registered.return_value = True
+            config.is_lerev_installed.return_value = True
+            config.lerev_plugin_file.return_value = plugins_dir / "lerev.ts"
             config.opencode_config_file.return_value = config_file
             main()
+
+        captured = capsys.readouterr()
+        assert "already installed" in captured.out.lower()
 
     def test_install_no_opencode_config(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Install warns when OpenCode config not found."""
@@ -153,8 +163,8 @@ class TestCLIUninstall:
             patch("lerev.cli.LerevConfig") as MockConfig,
         ):
             config = MockConfig.return_value
-            config.lerev_plugin_dir.return_value = Path("/nonexistent")
-            config.opencode_config_file.return_value = None
+            config.lerev_plugin_file.return_value = Path("/nonexistent/lerev.ts")
+            config.opencode_config_dir.return_value = Path("/nonexistent")
             main()
         captured = capsys.readouterr()
         assert "complete" in captured.out.lower()
