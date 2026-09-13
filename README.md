@@ -6,12 +6,43 @@ Lerev gives coding agents persistent, project-scoped memory that survives restar
 
 ## Install
 
+### Python
 ```bash
 pip install lerev
-lerev install
 ```
 
-Then start your coding agent in any project — Lerev connects automatically.
+### npm / bun
+```bash
+npm install -g @dksh/lerev
+# or
+bun install -g @dksh/lerev
+```
+
+### Windows
+Download `Lerev-Setup.exe` from [releases](https://github.com/dkshs/lerev/releases)
+
+### Chocolatey
+```bash
+choco install lerev
+```
+
+### Homebrew (macOS)
+```bash
+brew install lerev
+```
+
+### Linux
+```bash
+curl -fsSL https://raw.githubusercontent.com/dkshs/lerev/main/packaging/linux/install.sh | sh
+```
+
+### From source
+```bash
+git clone https://github.com/dkshs/lerev.git
+pip install -e .
+```
+
+Plugin auto-installs on first use. Restart OpenCode after install.
 
 ## What Lerev Does
 
@@ -49,19 +80,9 @@ lerev --help        # Show commands
 lerev version       # Print version
 lerev status        # Show installation status
 lerev doctor        # Run diagnostics
-lerev install       # Register agent plugin
-lerev uninstall     # Remove agent plugin
+lerev install       # Reinstall plugin
+lerev uninstall     # Remove plugin
 ```
-
-## Other Install Methods
-
-- **Windows installer**: Download `Lerev-Setup.exe` from [releases](https://github.com/dex34132-web/lerev/releases)
-- **Chocolatey**: `choco install lerev`
-- **Homebrew**: `brew install lerev`
-- **Linux**: `curl -fsSL https://lerev.dev/install.sh | sh`
-- **Development**: `git clone https://github.com/dex34132-web/lerev.git && pip install -e .`
-
-See [docs/installation.md](docs/installation.md) for details.
 
 ## Development
 
