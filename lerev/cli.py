@@ -209,6 +209,14 @@ def _cmd_uninstall(args: argparse.Namespace) -> None:
     print("Restart OpenCode to apply changes.")
 
 
+def _auto_install(config: LerevConfig) -> None:
+    """Auto-install plugin on first run (silent)."""
+    plugins_dir = config.opencode_plugins_dir()
+    plugins_dir.mkdir(parents=True, exist_ok=True)
+    plugin_file = config.lerev_plugin_file()
+    plugin_file.write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
+
+
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -229,6 +237,12 @@ def main() -> None:
     if args.command is None:
         parser.print_help()
         sys.exit(0)
+
+    # Auto-install plugin on first run
+    if args.command not in ("version", "uninstall", "install"):
+        config = LerevConfig()
+        if not config.is_lerev_installed():
+            _auto_install(config)
 
     commands = {
         "version": _cmd_version,
