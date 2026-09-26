@@ -1,4 +1,4 @@
-"""LEREV V2.6 tool interface for the learning pipeline."""
+"""Teacher V2.6 tool interface for the learning pipeline."""
 from core.routing.v26.tools.base import BackgroundTask, PipelineResult, Tool, ToolRegistry, ToolResult
 from core.routing.v26.tools.status import StatusTool
 from core.routing.v26.tools.remember import RememberTool

@@ -1,8 +1,8 @@
-"""Integration bridge between Lerev V2.5 and existing V2.4.2 subsystems.
+"""Integration bridge between Teacher V2.5 and existing V2.4.2 subsystems.
 
 The distinction:
     V2.5 decides WHERE information should go.
-    Existing Lerev subsystems decide WHAT should happen to that information.
+    Existing Teacher subsystems decide WHAT should happen to that information.
 
 This bridge connects routing destinations to existing V2.4.2 capability
 providers without rebuilding them: confidence estimation, conflict
@@ -48,7 +48,7 @@ class CapabilityProvider(Protocol):
 # ---------------------------------------------------------------------------
 
 
-class LerevIntegrationBridge:
+class TeacherIntegrationBridge:
     """Wires routing decisions to V2.4.2 capability providers.
 
     No global mutable state. The bridge is constructed per-integration
@@ -174,6 +174,9 @@ class LerevIntegrationBridge:
         self._error_count = 0
 
 
+
+# Legacy alias - pre-rename imports used LerevIntegrationBridge.
+LerevIntegrationBridge = TeacherIntegrationBridge
 def make_noop_handler() -> Callable[[InformationPacket, RoutingDecision], None]:
     """Return a handler that does nothing (for tests and defaults)."""
     def _noop(packet: InformationPacket, decision: RoutingDecision) -> None:

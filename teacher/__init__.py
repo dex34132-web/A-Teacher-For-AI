@@ -1,4 +1,4 @@
-"""Lerev — Universal agent learning and memory system."""
+"""Teacher — Universal agent learning and memory system."""
 
 from __future__ import annotations
 

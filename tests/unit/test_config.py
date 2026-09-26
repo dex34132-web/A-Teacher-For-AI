@@ -1,4 +1,4 @@
-"""Tests for Lerev config."""
+"""Tests for Teacher config."""
 
 from __future__ import annotations
 
@@ -6,17 +6,17 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from lerev.config import LerevConfig, get_opencode_config_path, get_opencode_node_modules
+from teacher.config import TeacherConfig, get_opencode_config_path, get_opencode_node_modules
 
 
-class TestLerevConfig:
-    """Test Lerev configuration."""
+class TestTeacherConfig:
+    """Test Teacher configuration."""
 
     def test_config_paths(self) -> None:
         """Config provides correct default paths."""
-        config = LerevConfig()
-        assert config.package_name == "lerev"
-        assert config.plugin_dir_name == "lerev"
+        config = TeacherConfig()
+        assert config.package_name == "teacher"
+        assert config.plugin_dir_name == "teacher"
 
     def test_get_opencode_config_path_linux(self, tmp_path: Path) -> None:
         """Finds OpenCode config on Linux/macOS."""
@@ -25,7 +25,7 @@ class TestLerevConfig:
         config_file = config_dir / "opencode.jsonc"
         config_file.write_text('{"plugin": []}', encoding="utf-8")
 
-        with patch("lerev.config.Path.home", return_value=tmp_path):
+        with patch("teacher.config.Path.home", return_value=tmp_path):
             result = get_opencode_config_path()
 
         assert result == config_file
@@ -37,14 +37,14 @@ class TestLerevConfig:
         config_file = config_dir / "opencode.jsonc"
         config_file.write_text('{"plugin": []}', encoding="utf-8")
 
-        with patch("lerev.config.Path.home", return_value=tmp_path):
+        with patch("teacher.config.Path.home", return_value=tmp_path):
             result = get_opencode_config_path()
 
         assert result == config_file
 
     def test_get_opencode_config_path_not_found(self, tmp_path: Path) -> None:
         """Returns None when config not found."""
-        with patch("lerev.config.Path.home", return_value=tmp_path):
+        with patch("teacher.config.Path.home", return_value=tmp_path):
             result = get_opencode_config_path()
         assert result is None
 
@@ -53,7 +53,7 @@ class TestLerevConfig:
         nm_dir = tmp_path / ".config" / "opencode" / "node_modules"
         nm_dir.mkdir(parents=True)
 
-        with patch("lerev.config.Path.home", return_value=tmp_path):
+        with patch("teacher.config.Path.home", return_value=tmp_path):
             result = get_opencode_node_modules()
 
         assert result == nm_dir
@@ -65,26 +65,26 @@ class TestLerevConfig:
         config_file = config_dir / "opencode.jsonc"
         config_file.write_text('{"plugin": ["test-plugin"]}', encoding="utf-8")
 
-        with patch("lerev.config.Path.home", return_value=tmp_path):
-            config = LerevConfig()
+        with patch("teacher.config.Path.home", return_value=tmp_path):
+            config = TeacherConfig()
             result = config.read_opencode_config()
 
         assert result is not None
         assert result["plugin"] == ["test-plugin"]
 
-    def test_is_lerev_installed(self, tmp_path: Path) -> None:
-        """Checks if Lerev plugin file exists."""
+    def test_is_teacher_installed(self, tmp_path: Path) -> None:
+        """Checks if Teacher plugin file exists."""
         plugins_dir = tmp_path / ".config" / "opencode" / "plugins"
         plugins_dir.mkdir(parents=True)
-        plugin_file = plugins_dir / "lerev.ts"
+        plugin_file = plugins_dir / "teacher.ts"
         plugin_file.write_text("// test", encoding="utf-8")
 
-        with patch("lerev.config.Path.home", return_value=tmp_path):
-            config = LerevConfig()
-            assert config.is_lerev_installed() is True
+        with patch("teacher.config.Path.home", return_value=tmp_path):
+            config = TeacherConfig()
+            assert config.is_teacher_installed() is True
 
-    def test_is_lerev_not_installed(self, tmp_path: Path) -> None:
-        """Returns False when Lerev plugin file does not exist."""
-        with patch("lerev.config.Path.home", return_value=tmp_path):
-            config = LerevConfig()
-            assert config.is_lerev_installed() is False
+    def test_is_teacher_not_installed(self, tmp_path: Path) -> None:
+        """Returns False when Teacher plugin file does not exist."""
+        with patch("teacher.config.Path.home", return_value=tmp_path):
+            config = TeacherConfig()
+            assert config.is_teacher_installed() is False

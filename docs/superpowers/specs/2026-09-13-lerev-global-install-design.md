@@ -1,5 +1,8 @@
 # Lerev — Global Cross-Platform Installation & Distribution
 
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
+
 **Date:** 2026-09-13
 **Status:** Design
 **Product Name:** Lerev (renamed from Lerev)

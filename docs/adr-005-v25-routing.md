@@ -1,5 +1,8 @@
 # ADR: Lerev V2.5 — Universal Agent Routing & Intelligence Layer
 
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
+
 ## Status
 
 Accepted — V2.5 Implementation Complete

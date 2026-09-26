@@ -1,8 +1,8 @@
 !include "MUI2.nsh"
 
-Name "Lerev"
-OutFile "Lerev-Setup.exe"
-InstallDir "$LOCALAPPDATA\Lerev"
+Name "Teacher"
+OutFile "Teacher-Setup.exe"
+InstallDir "$LOCALAPPDATA\Teacher"
 RequestExecutionLevel user
 
 !define MUI_ABORTWARNING
@@ -23,40 +23,40 @@ RequestExecutionLevel user
 Section "Install"
     SetOutPath "$INSTDIR"
 
-    ; Copy lerev.exe
-    File "dist\lerev.exe"
+    ; Copy teacher.exe
+    File "dist\teacher.exe"
 
     ; Add to PATH
     EnVar::AddValue "PATH" "$INSTDIR"
     Pop $0
 
-    ; Run lerev install to register OpenCode plugin
-    nsExec::ExecToStack '"$INSTDIR\lerev.exe" install'
+    ; Run teacher install to register OpenCode plugin
+    nsExec::ExecToStack '"$INSTDIR\teacher.exe" install'
     Pop $0
 
     ; Write uninstaller
     WriteUninstaller "$INSTDIR\uninstall.exe"
 
     ; Add to Programs Menu
-    CreateDirectory "$SMPROGRAMS\Lerev"
-    CreateShortCut "$SMPROGRAMS\Lerev\Lerev.lnk" "$INSTDIR\lerev.exe"
-    CreateShortCut "$SMPROGRAMS\Lerev\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+    CreateDirectory "$SMPROGRAMS\Teacher"
+    CreateShortCut "$SMPROGRAMS\Teacher\Teacher.lnk" "$INSTDIR\teacher.exe"
+    CreateShortCut "$SMPROGRAMS\Teacher\Uninstall.lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "Uninstall"
-    ; Run lerev uninstall to deregister OpenCode plugin
-    nsExec::ExecToStack '"$INSTDIR\lerev.exe" uninstall'
+    ; Run teacher uninstall to deregister OpenCode plugin
+    nsExec::ExecToStack '"$INSTDIR\teacher.exe" uninstall'
 
     ; Remove from PATH
     EnVar::RemoveValue "PATH" "$INSTDIR"
 
     ; Remove files
-    Delete "$INSTDIR\lerev.exe"
+    Delete "$INSTDIR\teacher.exe"
     Delete "$INSTDIR\uninstall.exe"
     RMDir "$INSTDIR"
 
     ; Remove Programs Menu
-    Delete "$SMPROGRAMS\Lerev\Lerev.lnk"
-    Delete "$SMPROGRAMS\Lerev\Uninstall.lnk"
-    RMDir "$SMPROGRAMS\Lerev"
+    Delete "$SMPROGRAMS\Teacher\Teacher.lnk"
+    Delete "$SMPROGRAMS\Teacher\Uninstall.lnk"
+    RMDir "$SMPROGRAMS\Teacher"
 SectionEnd

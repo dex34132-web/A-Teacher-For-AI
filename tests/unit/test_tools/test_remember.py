@@ -10,7 +10,7 @@ def _make_tool():
 
 def test_remember_tool_name():
     tool = _make_tool()
-    assert tool.name == "lerev_remember"
+    assert tool.name == "teacher_remember"
 
 
 def test_remember_tool_schema_has_content():

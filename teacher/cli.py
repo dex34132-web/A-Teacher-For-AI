@@ -1,33 +1,34 @@
-"""Lerev CLI - command-line interface for Lerev."""
+"""Teacher CLI - command-line interface for Teacher."""
 
 from __future__ import annotations
 
 import argparse
+import shutil
 import sys
 from pathlib import Path
 
-from lerev import __version__
-from lerev.config import LerevConfig
-from lerev.discovery import discover_bridge
-from lerev.plugin_source import TS_PLUGIN_SOURCE
+from teacher import __version__
+from teacher.config import TeacherConfig
+from teacher.discovery import discover_bridge
+from teacher.plugin_source import TS_PLUGIN_SOURCE
 
 
 def _cmd_version(args: argparse.Namespace) -> None:
-    """Print Lerev version."""
-    print(f"lerev {__version__}")
+    """Print Teacher version."""
+    print(f"teacher {__version__}")
 
 
 def _cmd_status(args: argparse.Namespace) -> None:
-    """Print Lerev status."""
-    config = LerevConfig()
+    """Print Teacher status."""
+    config = TeacherConfig()
     bridge = discover_bridge(".")
 
-    print("Lerev")
+    print("Teacher")
     print("----------------")
     print(f"Version: {__version__}")
 
     # Plugin status
-    if config.is_lerev_installed():
+    if config.is_teacher_installed():
         print("Plugin: installed")
     else:
         print("Plugin: not installed")
@@ -45,21 +46,60 @@ def _cmd_status(args: argparse.Namespace) -> None:
     else:
         print("Bridge: not found")
 
-    # Memory status
-    memory_dir = Path(".lerev") / "memory"
-    legacy_dir = Path(".evo") / "memory"
-    if memory_dir.exists() or legacy_dir.exists():
+    # Memory status (canonical dir plus legacy pre-rename locations)
+    memory_candidates = (
+        Path(".teacher") / "memory",
+        Path(".lerev") / "memory",
+        Path(".evo") / "memory",
+    )
+    if any(candidate.exists() for candidate in memory_candidates):
         print("Memory: available")
     else:
         print("Memory: no data")
 
 
+def _clean_legacy_plugin(config: TeacherConfig, verbose: bool = True) -> bool:
+    """Remove stale plugin artefacts left by pre-rename installs.
+
+    Removes the old ``node_modules/lerev`` directory and the stale
+    ``plugins/lerev.ts`` file (legacy identity) if present. Never touches
+    the canonical ``plugins/teacher.ts``.
+    """
+    removed = False
+
+    legacy_dir = config.legacy_plugin_dir()
+    if legacy_dir.is_dir():
+        try:
+            shutil.rmtree(legacy_dir)
+            removed = True
+            if verbose:
+                print(f"Removed stale legacy plugin directory: {legacy_dir}")
+        except OSError:
+            pass
+
+    legacy_file = config.lerev_plugin_file()
+    if legacy_file.is_file():
+        try:
+            legacy_file.unlink()
+            removed = True
+            if verbose:
+                print(f"Removed stale legacy plugin file: {legacy_file}")
+        except OSError:
+            pass
+
+    return removed
+
+
+# Legacy alias (pre-rename helper name).
+_clean_legacy_plugin_dir = _clean_legacy_plugin
+
+
 def _cmd_install(args: argparse.Namespace) -> None:
-    """Install Lerev globally for OpenCode."""
-    config = LerevConfig()
+    """Install Teacher globally for OpenCode."""
+    config = TeacherConfig()
     force = getattr(args, "force", False)
 
-    print("Lerev Installer")
+    print("Teacher Installer")
     print("----------------------------")
 
     print(f"Python: {sys.version_info.major}.{sys.version_info.minor} OK")
@@ -69,15 +109,18 @@ def _cmd_install(args: argparse.Namespace) -> None:
     if config_file is None:
         print("WARNING: OpenCode config not found")
         print(f"  Expected at: {config.opencode_config_file()}")
-        print("  Lerev will work in development mode only.")
+        print("  Teacher will work in development mode only.")
         return
 
     print(f"OpenCode config: {config_file}")
 
+    # Clean up stale pre-rename plugin artefacts
+    _clean_legacy_plugin(config)
+
     # Check if already installed
-    plugin_file = config.lerev_plugin_file()
+    plugin_file = config.teacher_plugin_file()
     if plugin_file.exists() and not force:
-        print(f"Lerev is already installed at: {plugin_file}")
+        print(f"Teacher is already installed at: {plugin_file}")
         print("Use --force to reinstall.")
         return
 
@@ -94,19 +137,19 @@ def _cmd_install(args: argparse.Namespace) -> None:
     if bridge:
         print(f"Bridge: {bridge.tier} OK")
     else:
-        print("WARNING: Bridge not found. Run `lerev doctor` for diagnostics.")
+        print("WARNING: Bridge not found. Run `teacher doctor` for diagnostics.")
 
     print("")
     print("Installation complete!")
-    print("Restart OpenCode to use Lerev.")
+    print("Restart OpenCode to use Teacher.")
 
 
 def _cmd_doctor(args: argparse.Namespace) -> None:
-    """Run Lerev diagnostics."""
-    config = LerevConfig()
+    """Run Teacher diagnostics."""
+    config = TeacherConfig()
     bridge = discover_bridge(".")
 
-    print("LEREV DOCTOR")
+    print("TEACHER DOCTOR")
     print("=" * 40)
     print("")
 
@@ -119,12 +162,12 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
         py_msg += " (requires 3.11+)"
     results.append(("Python runtime", py_ok, py_msg))
 
-    # 2. Lerev package importable
+    # 2. Teacher package importable
     try:
-        from lerev import __version__ as lerev_ver  # noqa: F401
-        results.append(("LEREV package", True, f"v{lerev_ver}"))
+        from teacher import __version__ as teacher_ver  # noqa: F401
+        results.append(("TEACHER package", True, f"v{teacher_ver}"))
     except Exception as exc:
-        results.append(("LEREV package", False, str(exc)))
+        results.append(("TEACHER package", False, str(exc)))
 
     # 3. V2.6 memory system
     try:
@@ -137,7 +180,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
 
     # 4. V2.5 routing
     try:
-        from core.routing.integration import LerevIntegrationBridge  # noqa: F401
+        from core.routing.integration import TeacherIntegrationBridge  # noqa: F401
         results.append(("V2.5 routing", True, "available"))
     except Exception as exc:
         results.append(("V2.5 routing", False, str(exc)))
@@ -155,15 +198,18 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
                      str(config_file) if opencode_found else "not found"))
 
     # 7. Plugin file
-    plugin_file = config.lerev_plugin_file()
+    plugin_file = config.teacher_plugin_file()
     plugin_exists = plugin_file.exists()
     results.append(("Plugin file", plugin_exists,
                      str(plugin_file) if plugin_exists else "not found"))
 
-    # 8. Memory directory
-    memory_dir = Path(".lerev") / "memory"
-    legacy_dir = Path(".evo") / "memory"
-    mem_exists = memory_dir.exists() or legacy_dir.exists()
+    # 8. Memory directory (canonical plus legacy pre-rename locations)
+    memory_candidates = (
+        Path(".teacher") / "memory",
+        Path(".lerev") / "memory",
+        Path(".evo") / "memory",
+    )
+    mem_exists = any(candidate.exists() for candidate in memory_candidates)
     results.append(("Project memory", True,
                      "exists" if mem_exists else "no data yet (will be created)"))
 
@@ -176,7 +222,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     passed = sum(1 for _, ok, _ in results if ok)
     total = len(results)
     if passed == total:
-        print("RESULT: LEREV IS READY")
+        print("RESULT: TEACHER IS READY")
     else:
         failed = total - passed
         print(f"RESULT: {failed} issue(s) found — fix them above")
@@ -184,53 +230,52 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
 
 
 def _cmd_uninstall(args: argparse.Namespace) -> None:
-    """Uninstall Lerev from OpenCode."""
-    config = LerevConfig()
+    """Uninstall Teacher from OpenCode."""
+    config = TeacherConfig()
 
-    print("Lerev Uninstaller")
+    print("Teacher Uninstaller")
     print("----------------------------")
 
     # Remove plugin file from auto-discovery directory
-    plugin_file = config.lerev_plugin_file()
+    plugin_file = config.teacher_plugin_file()
     if plugin_file.exists():
         plugin_file.unlink()
         print(f"Removed plugin: {plugin_file}")
 
-    # Also clean up old node_modules location if it exists
-    old_plugin_dir = config.opencode_config_dir() / "node_modules" / "lerev"
-    if old_plugin_dir.exists():
-        import shutil
-        shutil.rmtree(old_plugin_dir)
-        print(f"Removed old plugin directory: {old_plugin_dir}")
+    # Also clean up stale pre-rename artefacts
+    _clean_legacy_plugin(config)
 
     print("")
     print("Uninstall complete.")
-    print("Note: .lerev/memory/ was NOT removed (use explicit action to delete).")
+    print("Note: .teacher/memory/ was NOT removed (use explicit action to delete).")
     print("Restart OpenCode to apply changes.")
 
 
-def _auto_install(config: LerevConfig) -> None:
+def _auto_install(config: TeacherConfig) -> None:
     """Auto-install plugin on first run (silent)."""
     plugins_dir = config.opencode_plugins_dir()
     plugins_dir.mkdir(parents=True, exist_ok=True)
-    plugin_file = config.lerev_plugin_file()
+    plugin_file = config.teacher_plugin_file()
     plugin_file.write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
+    _clean_legacy_plugin(config, verbose=False)
 
 
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        prog="lerev",
-        description="Lerev - Universal agent learning and memory system",
+        prog="teacher",
+        description="Teacher - Universal agent learning and memory system",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    subparsers.add_parser("version", help="Print Lerev version")
-    subparsers.add_parser("status", help="Show Lerev status")
-    install_parser = subparsers.add_parser("install", help="Install Lerev globally for OpenCode")
-    install_parser.add_argument("--force", action="store_true", help="Force reinstall even if already installed")
-    subparsers.add_parser("doctor", help="Run Lerev diagnostics")
-    subparsers.add_parser("uninstall", help="Uninstall Lerev from OpenCode")
+    subparsers.add_parser("version", help="Print Teacher version")
+    subparsers.add_parser("status", help="Show Teacher status")
+    install_parser = subparsers.add_parser("install", help="Install Teacher globally for OpenCode")
+    install_parser.add_argument(
+        "--force", action="store_true", help="Force reinstall even if already installed"
+    )
+    subparsers.add_parser("doctor", help="Run Teacher diagnostics")
+    subparsers.add_parser("uninstall", help="Uninstall Teacher from OpenCode")
 
     args = parser.parse_args()
 
@@ -240,8 +285,8 @@ def main() -> None:
 
     # Auto-install plugin on first run
     if args.command not in ("version", "uninstall", "install"):
-        config = LerevConfig()
-        if not config.is_lerev_installed():
+        config = TeacherConfig()
+        if not config.is_teacher_installed():
             _auto_install(config)
 
     commands = {

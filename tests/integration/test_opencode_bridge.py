@@ -1,6 +1,6 @@
-"""Integration tests for the Lerev V2.6 ↔ OpenCode bridge.
+"""Integration tests for the Teacher V2.6 ↔ OpenCode bridge.
 
-Tests the actual bridge CLI (scripts/lerev_bridge.py) as a subprocess,
+Tests the actual bridge CLI (scripts/teacher_bridge.py) as a subprocess,
 verifying the full V2.6 memory pipeline through the real integration boundary.
 
 These tests exercise:
@@ -25,7 +25,7 @@ from pathlib import Path
 # Helpers
 # ---------------------------------------------------------------------------
 
-BRIDGE = str(Path(__file__).resolve().parent.parent.parent / "scripts" / "lerev_bridge.py")
+BRIDGE = str(Path(__file__).resolve().parent.parent.parent / "scripts" / "teacher_bridge.py")
 PYTHON = sys.executable
 
 
@@ -58,7 +58,7 @@ class TestBridgeStatus:
         resp = _bridge({"command": "status"})
         assert resp["ok"] is True
         components = resp["components"]
-        assert "lerev" in components
+        assert "teacher" in components
         assert "v2_5" in components
         assert "v2_6" in components
         assert "persistence" in components
@@ -66,7 +66,7 @@ class TestBridgeStatus:
 
     def test_status_components_are_real(self) -> None:
         resp = _bridge({"command": "status"})
-        assert resp["components"]["lerev"] == "available"
+        assert resp["components"]["teacher"] == "available"
         assert resp["components"]["v2_6"] == "available"
 
     def test_status_persistence_is_real(self) -> None:
@@ -132,8 +132,8 @@ class TestBridgeRemember:
                 },
                 worktree=tmpdir,
             )
-            # Verify file was created (new .lerev/memory/ path)
-            mem_file = Path(tmpdir) / ".lerev" / "memory" / "v26_memory.json"
+            # Verify file was created (new .teacher/memory/ path)
+            mem_file = Path(tmpdir) / ".teacher" / "memory" / "v26_memory.json"
             assert mem_file.exists()
             data = json.loads(mem_file.read_text(encoding="utf-8"))
             assert len(data["entries"]) == 1
@@ -177,7 +177,7 @@ class TestBridgeRecall:
             assert len(resp["memories"]) == 1
             assert "recallable memory content" in resp["memories"][0]["content"]
 
-    def test_recall_empty_when_no_match(self) -> None:
+    def test_recall_no_lexical_overlap_returns_in_scope_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             _bridge(
                 {
@@ -198,6 +198,52 @@ class TestBridgeRecall:
                     "session": "sess",
                     "query": "zzz_nonexistent_marker_zzz",
                     "context_budget": 2000,
+                },
+                worktree=tmpdir,
+            )
+            assert resp["ok"] is True
+            # Semantic ranking returns in-scope candidates ordered by
+            # relevance (zero-score candidates may be included, matching
+            # the documented MemoryStore.query semantic-branch design).
+            for memory in resp["memories"]:
+                assert "something unrelated" in memory["content"]
+
+            # Empty store still returns empty.
+            with tempfile.TemporaryDirectory() as empty_dir:
+                empty = _bridge(
+                    {
+                        "command": "recall",
+                        "agent": "no_match",
+                        "project": "proj",
+                        "session": "sess",
+                        "query": "zzz_nonexistent_marker_zzz",
+                    },
+                    worktree=empty_dir,
+                )
+            assert empty["ok"] is True
+            assert empty["memories"] == []
+
+    def test_recall_out_of_scope_returns_empty(self) -> None:
+        """A no-overlap query from another session still returns nothing."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            _bridge(
+                {
+                    "command": "remember",
+                    "agent": "no_match",
+                    "project": "proj",
+                    "session": "sess",
+                    "content": "something unrelated",
+                    "outcome": "NEUTRAL",
+                },
+                worktree=tmpdir,
+            )
+            resp = _bridge(
+                {
+                    "command": "recall",
+                    "agent": "no_match",
+                    "project": "proj",
+                    "session": "OTHER_SESS",
+                    "query": "zzz_nonexistent_marker_zzz",
                 },
                 worktree=tmpdir,
             )

@@ -1,4 +1,4 @@
-"""Diagnose tool for LEREV V2.6 — health and stats."""
+"""Diagnose tool for Teacher V2.6 — health and stats."""
 
 from __future__ import annotations
 
@@ -14,11 +14,11 @@ class DiagnoseTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_diagnose"
+        return "teacher_diagnose"
 
     @property
     def description(self) -> str:
-        return "Return health and diagnostic information about the LEREV memory system."
+        return "Return health and diagnostic information about the Teacher memory system."
 
     @property
     def schema(self) -> dict:

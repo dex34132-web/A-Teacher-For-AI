@@ -1,13 +1,13 @@
 $ErrorActionPreference = 'Stop'
 
-$packageName = 'lerev'
+$packageName = 'teacher'
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# Install lerev.exe
+# Install teacher.exe
 Install-ChocolateyPackage -PackageName $packageName `
     -FileType 'exe' `
-    -File "$toolsDir\lerev.exe" `
+    -File "$toolsDir\teacher.exe" `
     -SilentArgs 'install'
 
-Write-Host "Lerev has been installed successfully."
-Write-Host "Restart OpenCode to use Lerev tools."
+Write-Host "Teacher has been installed successfully."
+Write-Host "Restart OpenCode to use Teacher tools."

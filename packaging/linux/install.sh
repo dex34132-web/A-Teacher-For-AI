@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-LEREV_VERSION="2.6.0"
+TEACHER_VERSION="2.6.0"
 INSTALL_DIR="${HOME}/.local/bin"
 
-echo "Lerev Installer"
+echo "Teacher Installer"
 echo "-----------------------------"
 
 # Detect OS
@@ -30,9 +30,9 @@ if ! command -v pip3 >/dev/null 2>&1; then
     exit 1
 fi
 
-# Install Lerev
-echo "Installing Lerev..."
-pip3 install --user lerev
+# Install Teacher
+echo "Installing Teacher..."
+pip3 install --user teacher
 
 # Ensure ~/.local/bin is on PATH (POSIX-compatible)
 case ":${PATH}:" in
@@ -50,12 +50,12 @@ case ":${PATH}:" in
 esac
 
 # Register with OpenCode
-if command -v lerev >/dev/null 2>&1; then
+if command -v teacher >/dev/null 2>&1; then
     echo "Registering with OpenCode..."
-    lerev install
+    teacher install
 else
-    echo "WARNING: lerev command not found on PATH."
-    echo "Please run 'lerev install' manually after ensuring ~/.local/bin is on PATH."
+    echo "WARNING: teacher command not found on PATH."
+    echo "Please run 'teacher install' manually after ensuring ~/.local/bin is on PATH."
 fi
 
 echo ""

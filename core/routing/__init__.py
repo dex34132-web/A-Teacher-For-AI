@@ -1,12 +1,12 @@
-"""Lerev V2.5 — Universal Agent Routing & Intelligence Layer.
+"""Teacher V2.5 — Universal Agent Routing & Intelligence Layer.
 
 This module provides the agent-agnostic routing infrastructure that
-connects any AI system to Lerev's learning, experience, memory, and
+connects any AI system to Teacher's learning, experience, memory, and
 knowledge subsystems.
 
 The core principle:
     Let the agent do the semantic thinking.
-    Let Lerev make the routing structured, efficient, safe, explainable,
+    Let Teacher make the routing structured, efficient, safe, explainable,
     and cheap.
 
 V2.5 is agent-agnostic at its core. It does not depend on any specific
@@ -37,7 +37,7 @@ from core.routing.information import (
     SourceType,
 )
 from core.routing.integration import (
-    LerevIntegrationBridge,
+    TeacherIntegrationBridge,
     make_collector_handler,
     make_noop_handler,
 )
@@ -98,7 +98,7 @@ __all__ = [
     "AgentRoutingContract",
     "DestinationHandler",
     # Integration bridge (V2.4.2)
-    "LerevIntegrationBridge",
+    "TeacherIntegrationBridge",
     "make_noop_handler",
     "make_collector_handler",
     # Main router

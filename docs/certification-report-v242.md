@@ -1,5 +1,8 @@
 # Lerev V2.4.2 — 9/10 Certification Report
 
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
+
 **Date:** 2026-09-10
 **Auditor:** Independent certification pass
 **Commit:** 006d084 (based on a0377eb)

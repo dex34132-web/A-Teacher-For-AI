@@ -1,8 +1,8 @@
-"""Central memory manager for Lerev V2.6.
+"""Central memory manager for Teacher V2.6.
 
 Coordinates the V2.6 read/write paths:
 - Memory request validation and scope enforcement
-- Retrieval coordination (via existing Lerev systems)
+- Retrieval coordination (via existing Teacher systems)
 - Confidence filtering
 - Context budget enforcement
 - Experience capture
@@ -11,7 +11,7 @@ Coordinates the V2.6 read/write paths:
 
 Design principles:
 - Does NOT replace V2.3 confidence, V2.2 conflict, V2.4.2 lifecycle, V2.5 routing
-- Coordinates existing Lerev systems rather than rebuilding them
+- Coordinates existing Teacher systems rather than rebuilding them
 - No global mutable state
 - Deterministic and auditable
 """
@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from core.learner.feature_extractor import FeatureExtractor
 from core.routing.v26.consolidation import ConsolidationResult, consolidate_experiences
 from core.routing.v26.experience import (
     Experience,
@@ -57,6 +58,7 @@ class MemoryManager:
         storage: ScopeIsolatedStorage | None = None,
         policy: V26SecurityPolicy | None = None,
         store: MemoryStore | None = None,
+        extractor: FeatureExtractor | None = None,
     ) -> None:
         """Initialize the memory manager.
 
@@ -64,10 +66,13 @@ class MemoryManager:
             storage: Persistent storage backend (optional, for durability).
             policy: Security policy (optional, uses defaults if None).
             store: In-memory store (optional, creates default if None).
+            extractor: TF-IDF feature extractor for semantic recall
+                ranking (optional, creates default if None).
         """
         self._storage = storage
         self._policy = policy or V26SecurityPolicy()
         self._store = store or MemoryStore()
+        self._extractor = extractor if extractor is not None else FeatureExtractor()
         self._consolidation_history: list[ConsolidationResult] = []
         self._operation_count = 0
         self._error_count = 0
@@ -83,6 +88,7 @@ class MemoryManager:
         1. Validate request and security policy
         2. Validate scope access
         3. Query in-memory store with scope filtering
+           and semantic (TF-IDF) ranking via the feature extractor
         4. Filter by confidence
         5. Apply context budget
         6. Return bounded response
@@ -119,6 +125,7 @@ class MemoryManager:
             minimum_confidence=request.minimum_confidence,
             tags=request.tags if request.tags else None,
             query_text=request.query,
+            extractor=self._extractor,
         )
 
         # Step 4: Filter by instruction boundary (security)
@@ -256,7 +263,7 @@ class MemoryManager:
     ) -> tuple[bool, str]:
         """Check if an experience is a candidate for promotion.
 
-        Uses existing Lerev mechanisms (confidence, evidence, lifecycle)
+        Uses existing Teacher mechanisms (confidence, evidence, lifecycle)
         to determine promotion readiness.
 
         Args:

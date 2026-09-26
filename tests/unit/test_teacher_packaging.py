@@ -1,4 +1,4 @@
-"""Tests for Lerev packaging and distribution."""
+"""Tests for Teacher packaging and distribution."""
 
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ class TestPyprojectToml:
     """Test pyproject.toml configuration."""
 
     def test_package_name(self) -> None:
-        """Package name is lerev."""
+        """Package name is teacher."""
         with open("pyproject.toml", "rb") as f:
             config = tomllib.load(f)
-        assert config["project"]["name"] == "lerev"
+        assert config["project"]["name"] == "teacher"
 
     def test_version(self) -> None:
         """Version is 2.6.0."""
@@ -28,8 +28,8 @@ class TestPyprojectToml:
         """CLI entry point is defined."""
         with open("pyproject.toml", "rb") as f:
             config = tomllib.load(f)
-        assert "lerev" in config["project"]["scripts"]
-        assert config["project"]["scripts"]["lerev"] == "lerev.cli:main"
+        assert "teacher" in config["project"]["scripts"]
+        assert config["project"]["scripts"]["teacher"] == "teacher.cli:main"
 
     def test_python_requires(self) -> None:
         """Requires Python 3.11+."""
@@ -43,7 +43,7 @@ class TestPyprojectToml:
             config = tomllib.load(f)
         packages = config["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"]
         assert "core" in packages
-        assert "lerev" in packages
+        assert "teacher" in packages
 
     def test_license(self) -> None:
         """Package is MIT licensed."""
@@ -59,16 +59,16 @@ class TestPyprojectToml:
 
 
 class TestPackageInit:
-    """Test lerev package initialization."""
+    """Test teacher package initialization."""
 
     def test_version_importable(self) -> None:
-        """Version is importable from lerev."""
-        from lerev import __version__
+        """Version is importable from teacher."""
+        from teacher import __version__
         assert __version__ == "2.6.0"
 
     def test_version_all(self) -> None:
         """__all__ includes __version__."""
-        from lerev import __all__
+        from teacher import __all__
         assert "__version__" in __all__
 
 
@@ -77,21 +77,21 @@ class TestChocolateyPackage:
 
     def test_nuspec_exists(self) -> None:
         """nuspec file exists."""
-        assert Path("packaging/chocolatey/lerev.nuspec").exists()
+        assert Path("packaging/chocolatey/teacher.nuspec").exists()
 
     def test_nuspec_package_id(self) -> None:
-        """nuspec package ID is lerev."""
+        """nuspec package ID is teacher."""
         import xml.etree.ElementTree as ET
-        tree = ET.parse("packaging/chocolatey/lerev.nuspec")
+        tree = ET.parse("packaging/chocolatey/teacher.nuspec")
         ns = {"ns": "http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"}
         pkg_id = tree.find(".//ns:id", ns)
         assert pkg_id is not None
-        assert pkg_id.text == "lerev"
+        assert pkg_id.text == "teacher"
 
     def test_nuspec_version(self) -> None:
         """nuspec version matches."""
         import xml.etree.ElementTree as ET
-        tree = ET.parse("packaging/chocolatey/lerev.nuspec")
+        tree = ET.parse("packaging/chocolatey/teacher.nuspec")
         ns = {"ns": "http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"}
         version = tree.find(".//ns:version", ns)
         assert version is not None
@@ -116,17 +116,17 @@ class TestHomebrewFormula:
 
     def test_formula_exists(self) -> None:
         """Formula file exists."""
-        assert Path("packaging/homebrew/lerev.rb").exists()
+        assert Path("packaging/homebrew/teacher.rb").exists()
 
     def test_formula_has_sha256(self) -> None:
         """Formula does not have PLACEHOLDER_SHA256."""
-        content = Path("packaging/homebrew/lerev.rb").read_text()
+        content = Path("packaging/homebrew/teacher.rb").read_text()
         assert "PLACEHOLDER_SHA256" not in content
 
     def test_formula_class_name(self) -> None:
-        """Formula class is Lerev."""
-        content = Path("packaging/homebrew/lerev.rb").read_text()
-        assert "class Lerev < Formula" in content
+        """Formula class is Teacher."""
+        content = Path("packaging/homebrew/teacher.rb").read_text()
+        assert "class Teacher < Formula" in content
 
 
 class TestNSISInstaller:
@@ -134,16 +134,16 @@ class TestNSISInstaller:
 
     def test_installer_exists(self) -> None:
         """Installer script exists."""
-        assert Path("packaging/windows/lerev-installer.nsi").exists()
+        assert Path("packaging/windows/teacher-installer.nsi").exists()
 
     def test_installer_name(self) -> None:
-        """Installer name is Lerev."""
-        content = Path("packaging/windows/lerev-installer.nsi").read_text()
-        assert 'Name "Lerev"' in content
+        """Installer name is Teacher."""
+        content = Path("packaging/windows/teacher-installer.nsi").read_text()
+        assert 'Name "Teacher"' in content
 
     def test_installer_adds_to_path(self) -> None:
-        """Installer adds lerev to PATH for standalone exe."""
-        content = Path("packaging/windows/lerev-installer.nsi").read_text()
+        """Installer adds teacher to PATH for standalone exe."""
+        content = Path("packaging/windows/teacher-installer.nsi").read_text()
         assert "EnVar::AddValue" in content
 
 
@@ -167,4 +167,4 @@ class TestLinuxInstaller:
     def test_installer_is_idempotent(self) -> None:
         """Installer is idempotent (uses pip install, not pip install --force)."""
         content = Path("packaging/linux/install.sh").read_text()
-        assert "pip3 install --user lerev" in content
+        assert "pip3 install --user teacher" in content

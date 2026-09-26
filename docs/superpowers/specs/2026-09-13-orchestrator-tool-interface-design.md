@@ -1,5 +1,8 @@
 # LEREV Orchestrator + Tool Interface Design
 
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
+
 **Date:** 2026-09-13
 **Status:** Draft
 **Depends on:** Tasks 1-2 (semantic retrieval + MemoryStore wiring) — COMPLETE

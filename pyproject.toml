@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "lerev"
+name = "teacher"
 version = "2.6.0"
 description = "Universal agent learning and memory system"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
-    { name = "Lerev Contributors" },
+    { name = "Teacher Contributors" },
 ]
 keywords = ["ai", "machine-learning", "coding-agent", "harness", "memory", "learning"]
 classifiers = [
@@ -32,7 +32,9 @@ dependencies = [
 ]
 
 [project.scripts]
-lerev = "lerev.cli:main"
+teacher = "teacher.cli:main"
+# Legacy alias (pre-rename installs used `lerev`); kept for compatibility.
+lerev = "teacher.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -50,17 +52,18 @@ semantic = [
     "fastembed>=0.8.0",
 ]
 all = [
-    "lerev[dev,web,semantic]",
+    "teacher[dev,web,semantic]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/dkshs/lerev"
-Documentation = "https://github.com/dkshs/lerev/tree/main/docs"
-Repository = "https://github.com/dkshs/lerev"
-Issues = "https://github.com/dkshs/lerev/issues"
+# Repository URL keeps the pre-rename GitHub repo path (remote not renamed).
+Homepage = "https://github.com/dex34132-web/lerev"
+Documentation = "https://github.com/dex34132-web/lerev/tree/main/docs"
+Repository = "https://github.com/dex34132-web/lerev"
+Issues = "https://github.com/dex34132-web/lerev/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["core", "web", "adapters", "storage", "lerev"]
+packages = ["core", "web", "adapters", "storage", "teacher", "lerev"]
 
 [tool.ruff]
 line-length = 100

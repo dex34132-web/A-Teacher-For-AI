@@ -19,7 +19,9 @@ def create_tools(
     extractor: FeatureExtractor | None = None,
     storage: ScopeIsolatedStorage | None = None,
 ) -> list:
-    manager = MemoryManager(storage=storage)
+    if extractor is None:
+        extractor = FeatureExtractor()
+    manager = MemoryManager(storage=storage, extractor=extractor)
     if storage is not None:
         manager.reload()
     store = MemoryStore()
@@ -28,8 +30,6 @@ def create_tools(
             entry = storage.get(mid)
             if entry is not None:
                 store.store(entry)
-    if extractor is None:
-        extractor = FeatureExtractor()
     return [
         StatusTool(),
         RememberTool(manager=manager),

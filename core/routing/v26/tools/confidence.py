@@ -1,4 +1,4 @@
-"""Confidence estimation tool for LEREV V2.6."""
+"""Confidence estimation tool for Teacher V2.6."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ class ConfidenceTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_confidence"
+        return "teacher_confidence"
 
     @property
     def description(self) -> str:

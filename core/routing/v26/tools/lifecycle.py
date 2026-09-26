@@ -1,4 +1,4 @@
-"""Lifecycle management tool for LEREV V2.6."""
+"""Lifecycle management tool for Teacher V2.6."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ class LifecycleTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_lifecycle"
+        return "teacher_lifecycle"
 
     @property
     def description(self) -> str:

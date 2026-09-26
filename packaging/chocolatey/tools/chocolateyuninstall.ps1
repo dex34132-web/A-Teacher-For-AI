@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 # Unregister from OpenCode
-lerev uninstall
+teacher uninstall
 
 # Uninstall via pip
-pip uninstall lerev -y
+pip uninstall teacher -y

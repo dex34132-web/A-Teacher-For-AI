@@ -1,5 +1,8 @@
 # LEREV Learning Pipeline Implementation Plan
 
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Close the gap between LEREV's storage/retrieval layer and a real learning pipeline by wiring existing V2.2 conflict, V2.3 confidence, V2.4.2 lifecycle, and semantic similarity systems into the V2.6 `remember`/`recall` pathway.

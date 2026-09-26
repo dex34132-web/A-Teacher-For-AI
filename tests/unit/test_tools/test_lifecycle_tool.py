@@ -23,7 +23,7 @@ def _make_tool_with_memory():
 
 def test_lifecycle_tool_name():
     tool, _ = _make_tool_with_memory()
-    assert tool.name == "lerev_lifecycle"
+    assert tool.name == "teacher_lifecycle"
 
 
 def test_lifecycle_tool_schema():
@@ -100,4 +100,4 @@ def test_lifecycle_tool_execute_score_not_found():
 def test_lifecycle_tool_returns_metadata():
     tool, _ = _make_tool_with_memory()
     result = tool.execute(action="score", memory_id="mem_001")
-    assert result.metadata.get("tool") == "lerev_lifecycle"
+    assert result.metadata.get("tool") == "teacher_lifecycle"

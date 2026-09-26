@@ -32,7 +32,7 @@ def _make_tool_with_entries():
 
 def test_deduplicate_tool_name():
     tool = _make_tool_with_entries()
-    assert tool.name == "lerev_deduplicate"
+    assert tool.name == "teacher_deduplicate"
 
 
 def test_deduplicate_tool_schema():
@@ -76,4 +76,4 @@ def test_deduplicate_tool_execute_empty_store():
 def test_deduplicate_tool_returns_metadata():
     tool = _make_tool_with_entries()
     result = tool.execute(content="Python")
-    assert result.metadata.get("tool") == "lerev_deduplicate"
+    assert result.metadata.get("tool") == "teacher_deduplicate"

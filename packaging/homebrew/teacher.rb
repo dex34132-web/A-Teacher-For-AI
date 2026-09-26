@@ -1,9 +1,9 @@
-class Lerev < Formula
+class Teacher < Formula
   desc "Universal agent learning and memory system"
-  homepage "https://github.com/dkshs/lerev"
-  url "https://github.com/dkshs/lerev/archive/refs/tags/v2.6.0.tar.gz"
+  homepage "https://github.com/dex34132-web/lerev"
+  url "https://github.com/dex34132-web/lerev/archive/refs/tags/v2.6.0.tar.gz"
   # sha256: compute with: shasum -a 256 v2.6.0.tar.gz
-  # or: curl -sL https://github.com/dkshs/lerev/archive/refs/tags/v2.6.0.tar.gz | shasum -a 256
+  # or: curl -sL https://github.com/dex34132-web/lerev/archive/refs/tags/v2.6.0.tar.gz | shasum -a 256
   license "MIT"
 
   depends_on "python@3.12"
@@ -13,10 +13,10 @@ class Lerev < Formula
   end
 
   def post_install
-    system "#{bin}/lerev", "install"
+    system "#{bin}/teacher", "install"
   end
 
   test do
-    assert_match "lerev #{version}", shell_output("#{bin}/lerev version")
+    assert_match "teacher #{version}", shell_output("#{bin}/teacher version")
   end
 end

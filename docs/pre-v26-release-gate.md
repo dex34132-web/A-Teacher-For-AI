@@ -1,5 +1,8 @@
 # Lerev Pre-V2.6 Release Gate Audit
 
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
+
 **Date:** September 11, 2026
 **Auditor:** Independent Automated Audit
 **Scope:** Final gate before V2.6 development begins

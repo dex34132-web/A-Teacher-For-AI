@@ -1,4 +1,7 @@
 # Lerev Full Historical Audit Report
+
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
 ## Versions 1.1 through 2.5
 
 **Report Version:** 1.0  

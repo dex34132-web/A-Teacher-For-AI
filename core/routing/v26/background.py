@@ -16,7 +16,7 @@ class BackgroundWorker:
     def on_memory_stored(self) -> None:
         self._memory_count += 1
         if self._memory_count >= self._consolidation_threshold:
-            self._orchestrator.trigger_background("lerev_knowledge", min_occurrences=3)
+            self._orchestrator.trigger_background("teacher_knowledge", min_occurrences=3)
             self._memory_count = 0
 
     def run_cycle(self) -> list[ToolResult]:

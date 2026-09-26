@@ -1,5 +1,8 @@
 # ADR-025: V2.4.2 Knowledge Lifecycle Hardening
 
+> **Historical document.** Written under the project's former name, *LEREV* (now *Teacher*), and preserved as-is for the record; names below may not match the current codebase.
+
+
 **Date:** 2026-09-10
 **Status:** Accepted
 **Deciders:** Lerev Team

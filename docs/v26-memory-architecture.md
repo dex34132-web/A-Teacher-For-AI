@@ -1,8 +1,8 @@
-# Lerev V2.6 — Long-Term Memory + Deep Agent Connection
+# Teacher V2.6 — Long-Term Memory + Deep Agent Connection
 
 ## Overview
 
-V2.6 adds persistent memory, scope isolation, experience management, and deep agent connection infrastructure to Lerev. It builds on V2.5's universal routing layer.
+V2.6 adds persistent memory, scope isolation, experience management, and deep agent connection infrastructure to Teacher. It builds on V2.5's universal routing layer.
 
 ```
 V2.4.2  Knowledge + Lifecycle

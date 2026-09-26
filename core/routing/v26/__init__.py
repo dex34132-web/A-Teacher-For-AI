@@ -1,4 +1,4 @@
-"""Lerev V2.6 — Long-Term Memory + Deep Agent Connection.
+"""Teacher V2.6 — Long-Term Memory + Deep Agent Connection.
 
 This module provides the persistent memory, scope isolation, experience
 management, and deep agent connection infrastructure that builds on
@@ -19,7 +19,7 @@ Design principles:
 - Deterministic and auditable
 - Scope-isolated across agent/project/session
 - Stored memory is DATA, never instructions
-- Reuses existing Lerev systems (confidence, conflict, lifecycle)
+- Reuses existing Teacher systems (confidence, conflict, lifecycle)
 """
 
 from __future__ import annotations

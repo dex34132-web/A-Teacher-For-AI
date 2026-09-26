@@ -1,4 +1,4 @@
-"""Base classes for LEREV tools."""
+"""Base classes for Teacher tools."""
 from __future__ import annotations
 
 import time
@@ -24,7 +24,7 @@ class ToolResult:
 
 
 class Tool(ABC):
-    """Base class for all LEREV tools."""
+    """Base class for all Teacher tools."""
 
     @property
     @abstractmethod
