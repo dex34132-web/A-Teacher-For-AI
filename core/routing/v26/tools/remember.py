@@ -1,26 +1,26 @@
-"""Remember tool for LEREV V2.6 — store an experience."""
+"""Remember tool for Teacher V2.6 — store an experience."""
 
 from __future__ import annotations
 
 from core.routing.v26.experience import Experience, ExperienceOutcome
-from core.routing.v26.identity import AgentIdentity
+from core.routing.v26.identity import AgentIdentity, ProjectIdentity, SessionIdentity
 from core.routing.v26.memory_manager import MemoryManager
 from core.routing.v26.tools.base import Tool, ToolResult
 
 
 class RememberTool(Tool):
-    """Store an experience into LEREV long-term memory."""
+    """Store an experience into Teacher long-term memory."""
 
     def __init__(self, manager: MemoryManager) -> None:
         self._manager = manager
 
     @property
     def name(self) -> str:
-        return "lerev_remember"
+        return "teacher_remember"
 
     @property
     def description(self) -> str:
-        return "Store an experience into LEREV long-term memory."
+        return "Store an experience into Teacher long-term memory."
 
     @property
     def schema(self) -> dict:
@@ -37,6 +37,8 @@ class RememberTool(Tool):
                 "observation": {"type": "string", "description": "What was observed."},
                 "action": {"type": "string", "description": "What action was taken."},
                 "agent_id": {"type": "string", "description": "Agent identifier.", "default": "default"},
+                "project": {"type": "string", "description": "Project scope identifier."},
+                "session": {"type": "string", "description": "Session scope identifier."},
                 "source": {"type": "string", "description": "Source of the experience.", "default": "tool"},
                 "tags": {"type": "array", "items": {"type": "string"}, "description": "Tags for filtering."},
                 "confidence": {"type": "number", "description": "Confidence in this memory [0,1].", "default": 0.5},
@@ -56,7 +58,9 @@ class RememberTool(Tool):
         outcome_str: str = kwargs.get("outcome", "NEUTRAL")
         observation: str = kwargs.get("observation", content)
         action: str = kwargs.get("action", "")
-        agent_id: str = kwargs.get("agent_id", "default")
+        agent_id: str = kwargs.get("agent_id") or kwargs.get("agent") or "default"
+        project_id: str = kwargs.get("project") or kwargs.get("project_id") or ""
+        session_id: str = kwargs.get("session") or kwargs.get("session_id") or ""
         source: str = kwargs.get("source", "tool")
         tags: list[str] = kwargs.get("tags", [])
         confidence: float = kwargs.get("confidence", 0.5)
@@ -72,8 +76,22 @@ class RememberTool(Tool):
             )
 
         agent = AgentIdentity.create(agent_id=agent_id)
+        project = (
+            ProjectIdentity.create(project_id=project_id, name=project_id)
+            if project_id
+            else None
+        )
+        session = (
+            SessionIdentity.create(
+                session_id=session_id, project_id=project_id, agent_id=agent_id
+            )
+            if session_id
+            else None
+        )
         experience = Experience.create(
             agent=agent,
+            project=project,
+            session=session,
             observation=observation,
             action=action,
             outcome=outcome,

@@ -1,11 +1,11 @@
-"""Lerev bridge — importable entry point for the bridge protocol.
+"""Teacher bridge — importable entry point for the bridge protocol.
 
 Reads a single JSON request from stdin, processes it through the V2.6
 memory architecture, and writes a single JSON response to stdout.
 
 Protocol:
     stdin  → JSON request  → bridge → V2.6 components
-    stdout → JSON response → Lerev plugin
+    stdout → JSON response → Teacher plugin
 
 Commands:
     status   — check component availability
@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
 from typing import Any
 
 # ---------------------------------------------------------------------------
@@ -36,6 +35,8 @@ from core.routing.v26.security import (
     detect_injection,
     validate_memory_request,
 )
+from teacher import __version__
+from teacher.config import resolve_memory_dir
 
 # ---------------------------------------------------------------------------
 # Bridge state (lazily initialised, lives for one process invocation)
@@ -54,13 +55,9 @@ def _init_manager(worktree: str) -> MemoryManager:
         return _manager
 
     try:
-        storage_dir = Path(worktree) / ".lerev" / "memory"
-        # Fall back to legacy .evo directory
-        if not storage_dir.exists():
-            legacy_dir = Path(worktree) / ".evo" / "memory"
-            if legacy_dir.exists():
-                storage_dir = legacy_dir
-        storage_dir.mkdir(parents=True, exist_ok=True)
+        # Canonical .teacher/memory — legacy .lerev/.evo dirs are copied
+        # over non-destructively on first use (see resolve_memory_dir).
+        storage_dir = resolve_memory_dir(worktree)
         _storage = ScopeIsolatedStorage(base_path=storage_dir)
         _manager = MemoryManager(storage=_storage)
         _manager.reload()
@@ -81,10 +78,10 @@ def _handle_status(req: dict[str, Any]) -> dict[str, Any]:
     worktree = req.get("worktree", "")
     checks: dict[str, str] = {}
 
-    checks["lerev"] = "available"
+    checks["teacher"] = "available"
 
     try:
-        from core.routing.integration import LerevIntegrationBridge  # noqa: F401
+        from core.routing.integration import TeacherIntegrationBridge  # noqa: F401
         checks["v2_5"] = "available"
     except Exception:
         checks["v2_5"] = "not_importable"
@@ -99,10 +96,7 @@ def _handle_status(req: dict[str, Any]) -> dict[str, Any]:
         checks["v2_6"] = "not_importable"
 
     try:
-        storage_dir = Path(worktree) / ".lerev" / "memory"
-        if not storage_dir.exists():
-            storage_dir = Path(worktree) / ".evo" / "memory"
-        storage_dir.mkdir(parents=True, exist_ok=True)
+        storage_dir = resolve_memory_dir(worktree)
         test_file = storage_dir / ".bridge_test"
         test_file.write_text("ok", encoding="utf-8")
         test_file.unlink(missing_ok=True)
@@ -116,7 +110,7 @@ def _handle_status(req: dict[str, Any]) -> dict[str, Any]:
     except Exception:
         checks["security"] = "unavailable"
 
-    return {"ok": True, "components": checks}
+    return {"ok": True, "components": checks, "version": __version__}
 
 
 def _handle_remember(req: dict[str, Any]) -> dict[str, Any]:
@@ -261,27 +255,28 @@ def _handle_recall(req: dict[str, Any]) -> dict[str, Any]:
 
 _orchestrator = None
 
-def _get_orchestrator():
+def _get_orchestrator(worktree=""):
     global _orchestrator
     if _orchestrator is None:
         from core.routing.v26.factory import create_orchestrator
-        _orchestrator = create_orchestrator()
+        manager = _init_manager(worktree)
+        _orchestrator = create_orchestrator(storage=manager._storage)
     return _orchestrator
 
 def _dispatch_to_orchestrator(tool_name, req):
-    orch = _get_orchestrator()
+    orch = _get_orchestrator(req.get("worktree", ""))
     params = {k: v for k, v in req.items() if k != "command"}
     result = orch.dispatch(tool_name, **params)
     return {"ok": result.success, "result": result.data, "errors": result.errors}
 
-def _handle_learn(req): return _dispatch_to_orchestrator("lerev_remember", req)
-def _handle_diagnose(req): return _dispatch_to_orchestrator("lerev_diagnose", req)
-def _handle_conflict(req): return _dispatch_to_orchestrator("lerev_conflict", req)
-def _handle_confidence(req): return _dispatch_to_orchestrator("lerev_confidence", req)
-def _handle_deduplicate(req): return _dispatch_to_orchestrator("lerev_deduplicate", req)
-def _handle_lifecycle(req): return _dispatch_to_orchestrator("lerev_lifecycle", req)
-def _handle_search(req): return _dispatch_to_orchestrator("lerev_search", req)
-def _handle_knowledge(req): return _dispatch_to_orchestrator("lerev_knowledge", req)
+def _handle_learn(req): return _dispatch_to_orchestrator("teacher_remember", req)
+def _handle_diagnose(req): return _dispatch_to_orchestrator("teacher_diagnose", req)
+def _handle_conflict(req): return _dispatch_to_orchestrator("teacher_conflict", req)
+def _handle_confidence(req): return _dispatch_to_orchestrator("teacher_confidence", req)
+def _handle_deduplicate(req): return _dispatch_to_orchestrator("teacher_deduplicate", req)
+def _handle_lifecycle(req): return _dispatch_to_orchestrator("teacher_lifecycle", req)
+def _handle_search(req): return _dispatch_to_orchestrator("teacher_search", req)
+def _handle_knowledge(req): return _dispatch_to_orchestrator("teacher_knowledge", req)
 
 
 # ---------------------------------------------------------------------------

@@ -3,6 +3,7 @@ from __future__ import annotations
 from core.learner.feature_extractor import FeatureExtractor
 from core.routing.v26.memory_manager import MemoryManager
 from core.routing.v26.memory_store import MemoryStore
+from core.routing.v26.persistence import ScopeIsolatedStorage
 from core.routing.v26.tools.status import StatusTool
 from core.routing.v26.tools.remember import RememberTool
 from core.routing.v26.tools.recall import RecallTool
@@ -14,9 +15,19 @@ from core.routing.v26.tools.knowledge import KnowledgeExtractionTool
 from core.routing.v26.tools.lifecycle import LifecycleTool
 from core.routing.v26.tools.diagnose import DiagnoseTool
 
-def create_tools(extractor: FeatureExtractor | None = None) -> list:
-    manager = MemoryManager()
+def create_tools(
+    extractor: FeatureExtractor | None = None,
+    storage: ScopeIsolatedStorage | None = None,
+) -> list:
+    manager = MemoryManager(storage=storage)
+    if storage is not None:
+        manager.reload()
     store = MemoryStore()
+    if storage is not None:
+        for mid in storage.list_keys():
+            entry = storage.get(mid)
+            if entry is not None:
+                store.store(entry)
     if extractor is None:
         extractor = FeatureExtractor()
     return [
