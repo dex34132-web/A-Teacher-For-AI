@@ -1,12 +1,14 @@
 """Tests for V2.6 persistence module.
 
 Covers: ScopeIsolatedStorage — write, persist, reload, scope filtering,
-malformed data recovery, atomic writes.
+corrupt-state rejection (never silently empty), atomic writes.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+
+import pytest
 
 from core.routing.v26.identity import (
     AgentIdentity,
@@ -15,7 +17,11 @@ from core.routing.v26.identity import (
     SessionIdentity,
 )
 from core.routing.v26.memory_types import MemoryEntry, MemoryKind
-from core.routing.v26.persistence import SCHEMA_VERSION, ScopeIsolatedStorage
+from core.routing.v26.persistence import (
+    SCHEMA_VERSION,
+    PersistenceError,
+    ScopeIsolatedStorage,
+)
 
 
 def _make_scope(agent_id: str = "a1", project_id: str = "", session_id: str = "") -> MemoryScope:
@@ -152,28 +158,26 @@ class TestScopeFiltering:
 
 
 # ---------------------------------------------------------------------------
-# Persistence recovery
+# Corrupt-state rejection (a corrupt file must NEVER become an empty store)
 # ---------------------------------------------------------------------------
 
 
 class TestPersistenceRecovery:
-    def test_malformed_json_recovery(self, tmp_path: Path) -> None:
+    def test_malformed_json_raises(self, tmp_path: Path) -> None:
         storage = ScopeIsolatedStorage(tmp_path)
-        # Write malformed JSON
         file_path = tmp_path / "v26_memory.json"
         file_path.write_text("{invalid json", encoding="utf-8")
 
-        # Should recover gracefully
-        count = storage.reload()
-        assert count == 0
+        with pytest.raises(PersistenceError):
+            storage.reload()
 
-    def test_truncated_json_recovery(self, tmp_path: Path) -> None:
+    def test_truncated_json_raises(self, tmp_path: Path) -> None:
         storage = ScopeIsolatedStorage(tmp_path)
         file_path = tmp_path / "v26_memory.json"
         file_path.write_text('{"version": "2.6.0", "entries": [{"memory_id":', encoding="utf-8")
 
-        count = storage.reload()
-        assert count == 0
+        with pytest.raises(PersistenceError):
+            storage.reload()
 
     def test_missing_entries_recovery(self, tmp_path: Path) -> None:
         storage = ScopeIsolatedStorage(tmp_path)
@@ -183,13 +187,13 @@ class TestPersistenceRecovery:
         count = storage.reload()
         assert count == 0
 
-    def test_wrong_type_entries_recovery(self, tmp_path: Path) -> None:
+    def test_wrong_type_entries_raises(self, tmp_path: Path) -> None:
         storage = ScopeIsolatedStorage(tmp_path)
         file_path = tmp_path / "v26_memory.json"
         file_path.write_text('{"version": "2.6.0", "entries": "not a list"}', encoding="utf-8")
 
-        count = storage.reload()
-        assert count == 0
+        with pytest.raises(PersistenceError):
+            storage.reload()
 
     def test_nonexistent_file_returns_empty(self, tmp_path: Path) -> None:
         storage = ScopeIsolatedStorage(tmp_path / "nonexistent")

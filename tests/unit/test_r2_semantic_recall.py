@@ -337,6 +337,45 @@ class TestProjectIsolation:
         results = _ask(manager, "What is the project spacecraft called?", project_id="project-A")
         assert results == []
 
+    def test_project_isolation_survives_process_death(self, tmp_path) -> None:
+        """§10: repeat project isolation after bridge process death."""
+        worktree = str(tmp_path)
+        _bridge({
+            "command": "learn",
+            "worktree": worktree,
+            "agent": "opencode",
+            "project": "project-A",
+            "session": "ses_iso_a",
+            "content": "The project spacecraft is called ORION-47.",
+            "outcome": "SUCCESS",
+        })
+        _bridge({
+            "command": "learn",
+            "worktree": worktree,
+            "agent": "opencode",
+            "project": "project-B",
+            "session": "ses_iso_b",
+            "content": "The project spacecraft is called VEGA-12.",
+            "outcome": "SUCCESS",
+        })
+        # Fresh process: project-A must not retrieve project-B's memory.
+        recall = _bridge({
+            "command": "recall",
+            "worktree": worktree,
+            "agent": "opencode",
+            "project": "project-A",
+            "session": "ses_iso_a",
+            "query": "What is the project spacecraft called?",
+        })
+        assert recall.get("ok") is True, recall
+        contents = [m["content"] for m in recall["memories"]]
+        assert any("ORION-47" in c for c in contents), (
+            f"project-A memory not retrieved across processes: {contents}"
+        )
+        assert not any("VEGA-12" in c for c in contents), (
+            f"project isolation broken across processes: {contents}"
+        )
+
 
 # ---------------------------------------------------------------------------
 # §11 — session isolation with semantic queries (R3 unchanged)
