@@ -51,8 +51,11 @@ web = [
 semantic = [
     "fastembed>=0.8.0",
 ]
+mcp = [
+    "mcp>=2.0",
+]
 all = [
-    "teacher[dev,web,semantic]",
+    "teacher[dev,web,semantic,mcp]",
 ]
 
 [project.urls]

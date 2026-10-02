@@ -82,7 +82,26 @@ teacher status        # Show installation status
 teacher doctor        # Run diagnostics
 teacher install       # Reinstall plugin
 teacher uninstall     # Remove plugin
+teacher mcp           # Run MCP server (stdio)
+teacher mcp config claude   # Print client MCP config
 ```
+
+## MCP
+
+Teacher ships a production MCP server so any MCP-compatible client (Claude Code,
+Codex, OpenCode, Cursor, Windsurf, Cline, Roo, Gemini CLI, …) can use the same
+memory core — thin translation over the existing bridge, no second system:
+
+```bash
+pip install "teacher[mcp]"
+teacher mcp                 # stdio server
+python -m teacher.mcp       # identical entry point
+```
+
+Eleven `teacher_*` tools, a budgeted `teacher://` resource set, and a
+`relevant_context` prompt. See **[docs/mcp.md](docs/mcp.md)** for copy-paste client
+configs, tool reference, scope rules, and security notes. The JSON bridge and the
+OpenCode plugin keep working unchanged alongside it.
 
 ## Development
 

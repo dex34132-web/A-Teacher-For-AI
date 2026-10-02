@@ -260,6 +260,36 @@ def _auto_install(config: TeacherConfig) -> None:
     _clean_legacy_plugin(config, verbose=False)
 
 
+def _cmd_mcp(args: argparse.Namespace) -> None:
+    """Run the Teacher MCP server (stdio) or print client configuration."""
+    if getattr(args, "mcp_command", None) == "config":
+        from teacher.mcp.config import build_client_config
+
+        client = getattr(args, "client", None) or "generic"
+        try:
+            preset = build_client_config(client)
+        except ValueError as exc:
+            sys.stderr.write(f"{exc}\n")
+            sys.exit(1)
+        print(f"# Teacher MCP config for {preset['name']} ({preset['format']})")
+        print(f"# File: {preset['path']}")
+        print(preset["config"])
+        if preset.get("cli"):
+            print(f"# CLI alternative: {preset['cli']}")
+        return
+
+    try:
+        from teacher.mcp.server import main as mcp_main
+    except ImportError as exc:
+        sys.stderr.write(
+            "Teacher MCP server requires the optional 'mcp' package.\n"
+            "Install it with: pip install 'teacher[mcp]'\n"
+            f"(import failed: {exc})\n"
+        )
+        sys.exit(1)
+    mcp_main()
+
+
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -276,6 +306,19 @@ def main() -> None:
     )
     subparsers.add_parser("doctor", help="Run Teacher diagnostics")
     subparsers.add_parser("uninstall", help="Uninstall Teacher from OpenCode")
+    mcp_parser = subparsers.add_parser(
+        "mcp", help="Run the Teacher MCP server over stdio, or print client config"
+    )
+    mcp_subparsers = mcp_parser.add_subparsers(dest="mcp_command")
+    mcp_config_parser = mcp_subparsers.add_parser(
+        "config", help="Print copy-paste MCP client configuration"
+    )
+    mcp_config_parser.add_argument(
+        "client",
+        nargs="?",
+        default="generic",
+        help="MCP client preset (claude, codex, opencode, cursor, ...)",
+    )
 
     args = parser.parse_args()
 
@@ -283,8 +326,8 @@ def main() -> None:
         parser.print_help()
         sys.exit(0)
 
-    # Auto-install plugin on first run
-    if args.command not in ("version", "uninstall", "install"):
+    # Auto-install plugin on first run (server-only commands don't need it)
+    if args.command not in ("version", "uninstall", "install", "mcp"):
         config = TeacherConfig()
         if not config.is_teacher_installed():
             _auto_install(config)
@@ -295,6 +338,7 @@ def main() -> None:
         "install": _cmd_install,
         "doctor": _cmd_doctor,
         "uninstall": _cmd_uninstall,
+        "mcp": _cmd_mcp,
     }
 
     cmd_func = commands.get(args.command)
