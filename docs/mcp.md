@@ -203,6 +203,14 @@ All eleven tools are one-to-one with the V2.6 orchestrator surface. Responses ar
 raw bridge payloads (JSON in both `content` and `structuredContent`);
 `isError` is set when the underlying command reports `ok: false`.
 
+Routing is model-driven: every tool description carries a **"Use when …"** clause
+(recall first → remember/learn to store → conflict before contradicting saves →
+search when recall misses → confidence when unsure → status/diagnose for health →
+knowledge/deduplicate/lifecycle for occasional maintenance), and the server
+`instructions` field repeats the same recipe so clients that surface server
+instructions give their model a ready-made tool-selection policy. Read-only tools
+advertise `readOnlyHint`/`idempotentHint` annotations for client-side auto-approval.
+
 | Tool | Purpose | Key arguments |
 |------|---------|---------------|
 | `teacher_status` | Runtime/component health | — |

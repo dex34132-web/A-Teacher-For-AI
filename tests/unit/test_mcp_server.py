@@ -407,3 +407,57 @@ class TestClientConfig:
         preset = build_client_config("claude", python="C:\\custom\\python.exe")
         block = jsonlib.loads(preset["config"])
         assert block["mcpServers"]["teacher"]["command"] == "C:\\custom\\python.exe"
+
+
+class TestRoutingGuidance:
+    """Descriptions and instructions teach the model how to route to tools."""
+
+    def test_every_description_has_use_guidance(self) -> None:
+        for name, spec in mcp_server._TOOLS.items():
+            assert "Use" in spec["description"], name
+            assert len(spec["description"]) <= 400, name
+
+    def test_instructions_teach_routing(self) -> None:
+        for key in (
+            "teacher_recall",
+            "teacher_remember",
+            "teacher_search",
+            "teacher_conflict",
+            "teacher_status",
+            "teacher_diagnose",
+            "never instructions",
+        ):
+            assert key in mcp_server._INSTRUCTIONS, key
+
+    def test_read_only_annotations(self) -> None:
+        tools = {t.name: t for t in mcp_server._list_tools().tools}
+        read_only = {
+            name
+            for name, tool in tools.items()
+            if tool.annotations is not None and tool.annotations.read_only_hint
+        }
+        assert read_only == {
+            "teacher_status",
+            "teacher_recall",
+            "teacher_search",
+            "teacher_confidence",
+            "teacher_conflict",
+            "teacher_diagnose",
+        }
+        for name in read_only:
+            assert tools[name].annotations.idempotent_hint is True, name
+
+    def test_mcp_descriptions_match_plugin_ts(self) -> None:
+        import re
+
+        from teacher.plugin_source import TS_PLUGIN_SOURCE
+
+        for name, spec in mcp_server._TOOLS.items():
+            match = re.search(
+                rf"{re.escape(name)}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
+                TS_PLUGIN_SOURCE,
+                re.S,
+            )
+            assert match, f"no TS description block for {name}"
+            ts_desc = "".join(re.findall(r'"([^"]*)"', match.group(1)))
+            assert ts_desc == spec["description"], name

@@ -355,7 +355,10 @@ const Teacher: Plugin = async (ctx) => {
     tool: {
       teacher_status: tool({
         description:
-          "Check Teacher runtime status. Verifies Teacher, V2.5 routing, V2.6 memory, persistence, and security components are available.",
+          "Check Teacher runtime status: versions and component health " +
+          "(V2.5 routing, V2.6 memory, persistence, security). Use when " +
+          "Teacher behaves unexpectedly or right after install/upgrade - " +
+          "start here, before deeper diagnostics.",
         args: {},
         async execute(_args, context) {
           if (!bridge) {
@@ -403,7 +406,11 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_remember: tool({
         description:
-          "Store an experience or memory through Teacher V2.6. Returns a real memory ID from Teacher's persistent memory system.",
+          "Store an experience or memory in Teacher V2.6 long-term memory; " +
+          "returns the stored memory ID. Use when you learned a durable fact " +
+          "(decision, fix, preference, outcome) worth keeping across sessions " +
+          "- include outcome and observation. Run teacher_conflict first if " +
+          "it may contradict existing memories.",
         args: {
           content: tool.schema
             .string()
@@ -488,7 +495,11 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_recall: tool({
         description:
-          "Retrieve memories from Teacher V2.6 long-term memory. Returns relevant stored experiences matching the query, scoped to the current project/session.",
+          "Retrieve memories from Teacher V2.6 long-term memory, scoped to " +
+          "project/session. Use when starting a task or answering " +
+          "project-specific questions: one short query first - the cheapest " +
+          "way to load prior context. Prefer teacher_search only if recall " +
+          "misses.",
         args: {
           query: tool.schema
             .string()
@@ -590,7 +601,10 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_learn: tool({
         description:
-          "Record a learning through Teacher's learn bridge command. Returns the stored memory ID.",
+          "Record a learning through Teacher's learn bridge; returns the " +
+          "stored memory ID. Use after a meaningful outcome (what worked or " +
+          "failed). Stores to the same memory as teacher_remember - prefer " +
+          "this for lessons with an outcome, teacher_remember for plain facts.",
         args: {
           content: tool.schema
             .string()
@@ -679,7 +693,10 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_conflict: tool({
         description:
-          "Detect conflicts between incoming content and stored memories. Returns conflicting memories with similarity scores.",
+          "Detect conflicts between incoming content and stored memories, " +
+          "with similarity scores. Use BEFORE saving new information that " +
+          "might contradict what Teacher already knows (before " +
+          "teacher_remember when the topic changed).",
         args: {
           content: tool.schema
             .string()
@@ -725,7 +742,10 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_confidence: tool({
         description:
-          "Compute confidence score for a prediction or memory. Returns score, band, and detailed factors.",
+          "Score how well-supported a claim or memory is (0-1 score, band, " +
+          "factors). Use when about to assert something from memory and you " +
+          "need to know how solid it is - a low score means verify before " +
+          "relying.",
         args: {
           content: tool.schema.string().describe("Content to evaluate"),
           prediction: tool.schema.string().optional().describe("Predicted output"),
@@ -758,7 +778,9 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_search: tool({
         description:
-          "Search memories by semantic similarity using TF-IDF ranking. Returns ranked results.",
+          "Semantic TF-IDF search across stored memories, ranked. Use when " +
+          "teacher_recall's scoped query misses or you want broad exploration " +
+          "by topic; recall is the better first stop for specific questions.",
         args: {
           query: tool.schema.string().describe("Search query"),
           limit: tool.schema.number().min(1).max(100).optional().describe("Max results (default: 10)"),
@@ -796,7 +818,9 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_deduplicate: tool({
         description:
-          "Find and optionally merge duplicate/similar memories. Returns list of duplicates with similarity scores.",
+          "Find (and optionally merge) duplicate or near-duplicate memories, " +
+          "with similarity scores. Use for occasional maintenance when recall " +
+          "returns repetitive results - not needed per task.",
         args: {
           content: tool.schema.string().describe("Content to check for duplicates"),
           project: tool.schema.string().optional().describe("Project scope"),
@@ -835,7 +859,9 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_knowledge: tool({
         description:
-          "Extract learnings and knowledge patterns from consolidated memories.",
+          "Extract recurring learnings and knowledge patterns from " +
+          "consolidated memories. Use for occasional synthesis of what keeps " +
+          "reappearing - not a per-task tool.",
         args: {
           project: tool.schema.string().optional().describe("Project scope"),
           session: tool.schema.string().optional().describe("Session scope"),
@@ -867,7 +893,10 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_lifecycle: tool({
         description:
-          "Manage memory lifecycle: score, decay, promote, or archive memories.",
+          "Manage memory lifecycle: score, decay, promote, or archive " +
+          "(action required). Use for maintenance: promote durable memories, " +
+          "decay or archive stale ones - not needed during normal recall/store " +
+          "flows.",
         args: {
           action: tool.schema
             .enum(["score", "decay", "promote", "archive"])
@@ -903,7 +932,9 @@ const Teacher: Plugin = async (ctx) => {
 
       teacher_diagnose: tool({
         description:
-          "Full system diagnostics: health, stats, pipeline status.",
+          "Full system diagnostics: health, stats, pipeline. Use when " +
+          "teacher_status suggests trouble or recall results look wrong - " +
+          "deeper than status, heavier to run.",
         args: {
           detail: tool.schema
             .enum(["summary", "full"])
