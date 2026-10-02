@@ -139,6 +139,7 @@ function runBridge(
   python: string,
   args: string[],
   json: string,
+  timeoutMs = 30000,
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const cmd = `${python} ${args.join(" ")}`
@@ -152,7 +153,7 @@ function runBridge(
       settled = true
       child.kill()
       reject(new Error(`Command failed: ${cmd}`))
-    }, 30000)
+    }, timeoutMs)
 
     child.stdout.on("data", (d) => {
       stdout += d
@@ -191,6 +192,7 @@ async function invokeBridge(
   python: string,
   bridgePath: string,
   request: Record<string, unknown>,
+  timeoutMs?: number,
 ): Promise<Record<string, unknown>> {
   const json = JSON.stringify(request)
   // Module invocations arrive as "-m <module>" (teacher.bridge, or the
@@ -200,7 +202,7 @@ async function invokeBridge(
     : [bridgePath]
 
   try {
-    const { stdout, stderr } = await runBridge(python, args, json)
+    const { stdout, stderr } = await runBridge(python, args, json, timeoutMs)
     if (stderr) console.error("[teacher bridge stderr]", stderr)
     if (!stdout.trim()) {
       return {
@@ -217,6 +219,89 @@ async function invokeBridge(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Execution hooks — Teacher runs and shows itself on every tool execution
+// and every prompt. All hook work is budgeted (top-3, thresholded, timeboxed)
+// and must never break the execution it observes.
+// ---------------------------------------------------------------------------
+
+const HOOK_TIMEOUT_MS = 1500
+const HOOK_LIMIT = 3
+const HOOK_THRESHOLD = 0.2
+const HOOK_BUDGET = 400
+
+interface RecallOutcome {
+  hits: number
+  lines: string[]
+}
+
+/** In-flight execution recalls, keyed by tool callID. */
+const executionRecalls = new Map<string, RecallOutcome | null>()
+
+/** Prompt recalls, keyed by sessionID — injected exactly once per prompt. */
+const promptRecalls = new Map<string, RecallOutcome>()
+
+function hooksEnabled(): boolean {
+  return process.env.TEACHER_HOOKS !== "0"
+}
+
+function hasMemoryRoot(worktree: string): boolean {
+  for (const dir of [".teacher", ".lerev", ".evo"]) {
+    if (fileExists(resolve(worktree, dir, "memory"))) return true
+  }
+  return false
+}
+
+function capMap(map: Map<string, unknown>): void {
+  if (map.size > 300) map.clear()
+}
+
+/**
+ * Build the recall query from the tool name and its salient arguments so
+ * retrieval matches exactly what the agent/model is doing right now.
+ */
+function buildExecutionQuery(toolName: string, args: unknown): string {
+  const parts: string[] = [String(toolName).replace(/[_-]+/g, " ")]
+  if (args && typeof args === "object") {
+    const record = args as Record<string, unknown>
+    for (const key of [
+      "pattern",
+      "query",
+      "path",
+      "filePath",
+      "command",
+      "description",
+      "content",
+      "glob",
+      "url",
+      "prompt",
+      "keyword",
+    ]) {
+      const value = record[key]
+      if (typeof value === "string" && value.trim()) {
+        parts.push(value.slice(0, 300))
+      }
+    }
+    if (parts.length === 1) {
+      try {
+        parts.push(JSON.stringify(args).slice(0, 300))
+      } catch {
+        // Non-serializable args: the tool name alone still forms a query.
+      }
+    }
+  }
+  return parts.join(" ").slice(0, 500)
+}
+
+function formatRecallLines(memories: any[]): string[] {
+  return memories.map((m: any, i: number) => {
+    const conf =
+      typeof m.confidence === "number" ? m.confidence.toFixed(2) : "0.00"
+    const text = String(m.content ?? "").slice(0, 240)
+    return `${i + 1}. (conf=${conf}) ${text}`
+  })
+}
+
 const Teacher: Plugin = async (ctx) => {
   const bridge = await discoverBridge(ctx.worktree)
 
@@ -227,6 +312,44 @@ const Teacher: Plugin = async (ctx) => {
 
   const python = bridge?.python ?? ""
   const bridgePath = bridge?.bridgePath ?? ""
+
+  /**
+   * Budgeted recall for one execution or prompt through the existing bridge.
+   * Returns null whenever Teacher is unavailable, the worktree has no memory,
+   * or the bridge fails/times out — callers degrade to a bare marker.
+   */
+  const recallForExecution = async (
+    sessionID: string,
+    query: string,
+  ): Promise<RecallOutcome | null> => {
+    if (!bridge) return null
+    if (!query.trim()) return null
+    if (!hasMemoryRoot(ctx.worktree)) return null
+    const project = ctx.worktree.split(/[/\\]/).pop() || "unknown"
+    try {
+      const resp = await invokeBridge(
+        python,
+        bridgePath,
+        {
+          command: "recall",
+          worktree: ctx.worktree,
+          agent: "opencode",
+          project,
+          session: sessionID || undefined,
+          query,
+          confidence_threshold: HOOK_THRESHOLD,
+          context_budget: HOOK_BUDGET,
+          limit: HOOK_LIMIT,
+        },
+        HOOK_TIMEOUT_MS,
+      )
+      if (!resp.ok) return null
+      const memories = (resp as any).memories ?? []
+      return { hits: memories.length, lines: formatRecallLines(memories) }
+    } catch {
+      return null
+    }
+  }
 
   return {
     tool: {
@@ -809,6 +932,80 @@ const Teacher: Plugin = async (ctx) => {
           }
         },
       }),
+    },
+
+    "tool.execute.before": async (input, output) => {
+      try {
+        if (!hooksEnabled()) return
+        const query = buildExecutionQuery(input.tool, output.args)
+        const rec = await recallForExecution(input.sessionID, query)
+        capMap(executionRecalls)
+        executionRecalls.set(input.callID, rec)
+      } catch {
+        // Hooks must never break tool execution — degrade to no context.
+        executionRecalls.set(input.callID, null)
+      }
+    },
+
+    "tool.execute.after": async (input, output) => {
+      try {
+        if (!hooksEnabled()) return
+        const rec = executionRecalls.get(input.callID) ?? null
+        executionRecalls.delete(input.callID)
+        // Visible marker on EVERY execution — hits, zero hits, and degraded.
+        const marker = rec ? ` · teacher: ${rec.hits}` : " · teacher: –"
+        output.title = `${output.title || input.tool}${marker}`
+        if (rec && rec.hits > 0 && typeof output.output === "string") {
+          const block = `[teacher context]\n${rec.lines.join("\n")}\n[/teacher]`
+          output.output = `${output.output}\n\n${block}`
+        }
+      } catch {
+        // Teacher visibility must never break tool execution.
+      }
+    },
+
+    "chat.message": async (input, output) => {
+      try {
+        if (!hooksEnabled()) return
+        const text = (output.parts ?? [])
+          .filter((p: any) => p && p.type === "text")
+          .map((p: any) => String(p.text ?? ""))
+          .join(" ")
+          .slice(0, 500)
+        if (!text.trim()) return
+        const rec = await recallForExecution(input.sessionID, text)
+        if (rec && rec.hits > 0) {
+          capMap(promptRecalls)
+          promptRecalls.set(input.sessionID, rec)
+        }
+      } catch {
+        // Prompt recall is best-effort.
+      }
+    },
+
+    "experimental.chat.messages.transform": async (_input, output) => {
+      try {
+        const messages = output.messages ?? []
+        if (!messages.length) return
+        const last = messages[messages.length - 1]
+        const info: any = last.info
+        // Inject only at prompt time (turn starts with a user message),
+        // exactly once per prompt, budgeted to the stashed recall.
+        if (!info || info.role !== "user" || !info.sessionID) return
+        const rec = promptRecalls.get(info.sessionID)
+        if (!rec) return
+        promptRecalls.delete(info.sessionID)
+        last.parts.push({
+          id: `teacher-context-${info.id}`,
+          sessionID: info.sessionID,
+          messageID: info.id,
+          type: "text",
+          synthetic: true,
+          text: `[teacher context]\n${rec.lines.join("\n")}\n[/teacher]`,
+        })
+      } catch {
+        // Context injection is best-effort.
+      }
     },
   }
 }

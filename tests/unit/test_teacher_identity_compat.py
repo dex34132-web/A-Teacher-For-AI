@@ -83,6 +83,10 @@ class TestTeacherIdentity:
             '"lerev"',
             "'lerev'",
             "lerev.ts",
+            # Legacy memory-root fallback: hasMemoryRoot must detect
+            # pre-rename .lerev/memory projects so hooks run there too
+            # (README: .lerev/memory migrated non-destructively).
+            '".lerev"',
         }
         for lineno, line in enumerate(TS_PLUGIN_SOURCE.splitlines(), start=1):
             if "lerev" not in line:
