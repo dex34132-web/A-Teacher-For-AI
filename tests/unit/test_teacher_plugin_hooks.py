@@ -145,9 +145,14 @@ class TestRecallBudgetAndCostGuards:
         assert "HOOK_TIMEOUT_MS = 1500" in TS_PLUGIN_SOURCE
 
     def test_recall_uses_budget_constants(self) -> None:
-        assert "confidence_threshold: HOOK_THRESHOLD" in TS_PLUGIN_SOURCE
-        assert "context_budget: HOOK_BUDGET" in TS_PLUGIN_SOURCE
-        assert "limit: HOOK_LIMIT" in TS_PLUGIN_SOURCE
+        # Budget flows through knobs whose defaults are the HOOK_* consts.
+        assert "confidence_threshold: knobs.recall_threshold" in TS_PLUGIN_SOURCE
+        assert "context_budget: knobs.hook_budget" in TS_PLUGIN_SOURCE
+        assert "limit: knobs.hook_limit" in TS_PLUGIN_SOURCE
+        assert "recall_threshold: HOOK_THRESHOLD" in TS_PLUGIN_SOURCE
+        assert "hook_budget: HOOK_BUDGET" in TS_PLUGIN_SOURCE
+        assert "hook_limit: HOOK_LIMIT" in TS_PLUGIN_SOURCE
+        assert "hook_timeout_ms: HOOK_TIMEOUT_MS" in TS_PLUGIN_SOURCE
 
     def test_recall_is_timeboxed_through_bridge(self) -> None:
         assert "timeoutMs = 30000" in TS_PLUGIN_SOURCE  # default unchanged
