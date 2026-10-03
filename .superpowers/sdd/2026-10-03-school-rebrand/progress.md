@@ -30,3 +30,6 @@ Task 3: Ruling: brief's stale-name literals were bulk-corrupted to school.ts/sch
 Task 3: Ruling: plan-file Task 4 text found bulk-corrupted pre-dispatch (gitignore block, git grep "teacher"->"school", allowlist classes, ledger/handoff notes) — controller fixed 6 edits before brief extraction.
 Task 3: minor (deferred): skill-directory branch exercised only by unit fixture, not a live teacher-routing dir
 Task 3: complete (commits d868272..4c6b7ab, review clean)
+Task 4: implementer COMPLETE (777422f, pushed, 2507/0-new/MATCH/8-8-62). Audit: 79 hits all allowlisted, 0 product prose fixes. Swept controller plan-fix edits + ledger into commit (acknowledged).
+Task 4: minor (deferred): plan-file brief-echo text fits none of 3 allowlist classes literally (unfixable by design)
+Task 4: complete (commits 4c6b7ab..777422f, pushed, review clean)

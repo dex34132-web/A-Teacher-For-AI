@@ -49,6 +49,7 @@ def _cmd_status(args: argparse.Namespace) -> None:
     # Memory status (canonical dir plus legacy pre-rename locations)
     memory_candidates = (
         Path(".school") / "memory",
+        Path(".teacher") / "memory",
         Path(".lerev") / "memory",
         Path(".evo") / "memory",
     )
@@ -240,6 +241,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     # 8. Memory directory (canonical plus legacy pre-rename locations)
     memory_candidates = (
         Path(".school") / "memory",
+        Path(".teacher") / "memory",
         Path(".lerev") / "memory",
         Path(".evo") / "memory",
     )

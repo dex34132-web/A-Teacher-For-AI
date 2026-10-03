@@ -30,7 +30,7 @@ installers, docs, and tests. The GitHub repo is already `A-School-For-AI`.
 - **Console scripts:** `school = school.cli:main`, `school-bridge =
   school.bridge:main`. Remove `teacher` and `lerev` script aliases. The legacy
   `lerev/` package is removed if no test imports it, otherwise left untouched.
-- **Tools (13 in plugin TS + 13 in MCP `_TOOLS`):** `teacher_*` → `school_*`
+- **Tools (13 in plugin TS + 11 in MCP `_TOOLS`):** `teacher_*` → `school_*`
   (school_status, school_remember, school_recall, school_learn, school_conflict,
   school_confidence, school_search, school_deduplicate, school_knowledge,
   school_lifecycle, school_diagnose, school_route, school_route_stats).

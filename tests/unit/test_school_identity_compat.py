@@ -204,6 +204,36 @@ class TestMemoryRootChain:
         assert (old / "old.json").exists(), "legacy root untouched"
 
 
+class TestStatusDoctorMemoryCandidates:
+    """status/doctor memory checks see every root ``resolve_memory_dir`` reads."""
+
+    @staticmethod
+    def _teacher_only_worktree(tmp_path: Path) -> None:
+        legacy = tmp_path / ".teacher" / "memory"
+        legacy.mkdir(parents=True)
+        (legacy / "m.json").write_text('{"id": "x"}', encoding="utf-8")
+
+    def test_status_and_doctor_find_teacher_only_memory(
+        self, tmp_path: Path, monkeypatch, capsys
+    ) -> None:
+        from argparse import Namespace
+
+        from school.cli import _cmd_doctor, _cmd_status
+
+        self._teacher_only_worktree(tmp_path)
+        monkeypatch.chdir(tmp_path)
+
+        with patch("school.cli.discover_bridge", return_value=None):
+            _cmd_status(Namespace())
+            status_out = capsys.readouterr().out
+            _cmd_doctor(Namespace())
+            doctor_out = capsys.readouterr().out
+
+        assert "Memory: available" in status_out, status_out
+        assert "Memory: no data" not in status_out, status_out
+        assert "Project memory: exists" in doctor_out, doctor_out
+
+
 class TestNoStalePublicLerevIdentity:
     """Public surfaces say School; ``lerev`` survives only as labelled legacy."""
 
