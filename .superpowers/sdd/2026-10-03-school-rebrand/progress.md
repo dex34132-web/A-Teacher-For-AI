@@ -33,3 +33,7 @@ Task 3: complete (commits d868272..4c6b7ab, review clean)
 Task 4: implementer COMPLETE (777422f, pushed, 2507/0-new/MATCH/8-8-62). Audit: 79 hits all allowlisted, 0 product prose fixes. Swept controller plan-fix edits + ledger into commit (acknowledged).
 Task 4: minor (deferred): plan-file brief-echo text fits none of 3 allowlist classes literally (unfixable by design)
 Task 4: complete (commits 4c6b7ab..777422f, pushed, review clean)
+Final review: 2 Important (memory tuple missing .teacher; spec count 13->11) + 1 Minor (workspace trail) + 7 deferred Minors triaged OK-KEEP.
+Final fix wave round 1: 02393b0 (F1, F3, F2-line33); re-review: F1/F3 ADDRESSED, F2 NOT ADDRESSED (line 9).
+Final fix wave round 2: 152fdf0 (F2 line 9); re-review: ADDRESSED, no new breakage.
+PLAN COMPLETE (3579262..152fdf0, all reviews clean, all findings addressed or triaged OK-KEEP).
