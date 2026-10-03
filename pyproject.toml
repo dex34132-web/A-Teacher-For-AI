@@ -33,8 +33,7 @@ dependencies = [
 
 [project.scripts]
 school = "school.cli:main"
-# Legacy alias (pre-rename installs used `lerev`); kept for compatibility.
-lerev = "school.cli:main"
+school-bridge = "school.bridge:main"
 
 [project.optional-dependencies]
 dev = [

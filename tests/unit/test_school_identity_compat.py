@@ -135,11 +135,13 @@ class TestLegacyCompat:
 
         assert shim.main is main
 
-    def test_pyproject_keeps_legacy_console_script(self) -> None:
+    def test_pyproject_console_scripts(self) -> None:
         text = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
         assert 'name = "school"' in text
-        assert 'name = "lerev"' not in text
-        assert 'lerev = "school.cli:main"' in text
+        assert 'school = "school.cli:main"' in text
+        assert 'school-bridge = "school.bridge:main"' in text
+        assert "teacher =" not in text
+        assert "lerev =" not in text
 
     def test_legacy_plugin_methods(self, tmp_path: Path) -> None:
         with patch.object(Path, "home", return_value=tmp_path):
