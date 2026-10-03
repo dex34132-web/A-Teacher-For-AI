@@ -108,6 +108,7 @@ benchmarks/results/
 *.log
 logs/
 
-# Teacher runtime memory (legacy .lerev/ kept for existing projects)
+# School runtime memory (legacy .teacher/ and .lerev/ kept for existing projects)
+.school/
 .teacher/
 .lerev/

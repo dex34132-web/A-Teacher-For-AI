@@ -50,3 +50,4 @@ Task 2: Ruling: report-count claims (suite 2506, node-check, MATCH) deferred to 
 Task 2: fix round 1 dispatched (Important #1 only; minors deferred)
 Task 2: fix round 1/5 (1 addressed, 0 open — routePrompt slice(0,200); commits e555fb9..740d6c4)
 Task 2: complete (commits c31fb54..740d6c4, review clean)
+Note (rebrand): teacher→school rebrand completed; all plan/brief paths now school/. plugin_source.py line numbers shifted (discovery/memory-chain edits) — re-locate symbols by grep when resuming Task 3. Description strings bulk-renamed identically on TS and MCP; parity tests hold.

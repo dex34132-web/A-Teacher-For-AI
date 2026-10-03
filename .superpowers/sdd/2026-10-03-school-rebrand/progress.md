@@ -16,3 +16,17 @@
 - Ruling: pip install failure due to no network is not BLOCKED — proceed with suite via cwd, retry in T2 — cost if wrong: T2 console-script verification delays.
 
 ## Task lines
+Task 1: implementer DONE (commit 5db61c5, suite 2506, ruff 0 new, node --check 0, install resolves). Concerns: non-assertion comment/docstring edits (2), ruff baseline recount, suite 2506=2507-1 reconciled, .superpowers tracked, report uncommitted.
+Task 1: minor (deferred): test_school_plugin_bridge removal of stale EVO_HOME comment (ratified, accuracy fix, 0 assertions)
+Task 1: minor (deferred): test_school_identity_compat docstring rewrite (same class)
+Task 1: minor (deferred): plugin_source invokeBridge comment still mentions legacy lerev.bridge alias (cosmetic staleness)
+Task 1: minor (deferred): rebrand plan prose has mechanical SCHOOL_* -> SCHOOL_* self-reference (spec'd exclusion effect)
+Task 1: complete (commits 3579262..5db61c5, review clean)
+Task 2: Ruling: brief test line "assert "school =" not in text" was self-contradictory (plan defect) — implementer's "assert "teacher =" not in text" stands, matches spec final-state — cost if wrong: lerev alias could hide (mitigated: separate assert "lerev =" not in text in same test)
+Task 2: minor (deferred): identity script assertions are substring-based, not TOML key-set (binding constraints covered)
+Task 2: minor (deferred): worktree delete warnings dismissed without evidence in report (cosmetic)
+Task 2: complete (commits 5db61c5..d868272, review clean)
+Task 3: Ruling: brief's stale-name literals were bulk-corrupted to school.ts/school-routing (plan file was not in rename exclusion set); dispatch directive restored intentional teacher.ts/teacher-routing literals — cost if wrong: cleanup would delete the NEW plugin (catastrophic); implementer followed directive.
+Task 3: Ruling: plan-file Task 4 text found bulk-corrupted pre-dispatch (gitignore block, git grep "teacher"->"school", allowlist classes, ledger/handoff notes) — controller fixed 6 edits before brief extraction.
+Task 3: minor (deferred): skill-directory branch exercised only by unit fixture, not a live teacher-routing dir
+Task 3: complete (commits d868272..4c6b7ab, review clean)

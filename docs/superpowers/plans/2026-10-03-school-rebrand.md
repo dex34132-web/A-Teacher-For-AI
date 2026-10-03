@@ -724,13 +724,13 @@ git commit -m "feat(cli): school install removes stale previous-brand plugin and
 Replace the block (post-Task-1 state is unchanged because the file was excluded) so it reads:
 
 ```gitignore
-# School runtime memory (legacy .school/ and .lerev/ kept for existing projects)
+# School runtime memory (legacy .teacher/ and .lerev/ kept for existing projects)
 .school/
-.school/
+.teacher/
 .lerev/
 ```
 
-(The old comment said "School runtime memory (legacy .lerev/ kept ...)". Keep `.school/` and `.lerev/` — stale dirs remain on disk per spec.)
+(This replaces the old block that had only the comment + `.teacher/` + `.lerev/`. Keep `.teacher/` and `.lerev/` — stale dirs remain on disk per spec. Note: `.gitignore` was EXCLUDED from Task 1's bulk rename, so this edit must use the literal `.teacher/` text.)
 
 - [ ] **Step 2: Spec status line**
 
@@ -749,25 +749,25 @@ with:
 - [ ] **Step 3: Repo-wide `school` audit**
 
 ```powershell
-git grep -in "school" -- ':!.gitignore' ':!docs/superpowers/specs/2026-10-03-school-rebrand-design.md'
+git grep -in "teacher" -- ':!.gitignore' ':!docs/superpowers/specs/2026-10-03-school-rebrand-design.md'
 ```
 
 Every hit must fall into one of these allowlisted classes — anything else is a bug to fix in this step:
-1. `.school` memory-root chain literals (in `school/config.py`, `school/plugin_source.py`, the chain tests, and comments naming the legacy root).
-2. Stale-artifact names: `"school.ts"`, `"school-routing"` in `school/cli.py` + `tests/unit/test_cli.py` (intentional — they name the previous brand's files).
-3. Intentional legacy prose that documents the chain (e.g. docstrings saying "legacy `.school` roots are read in place").
+1. `.teacher` memory-root chain literals (in `school/config.py`, `school/plugin_source.py`, the chain tests, and comments naming the legacy root).
+2. Stale-artifact names: `"teacher.ts"`, `"teacher-routing"` in `school/cli.py` + `tests/unit/test_cli.py` (intentional — they name the previous brand's files).
+3. Intentional legacy prose that documents the chain (e.g. docstrings saying "legacy `.teacher` roots are read in place").
 
-Fix all other hits (this includes `tests/conftest.py`'s docstring only if it mentions school — it does not; and any README/docs leftovers). Also run:
+Fix all other hits (this includes `tests/conftest.py`'s docstring only if it mentions teacher — it does not; and any README/docs leftovers). Also run:
 
 ```powershell
-git grep -in "school" -- README.md docs packaging scripts school.spec school
+git grep -in "teacher" -- README.md docs packaging scripts school.spec school
 ```
 
 twice-verified clean (or down to allowlist items only). Check the in-flight adaptive-routing docs are fully rebranded:
 
 ```powershell
 git grep -c "school_" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loop.md .superpowers/sdd/2026-10-02-adaptive-routing-loop/task-3-brief.md
-git grep -in "school" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loop.md .superpowers/sdd
+git grep -in "teacher" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loop.md .superpowers/sdd
 ```
 
 (Second command: only allowlist hits 1-3 may appear.)
@@ -775,7 +775,7 @@ git grep -in "school" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loop
 - [ ] **Step 4: Append ledger note** (append to `.superpowers/sdd/2026-10-02-adaptive-routing-loop/progress.md` — the Phase 1 ledger — as a new line):
 
 ```
-Note (rebrand): school→school rebrand completed; all plan/brief paths now school/. plugin_source.py line numbers shifted (discovery/memory-chain edits) — re-locate symbols by grep when resuming Task 3. Description strings bulk-renamed identically on TS and MCP; parity tests hold.
+Note (rebrand): teacher→school rebrand completed; all plan/brief paths now school/. plugin_source.py line numbers shifted (discovery/memory-chain edits) — re-locate symbols by grep when resuming Task 3. Description strings bulk-renamed identically on TS and MCP; parity tests hold.
 ```
 
 - [ ] **Step 5: Full verification battery**
@@ -785,7 +785,7 @@ $env:PYTHONIOENCODING='utf-8'
 & ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider
 ```
 
-Expected: all green; record the count (baseline 2507; ±fewer is acceptable only for tests deleted in Task 7's class — report the exact delta and its cause).
+Expected: all green; record the count (baseline 2507 — Task 3 added 1 test; report the exact delta and its cause if any).
 
 ```powershell
 & ".venv\Scripts\python.exe" -m ruff check school tests scripts lerev 2>&1 | Select-Object -Last 10   # 0 NEW vs baseline
@@ -817,4 +817,4 @@ Verify: `git log school/main --oneline -3` matches local HEAD.
 
 - [ ] **Step 8: Handoff note (report only)**
 
-In the task report state: (a) restart OpenCode to load `school.ts` (the running session still has the old `school.ts` loaded); (b) Phase 1 resumes at adaptive-routing Task 3 using the rebranded brief — re-locate `plugin_source.py` line anchors by symbol.
+In the task report state: (a) restart OpenCode to load `school.ts` (the running session still has the old `teacher.ts` loaded); (b) Phase 1 resumes at adaptive-routing Task 3 using the rebranded brief — re-locate `plugin_source.py` line anchors by symbol.

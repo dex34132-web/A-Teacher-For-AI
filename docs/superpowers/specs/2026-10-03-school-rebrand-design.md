@@ -1,7 +1,7 @@
 # School Rebrand Design
 
 **Date:** 2026-10-03
-**Status:** approved design (scope + data decisions answered by user; spec pending user review)
+**Status:** approved (spec reviewed by user; implemented by docs/superpowers/plans/2026-10-03-school-rebrand.md)
 
 ## Goal
 
