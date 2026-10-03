@@ -94,6 +94,37 @@ def _clean_legacy_plugin(config: SchoolConfig, verbose: bool = True) -> bool:
 _clean_legacy_plugin_dir = _clean_legacy_plugin
 
 
+def _clean_stale_brand(config: SchoolConfig, verbose: bool = True) -> bool:
+    """Remove previous-brand artefacts so OpenCode never loads duplicates.
+
+    Deletes ``plugins/teacher.ts`` and ``skills/teacher-routing/`` written
+    by pre-rebrand installs of this product.
+    """
+    removed = False
+
+    stale_plugin = config.opencode_plugins_dir() / "teacher.ts"
+    if stale_plugin.is_file():
+        try:
+            stale_plugin.unlink()
+            removed = True
+            if verbose:
+                print(f"Removed stale previous-brand plugin: {stale_plugin}")
+        except OSError:
+            pass
+
+    stale_skill = config.opencode_plugins_dir().parent / "skills" / "teacher-routing"
+    if stale_skill.is_dir():
+        try:
+            shutil.rmtree(stale_skill)
+            removed = True
+            if verbose:
+                print(f"Removed stale previous-brand skill: {stale_skill}")
+        except OSError:
+            pass
+
+    return removed
+
+
 def _cmd_install(args: argparse.Namespace) -> None:
     """Install School globally for OpenCode."""
     config = SchoolConfig()
@@ -116,6 +147,9 @@ def _cmd_install(args: argparse.Namespace) -> None:
 
     # Clean up stale pre-rename plugin artefacts
     _clean_legacy_plugin(config)
+
+    # Remove stale previous-brand artefacts (rebrand cleanup)
+    _clean_stale_brand(config)
 
     # Check if already installed
     plugin_file = config.school_plugin_file()
