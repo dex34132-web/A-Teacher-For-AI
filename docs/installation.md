@@ -1,17 +1,17 @@
-# Teacher Installation
+# School Installation
 
 ## Development (local)
 
 ```powershell
 git clone https://github.com/dex34132-web/lerev.git
-cd teacher
+cd school
 pip install -e .
-teacher install
+school install
 ```
 
 ## Windows — GUI Installer
 
-Download `Teacher-Setup.exe` and run it.
+Download `School-Setup.exe` and run it.
 
 Requirements:
 - Windows 10/11
@@ -19,92 +19,92 @@ Requirements:
 
 The installer will:
 1. Detect Python
-2. Install Teacher via pip
+2. Install School via pip
 3. Register the OpenCode plugin
 4. Verify the installation
 
 ## Windows — pip
 
 ```powershell
-pip install teacher
-teacher install
+pip install school
+school install
 ```
 
 ## Windows — Chocolatey
 
 ```powershell
-choco install teacher
+choco install school
 ```
 
 ## macOS — Homebrew
 
 ```bash
-brew install teacher
+brew install school
 ```
 
 ## macOS — pip
 
 ```bash
-pip3 install teacher
-teacher install
+pip3 install school
+school install
 ```
 
 ## Linux — Shell Installer
 
 ```bash
-curl -fsSL https://teacher.dev/install.sh | sh
+curl -fsSL https://school.dev/install.sh | sh
 ```
 
 Or:
 
 ```bash
-wget -qO- https://teacher.dev/install.sh | sh
+wget -qO- https://school.dev/install.sh | sh
 ```
 
 ## Linux — pip
 
 ```bash
-pip3 install --user teacher
-teacher install
+pip3 install --user school
+school install
 ```
 
 ## Verifying Installation
 
 ```bash
-teacher doctor
+school doctor
 ```
 
 Expected output:
 
 ```
-TEACHER DOCTOR
+SCHOOL DOCTOR
 ========================================
 
   [PASS] Python runtime: 3.12.1
-  [PASS] TEACHER package: v2.6.0
+  [PASS] SCHOOL package: v2.6.0
   [PASS] V2.6 memory system: available
   [PASS] V2.5 routing: available
   [PASS] Bridge: tier=installed_module
   [PASS] OpenCode config: /home/user/.config/opencode/opencode.jsonc
-  [PASS] Plugin file: /home/user/.config/opencode/plugins/teacher.ts
+  [PASS] Plugin file: /home/user/.config/opencode/plugins/school.ts
   [PASS] Project memory: no data yet (will be created)
 
-RESULT: TEACHER IS READY
+RESULT: SCHOOL IS READY
 ```
 
 ## Migration from LEREV
 
-This project was formerly named **LEREV**; **Teacher** is the canonical
+This project was formerly named **LEREV**; **School** is the canonical
 identity. Legacy aliases are deliberately retained and clearly marked:
 
 | Legacy (pre-rename) | Current equivalent |
 |---------------------|--------------------|
-| `lerev` CLI command | `teacher` (`lerev` kept as legacy alias) |
-| `import lerev`, `python -m lerev.bridge` | `import teacher`, `python -m teacher.bridge` (shim kept) |
-| `LEREV_HOME`, `EVO_HOME` env vars | `TEACHER_HOME` (legacy names honoured as fallback) |
-| `lerev-bridge` on PATH | `teacher-bridge` (legacy name honoured as fallback) |
-| `plugins/lerev.ts` OpenCode plugin | `plugins/teacher.ts` (stale legacy file removed on install) |
-| `.lerev/memory/`, `.evo/memory/` | `.teacher/memory/` (copied non-destructively on first use; sources never deleted) |
+| `lerev` CLI command | `school` (`lerev` kept as legacy alias) |
+| `import lerev`, `python -m lerev.bridge` | `import school`, `python -m school.bridge` (shim kept) |
+| `LEREV_HOME`, `EVO_HOME` env vars | `SCHOOL_HOME` (legacy names honoured as fallback) |
+| `lerev-bridge` on PATH | `school-bridge` (legacy name honoured as fallback) |
+| `plugins/lerev.ts` OpenCode plugin | `plugins/school.ts` (stale legacy file removed on install) |
+| `.lerev/memory/`, `.evo/memory/` | `.school/memory/` (copied non-destructively on first use; sources never deleted) |
 
 ## Status
 

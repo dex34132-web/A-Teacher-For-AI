@@ -1,21 +1,21 @@
-# Teacher V2.5 — Universal Agent Routing & Intelligence Layer
+# School V2.5 — Universal Agent Routing & Intelligence Layer
 
 ## Overview
 
-Teacher V2.5 introduces a **universal, agent-agnostic routing and intelligence layer** that transforms Teacher from a direct-consumption learning engine into a **universal intelligence routing system**. It connects any AI system (agents, copilots, assistants, tools, IDEs, CLIs) to Teacher's learning, knowledge, and lifecycle subsystems through a structured, efficient, safe, and explainable routing layer.
+School V2.5 introduces a **universal, agent-agnostic routing and intelligence layer** that transforms School from a direct-consumption learning engine into a **universal intelligence routing system**. It connects any AI system (agents, copilots, assistants, tools, IDEs, CLIs) to School's learning, knowledge, and lifecycle subsystems through a structured, efficient, safe, and explainable routing layer.
 
-**Core principle**: Let the agent do the semantic thinking. Let Teacher make the routing structured, efficient, safe, explainable, and cheap.
+**Core principle**: Let the agent do the semantic thinking. Let School make the routing structured, efficient, safe, explainable, and cheap.
 
 ## Architecture
 
 ```
-Any AI System                    Teacher V2.5 Universal Router
+Any AI System                    School V2.5 Universal Router
  ┌─────────────┐              ┌─────────────────────────────────────┐
  │  Agent      │              │  INFORMATION MODEL                  │
  │  (Any AI)   │              │  InformationPacket (frozen, typed)  │
  │             │   Protocol   │  InformationType (14 types)         │
  │  "task done"│─────────────>│  SensitivityLevel (5 levels)        │
- │  "observe"  │              │  SourceType (AGENT/Teacher/USER/EXT)   │
+ │  "observe"  │              │  SourceType (AGENT/School/USER/EXT)   │
  │  "feedback" │              └──────────────┬──────────────────────┘
  └─────────────┘                             │
                                               ▼
@@ -38,7 +38,7 @@ Any AI System                    Teacher V2.5 Universal Router
                                     │  DESTINATIONS                       │
                                     │                                     │
                                     │  AGENT_CONTEXT  (immediate)         │
-                                    │  TEACHER_CONTEXT    (immediate)         │
+                                    │  SCHOOL_CONTEXT    (immediate)         │
                                     │  LEARNING       (deferred)          │
                                     │  RETRIEVAL      (deferred)          │
                                     │  KNOWLEDGE      (deferred)          │
@@ -210,7 +210,7 @@ class DestinationHandler(ABC):
 ### V2.4.2 Integration Bridge
 
 ```python
-bridge = TeacherIntegrationBridge()
+bridge = SchoolIntegrationBridge()
 
 # Connect to existing subsystems
 bridge.connect_learning_memory(hybrid_memory)
@@ -255,7 +255,7 @@ bridge.dispatch(packet, decision)
 | `core/routing/router.py` | UniversalRouter (main entry point) |
 | `core/routing/protocol.py` | AgentOperation, RoutingIntent, protocol prompt |
 | `core/routing/contracts.py` | AgentRoutingContract ABC, DestinationHandler ABC |
-| `core/routing/integration.py` | TeacherIntegrationBridge, convenience handlers |
+| `core/routing/integration.py` | SchoolIntegrationBridge, convenience handlers |
 
 ## Tests
 

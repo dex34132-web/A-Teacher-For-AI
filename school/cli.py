@@ -1,4 +1,4 @@
-"""Teacher CLI - command-line interface for Teacher."""
+"""School CLI - command-line interface for School."""
 
 from __future__ import annotations
 
@@ -7,28 +7,28 @@ import shutil
 import sys
 from pathlib import Path
 
-from teacher import __version__
-from teacher.config import TeacherConfig
-from teacher.discovery import discover_bridge
-from teacher.plugin_source import TS_PLUGIN_SOURCE
+from school import __version__
+from school.config import SchoolConfig
+from school.discovery import discover_bridge
+from school.plugin_source import TS_PLUGIN_SOURCE
 
 
 def _cmd_version(args: argparse.Namespace) -> None:
-    """Print Teacher version."""
-    print(f"teacher {__version__}")
+    """Print School version."""
+    print(f"school {__version__}")
 
 
 def _cmd_status(args: argparse.Namespace) -> None:
-    """Print Teacher status."""
-    config = TeacherConfig()
+    """Print School status."""
+    config = SchoolConfig()
     bridge = discover_bridge(".")
 
-    print("Teacher")
+    print("School")
     print("----------------")
     print(f"Version: {__version__}")
 
     # Plugin status
-    if config.is_teacher_installed():
+    if config.is_school_installed():
         print("Plugin: installed")
     else:
         print("Plugin: not installed")
@@ -48,7 +48,7 @@ def _cmd_status(args: argparse.Namespace) -> None:
 
     # Memory status (canonical dir plus legacy pre-rename locations)
     memory_candidates = (
-        Path(".teacher") / "memory",
+        Path(".school") / "memory",
         Path(".lerev") / "memory",
         Path(".evo") / "memory",
     )
@@ -58,12 +58,12 @@ def _cmd_status(args: argparse.Namespace) -> None:
         print("Memory: no data")
 
 
-def _clean_legacy_plugin(config: TeacherConfig, verbose: bool = True) -> bool:
+def _clean_legacy_plugin(config: SchoolConfig, verbose: bool = True) -> bool:
     """Remove stale plugin artefacts left by pre-rename installs.
 
     Removes the old ``node_modules/lerev`` directory and the stale
     ``plugins/lerev.ts`` file (legacy identity) if present. Never touches
-    the canonical ``plugins/teacher.ts``.
+    the canonical ``plugins/school.ts``.
     """
     removed = False
 
@@ -95,11 +95,11 @@ _clean_legacy_plugin_dir = _clean_legacy_plugin
 
 
 def _cmd_install(args: argparse.Namespace) -> None:
-    """Install Teacher globally for OpenCode."""
-    config = TeacherConfig()
+    """Install School globally for OpenCode."""
+    config = SchoolConfig()
     force = getattr(args, "force", False)
 
-    print("Teacher Installer")
+    print("School Installer")
     print("----------------------------")
 
     print(f"Python: {sys.version_info.major}.{sys.version_info.minor} OK")
@@ -109,7 +109,7 @@ def _cmd_install(args: argparse.Namespace) -> None:
     if config_file is None:
         print("WARNING: OpenCode config not found")
         print(f"  Expected at: {config.opencode_config_file()}")
-        print("  Teacher will work in development mode only.")
+        print("  School will work in development mode only.")
         return
 
     print(f"OpenCode config: {config_file}")
@@ -118,9 +118,9 @@ def _cmd_install(args: argparse.Namespace) -> None:
     _clean_legacy_plugin(config)
 
     # Check if already installed
-    plugin_file = config.teacher_plugin_file()
+    plugin_file = config.school_plugin_file()
     if plugin_file.exists() and not force:
-        print(f"Teacher is already installed at: {plugin_file}")
+        print(f"School is already installed at: {plugin_file}")
         print("Use --force to reinstall.")
         return
 
@@ -137,19 +137,19 @@ def _cmd_install(args: argparse.Namespace) -> None:
     if bridge:
         print(f"Bridge: {bridge.tier} OK")
     else:
-        print("WARNING: Bridge not found. Run `teacher doctor` for diagnostics.")
+        print("WARNING: Bridge not found. Run `school doctor` for diagnostics.")
 
     print("")
     print("Installation complete!")
-    print("Restart OpenCode to use Teacher.")
+    print("Restart OpenCode to use School.")
 
 
 def _cmd_doctor(args: argparse.Namespace) -> None:
-    """Run Teacher diagnostics."""
-    config = TeacherConfig()
+    """Run School diagnostics."""
+    config = SchoolConfig()
     bridge = discover_bridge(".")
 
-    print("TEACHER DOCTOR")
+    print("SCHOOL DOCTOR")
     print("=" * 40)
     print("")
 
@@ -162,12 +162,12 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
         py_msg += " (requires 3.11+)"
     results.append(("Python runtime", py_ok, py_msg))
 
-    # 2. Teacher package importable
+    # 2. School package importable
     try:
-        from teacher import __version__ as teacher_ver  # noqa: F401
-        results.append(("TEACHER package", True, f"v{teacher_ver}"))
+        from school import __version__ as school_ver  # noqa: F401
+        results.append(("SCHOOL package", True, f"v{school_ver}"))
     except Exception as exc:
-        results.append(("TEACHER package", False, str(exc)))
+        results.append(("SCHOOL package", False, str(exc)))
 
     # 3. V2.6 memory system
     try:
@@ -180,7 +180,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
 
     # 4. V2.5 routing
     try:
-        from core.routing.integration import TeacherIntegrationBridge  # noqa: F401
+        from core.routing.integration import SchoolIntegrationBridge  # noqa: F401
         results.append(("V2.5 routing", True, "available"))
     except Exception as exc:
         results.append(("V2.5 routing", False, str(exc)))
@@ -198,14 +198,14 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
                      str(config_file) if opencode_found else "not found"))
 
     # 7. Plugin file
-    plugin_file = config.teacher_plugin_file()
+    plugin_file = config.school_plugin_file()
     plugin_exists = plugin_file.exists()
     results.append(("Plugin file", plugin_exists,
                      str(plugin_file) if plugin_exists else "not found"))
 
     # 8. Memory directory (canonical plus legacy pre-rename locations)
     memory_candidates = (
-        Path(".teacher") / "memory",
+        Path(".school") / "memory",
         Path(".lerev") / "memory",
         Path(".evo") / "memory",
     )
@@ -222,7 +222,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     passed = sum(1 for _, ok, _ in results if ok)
     total = len(results)
     if passed == total:
-        print("RESULT: TEACHER IS READY")
+        print("RESULT: SCHOOL IS READY")
     else:
         failed = total - passed
         print(f"RESULT: {failed} issue(s) found — fix them above")
@@ -230,14 +230,14 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
 
 
 def _cmd_uninstall(args: argparse.Namespace) -> None:
-    """Uninstall Teacher from OpenCode."""
-    config = TeacherConfig()
+    """Uninstall School from OpenCode."""
+    config = SchoolConfig()
 
-    print("Teacher Uninstaller")
+    print("School Uninstaller")
     print("----------------------------")
 
     # Remove plugin file from auto-discovery directory
-    plugin_file = config.teacher_plugin_file()
+    plugin_file = config.school_plugin_file()
     if plugin_file.exists():
         plugin_file.unlink()
         print(f"Removed plugin: {plugin_file}")
@@ -247,23 +247,23 @@ def _cmd_uninstall(args: argparse.Namespace) -> None:
 
     print("")
     print("Uninstall complete.")
-    print("Note: .teacher/memory/ was NOT removed (use explicit action to delete).")
+    print("Note: .school/memory/ was NOT removed (use explicit action to delete).")
     print("Restart OpenCode to apply changes.")
 
 
-def _auto_install(config: TeacherConfig) -> None:
+def _auto_install(config: SchoolConfig) -> None:
     """Auto-install plugin on first run (silent)."""
     plugins_dir = config.opencode_plugins_dir()
     plugins_dir.mkdir(parents=True, exist_ok=True)
-    plugin_file = config.teacher_plugin_file()
+    plugin_file = config.school_plugin_file()
     plugin_file.write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
     _clean_legacy_plugin(config, verbose=False)
 
 
 def _cmd_mcp(args: argparse.Namespace) -> None:
-    """Run the Teacher MCP server (stdio) or print client configuration."""
+    """Run the School MCP server (stdio) or print client configuration."""
     if getattr(args, "mcp_command", None) == "config":
-        from teacher.mcp.config import build_client_config
+        from school.mcp.config import build_client_config
 
         client = getattr(args, "client", None) or "generic"
         try:
@@ -271,7 +271,7 @@ def _cmd_mcp(args: argparse.Namespace) -> None:
         except ValueError as exc:
             sys.stderr.write(f"{exc}\n")
             sys.exit(1)
-        print(f"# Teacher MCP config for {preset['name']} ({preset['format']})")
+        print(f"# School MCP config for {preset['name']} ({preset['format']})")
         print(f"# File: {preset['path']}")
         print(preset["config"])
         if preset.get("cli"):
@@ -279,11 +279,11 @@ def _cmd_mcp(args: argparse.Namespace) -> None:
         return
 
     try:
-        from teacher.mcp.server import main as mcp_main
+        from school.mcp.server import main as mcp_main
     except ImportError as exc:
         sys.stderr.write(
-            "Teacher MCP server requires the optional 'mcp' package.\n"
-            "Install it with: pip install 'teacher[mcp]'\n"
+            "School MCP server requires the optional 'mcp' package.\n"
+            "Install it with: pip install 'school[mcp]'\n"
             f"(import failed: {exc})\n"
         )
         sys.exit(1)
@@ -293,21 +293,21 @@ def _cmd_mcp(args: argparse.Namespace) -> None:
 def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        prog="teacher",
-        description="Teacher - Universal agent learning and memory system",
+        prog="school",
+        description="School - Universal agent learning and memory system",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    subparsers.add_parser("version", help="Print Teacher version")
-    subparsers.add_parser("status", help="Show Teacher status")
-    install_parser = subparsers.add_parser("install", help="Install Teacher globally for OpenCode")
+    subparsers.add_parser("version", help="Print School version")
+    subparsers.add_parser("status", help="Show School status")
+    install_parser = subparsers.add_parser("install", help="Install School globally for OpenCode")
     install_parser.add_argument(
         "--force", action="store_true", help="Force reinstall even if already installed"
     )
-    subparsers.add_parser("doctor", help="Run Teacher diagnostics")
-    subparsers.add_parser("uninstall", help="Uninstall Teacher from OpenCode")
+    subparsers.add_parser("doctor", help="Run School diagnostics")
+    subparsers.add_parser("uninstall", help="Uninstall School from OpenCode")
     mcp_parser = subparsers.add_parser(
-        "mcp", help="Run the Teacher MCP server over stdio, or print client config"
+        "mcp", help="Run the School MCP server over stdio, or print client config"
     )
     mcp_subparsers = mcp_parser.add_subparsers(dest="mcp_command")
     mcp_config_parser = mcp_subparsers.add_parser(
@@ -328,8 +328,8 @@ def main() -> None:
 
     # Auto-install plugin on first run (server-only commands don't need it)
     if args.command not in ("version", "uninstall", "install", "mcp"):
-        config = TeacherConfig()
-        if not config.is_teacher_installed():
+        config = SchoolConfig()
+        if not config.is_school_installed():
             _auto_install(config)
 
     commands = {

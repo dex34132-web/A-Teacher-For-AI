@@ -1,4 +1,4 @@
-"""Conflict detection tool for Teacher V2.6."""
+"""Conflict detection tool for School V2.6."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ class ConflictDetectionTool(Tool):
 
     @property
     def name(self) -> str:
-        return "teacher_conflict"
+        return "school_conflict"
 
     @property
     def description(self) -> str:

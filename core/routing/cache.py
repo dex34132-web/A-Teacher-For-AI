@@ -1,4 +1,4 @@
-"""Caching and batching for Teacher V2.5 routing.
+"""Caching and batching for School V2.5 routing.
 
 Supports routing-result caching, repeated-request detection,
 batching, and deferred processing.

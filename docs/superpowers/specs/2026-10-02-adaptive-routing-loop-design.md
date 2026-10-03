@@ -2,11 +2,11 @@
 
 Date: 2026-10-02
 Status: approved (design gate passed in session; awaiting spec review)
-Scope: Phase 1 of the Teacher roadmap. Domain-general — for everything, not only coding.
+Scope: Phase 1 of the School roadmap. Domain-general — for everything, not only coding.
 
 ## Problem
 
-Teacher exposes 11+ memory tools to the model, but tool usage is static: the same
+School exposes 11+ memory tools to the model, but tool usage is static: the same
 recall/hook behavior fires everywhere regardless of whether it helps. The user wants
 the system to *learn where and where not to use each tool*, using "a little bit of the
 model's computing power" for short bursts, with visible feedback whenever the machinery
@@ -35,9 +35,9 @@ MCP prompt/agent exposure.
 
 ## Components
 
-### 1. `teacher_route` tool
+### 1. `school_route` tool
 
-Registered by the plugin (OpenCode) and by `teacher/mcp/server.py` (MCP).
+Registered by the plugin (OpenCode) and by `school/mcp/server.py` (MCP).
 
 **Mode `assess`**
 
@@ -70,13 +70,13 @@ Registered by the plugin (OpenCode) and by `teacher/mcp/server.py` (MCP).
 - Every report appends one evidence line.
 
 **Display**: `tool.execute.after` appends ` · routing: <engage|reported>` to the
-title of `teacher_route` / `teacher_route_stats` in addition to the existing
-` · teacher: N` marker.
+title of `school_route` / `school_route_stats` in addition to the existing
+` · school: N` marker.
 
-### 2. `teacher_route_stats` tool
+### 2. `school_route_stats` tool
 
 - Args: `limit` (int, default 20).
-- Reads `.teacher/routing-stats.jsonl` plus a `recall` of tag `routing` lessons,
+- Reads `.school/routing-stats.jsonl` plus a `recall` of tag `routing` lessons,
   plus the current knobs; returns `{recent, aggregates: {per_tool: {calls, avg_ms}},
   lessons, knobs, last_activity}`.
 - Plugin: implemented in TS (file read + bridge recall). MCP: implemented in
@@ -85,18 +85,18 @@ title of `teacher_route` / `teacher_route_stats` in addition to the existing
 ### 3. Hook auto-tracking (plugin only)
 
 - `tool.execute.after` appends `{"ts", "tool", "ms", "ok", "hits?"}` per execution.
-  `hits` parsed only when the output carries a teacher payload; else null.
+  `hits` parsed only when the output carries a school payload; else null.
 - File capped at ~2000 lines (oldest lines dropped on append).
-- Silent on any write failure. Disabled by the existing `TEACHER_HOOKS=0` kill switch.
+- Silent on any write failure. Disabled by the existing `SCHOOL_HOOKS=0` kill switch.
 
-### 4. Skill `teacher-routing`
+### 4. Skill `school-routing`
 
-- Single `SKILL.md`, installed by `teacher install` into OpenCode's user skill
+- Single `SKILL.md`, installed by `school install` into OpenCode's user skill
   directory (exact path confirmed against OpenCode docs during implementation).
 - Description drives model self-selection: load for light/medium-light situations;
-  at medium+ the `teacher_route` assess result instructs loading it as well.
+  at medium+ the `school_route` assess result instructs loading it as well.
 - Workflow (all three, per user): review stats + recent lessons → write routing
-  lessons into Teacher memory via the bridge → update `.teacher/routing.json` knobs →
+  lessons into School memory via the bridge → update `.school/routing.json` knobs →
   print a compact audit and ask ≤3 preference questions.
 - The skill's first-ever question in a project is a 4-option calibration question
   (3 preset questioning intensities + 1 "type your own") — deferred to Phase 5's
@@ -104,7 +104,7 @@ title of `teacher_route` / `teacher_route_stats` in addition to the existing
 
 ### 5. Knobs file
 
-`.teacher/routing.json` in the project memory root:
+`.school/routing.json` in the project memory root:
 
 ```json
 {
@@ -124,10 +124,10 @@ title of `teacher_route` / `teacher_route_stats` in addition to the existing
 
 ## Data formats
 
-- Evidence line (`.teacher/routing-stats.jsonl`, one JSON per line):
+- Evidence line (`.school/routing-stats.jsonl`, one JSON per line):
   `{"ts": ISO-8601, "tool": str, "ms": int, "ok": bool, "hits": int|null,
   "kind": "exec"|"assess"|"report", "severity"?: str, "engage"?: str}`
-- Lessons: ordinary Teacher memories, tags `["routing", <outcome>]`, agent `opencode`.
+- Lessons: ordinary School memories, tags `["routing", <outcome>]`, agent `opencode`.
 
 ## Error handling
 
@@ -138,8 +138,8 @@ title of `teacher_route` / `teacher_route_stats` in addition to the existing
 | Stats write fails | silent |
 | Knobs file invalid | per-key defaults |
 | Skill not installed | assess returns `engage` + note `skill not found` |
-| `TEACHER_ROUTE=0` | micro-calls skipped entirely (self-rated path) |
-| `TEACHER_HOOKS=0` | tracking + markers off (existing behavior) |
+| `SCHOOL_ROUTE=0` | micro-calls skipped entirely (self-rated path) |
+| `SCHOOL_HOOKS=0` | tracking + markers off (existing behavior) |
 
 ## Security
 
@@ -152,11 +152,11 @@ title of `teacher_route` / `teacher_route_stats` in addition to the existing
 
 | File | Change |
 |---|---|
-| `teacher/plugin_source.py` | `teacher_route`, `teacher_route_stats` tools; tracking in `tool.execute.after`; knobs reader; ` · routing` marker |
-| `teacher/mcp/server.py` | parity for both tools (self-rated fallback); stats reader |
-| `skills/teacher-routing/SKILL.md` | new skill (source of truth) |
-| `teacher/cli.py` | `teacher install` ships the skill |
-| `tests/unit/test_teacher_plugin_hooks.py` | tracking, markers, knobs, kill switch |
+| `school/plugin_source.py` | `school_route`, `school_route_stats` tools; tracking in `tool.execute.after`; knobs reader; ` · routing` marker |
+| `school/mcp/server.py` | parity for both tools (self-rated fallback); stats reader |
+| `skills/school-routing/SKILL.md` | new skill (source of truth) |
+| `school/cli.py` | `school install` ships the skill |
+| `tests/unit/test_school_plugin_hooks.py` | tracking, markers, knobs, kill switch |
 | `tests/unit/test_mcp_server.py` | route/stats contracts, required-severity fallback |
 | `tests/integration/test_mcp_stdio.py` | route/stats over stdio |
 | `docs/routing.md` | user-facing doc (domain-general examples) |
@@ -173,10 +173,10 @@ title of `teacher_route` / `teacher_route_stats` in addition to the existing
 
 ## Acceptance criteria
 
-- [ ] `teacher_route` assess makes a real ≤10 s model call and returns a graded
+- [ ] `school_route` assess makes a real ≤10 s model call and returns a graded
       engage decision with a reason; fallback path works when the call fails.
-- [ ] `teacher_route report` persists tagged lessons retrievable by
-      `teacher_route_stats` and `teacher_recall`.
+- [ ] `school_route report` persists tagged lessons retrievable by
+      `school_route_stats` and `school_recall`.
 - [ ] Every route/stats execution shows a ` · routing` marker.
 - [ ] Evidence lines accumulate per execution; stats aggregates are correct.
 - [ ] Skill installs, self-selects for light situations, and its audit flow

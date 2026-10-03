@@ -1,6 +1,6 @@
-"""Routing destinations for Teacher V2.5.
+"""Routing destinations for School V2.5.
 
-Defines where information can be routed within Teacher. Destinations are
+Defines where information can be routed within School. Destinations are
 extensible and agent-agnostic. The same destination types work for
 coding agents, general agents, hosted models, and local models.
 """
@@ -15,13 +15,13 @@ from typing import Any
 class DestinationType(Enum):
     """Built-in routing destinations.
 
-    These are the standard destinations within Teacher. Custom destinations
+    These are the standard destinations within School. Custom destinations
     can be registered by extending the system.
     """
 
     # Agent interaction
     AGENT_CONTEXT = auto()  # Return to agent as context
-    TEACHER_CONTEXT = auto()  # Internal Teacher context
+    SCHOOL_CONTEXT = auto()  # Internal School context
 
     # Learning & knowledge
     LEARNING = auto()  # Route to learning subsystem
@@ -97,8 +97,8 @@ class Destination:
 # ---------------------------------------------------------------------------
 
 AGENT_CONTEXT = Destination(destination_type=DestinationType.AGENT_CONTEXT, name="agent_context")
-TEACHER_CONTEXT = Destination(
-    destination_type=DestinationType.TEACHER_CONTEXT, name="teacher_context"
+SCHOOL_CONTEXT = Destination(
+    destination_type=DestinationType.SCHOOL_CONTEXT, name="school_context"
 )
 LEARNING = Destination(destination_type=DestinationType.LEARNING, name="learning")
 RETRIEVAL = Destination(destination_type=DestinationType.RETRIEVAL, name="retrieval")
@@ -115,7 +115,7 @@ BATCH = Destination(destination_type=DestinationType.BATCH, name="batch")
 # Default destination registry
 DEFAULT_DESTINATIONS: list[Destination] = [
     AGENT_CONTEXT,
-    TEACHER_CONTEXT,
+    SCHOOL_CONTEXT,
     LEARNING,
     RETRIEVAL,
     KNOWLEDGE,

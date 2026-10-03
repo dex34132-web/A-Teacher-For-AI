@@ -1,7 +1,7 @@
-"""Client configuration presets for the Teacher MCP server.
+"""Client configuration presets for the School MCP server.
 
 Builds copy-paste configuration for common MCP clients. Does NOT import
-the ``mcp`` SDK — ``teacher mcp config`` must work without the optional
+the ``mcp`` SDK — ``school mcp config`` must work without the optional
 dependency installed.
 """
 
@@ -33,7 +33,7 @@ _FORMATS: dict[str, str] = {name: ("toml" if name == "codex" else "json")
 
 
 def _command(python: str | None = None) -> tuple[str, list[str]]:
-    return (python or sys.executable, ["-m", "teacher.mcp"])
+    return (python or sys.executable, ["-m", "school.mcp"])
 
 
 def _toml_string(value: str) -> str:
@@ -44,7 +44,7 @@ def _toml_string(value: str) -> str:
 
 def _mcp_servers_block(exe: str, args: list[str], **extra: Any) -> dict[str, Any]:
     server: dict[str, Any] = {"command": exe, "args": args, **extra}
-    return {"mcpServers": {"teacher": server}}
+    return {"mcpServers": {"school": server}}
 
 
 def build_client_config(client: str, python: str | None = None) -> dict[str, Any]:
@@ -65,17 +65,17 @@ def build_client_config(client: str, python: str | None = None) -> dict[str, Any
         # TOML basic strings: escape backslashes and quotes so Windows
         # paths (C:\Users\...) stay valid TOML.
         args_toml = ", ".join(_toml_string(a) for a in args)
-        config = f"[mcp_servers.teacher]\ncommand = {_toml_string(exe)}\nargs = [{args_toml}]\n"
-        cli = f"codex mcp add teacher -- {exe} -m teacher.mcp"
+        config = f"[mcp_servers.school]\ncommand = {_toml_string(exe)}\nargs = [{args_toml}]\n"
+        cli = f"codex mcp add school -- {exe} -m school.mcp"
     elif name == "claude":
         block = _mcp_servers_block(exe, args, type="stdio")
         config = json.dumps(block, indent=2)
-        cli = f"claude mcp add teacher -- {exe} -m teacher.mcp"
+        cli = f"claude mcp add school -- {exe} -m school.mcp"
     elif name == "opencode":
         block = {
             "$schema": "https://opencode.ai/config.json",
             "mcp": {
-                "teacher": {
+                "school": {
                     "type": "local",
                     "command": [exe, *args],
                     "enabled": True,
@@ -84,7 +84,7 @@ def build_client_config(client: str, python: str | None = None) -> dict[str, Any
         }
         config = json.dumps(block, indent=2)
     elif name == "vscode":
-        block = {"servers": {"teacher": {"type": "stdio", "command": exe, "args": args}}}
+        block = {"servers": {"school": {"type": "stdio", "command": exe, "args": args}}}
         config = json.dumps(block, indent=2)
     elif name == "cline":
         block = _mcp_servers_block(
@@ -94,7 +94,7 @@ def build_client_config(client: str, python: str | None = None) -> dict[str, Any
     elif name == "gemini":
         block = _mcp_servers_block(exe, args)
         config = json.dumps(block, indent=2)
-        cli = f"gemini mcp add teacher {exe} -m teacher.mcp"
+        cli = f"gemini mcp add school {exe} -m school.mcp"
     else:  # generic, cursor, windsurf, roo — shared mcpServers schema
         block = _mcp_servers_block(exe, args, type="stdio")
         config = json.dumps(block, indent=2)

@@ -1,19 +1,18 @@
-"""Teacher configuration — paths and OpenCode config discovery."""
+"""School configuration — paths and OpenCode config discovery."""
 
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 from typing import Any
 
 
-class TeacherConfig:
-    """Teacher configuration and path management."""
+class SchoolConfig:
+    """School configuration and path management."""
 
-    package_name: str = "teacher"
-    plugin_dir_name: str = "teacher"
-    memory_dir: str = ".teacher"
+    package_name: str = "school"
+    plugin_dir_name: str = "school"
+    memory_dir: str = ".school"
     legacy_memory_dir: str = ".evo"
     # Legacy identity — pre-rename installs used .lerev/ (and .evo/ before that).
     legacy_memory_dirs: tuple[str, ...] = (".lerev", ".evo")
@@ -35,13 +34,13 @@ class TeacherConfig:
         """Return the OpenCode auto-discovery plugins directory."""
         return self.opencode_config_dir() / "plugins"
 
-    def teacher_plugin_file(self) -> Path:
-        """Return the path to the Teacher TypeScript plugin file."""
+    def school_plugin_file(self) -> Path:
+        """Return the path to the School TypeScript plugin file."""
         return self.opencode_plugins_dir() / f"{self.plugin_dir_name}.ts"
 
     # Legacy alias — pre-rename installs looked for lerev.ts.
     def lerev_plugin_file(self) -> Path:
-        """Legacy alias for :meth:`teacher_plugin_file` (pre-rename installs)."""
+        """Legacy alias for :meth:`school_plugin_file` (pre-rename installs)."""
         return self.opencode_plugins_dir() / self.legacy_plugin_file_name
 
     def legacy_plugin_dir(self) -> Path:
@@ -67,13 +66,13 @@ class TeacherConfig:
             encoding="utf-8",
         )
 
-    def is_teacher_installed(self) -> bool:
-        """Check if Teacher plugin file exists in the auto-discovery directory."""
-        return self.teacher_plugin_file().is_file()
+    def is_school_installed(self) -> bool:
+        """Check if School plugin file exists in the auto-discovery directory."""
+        return self.school_plugin_file().is_file()
 
     # Legacy alias — pre-rename installs checked lerev.ts.
     def is_lerev_installed(self) -> bool:
-        """Legacy alias for :meth:`is_teacher_installed` (pre-rename installs)."""
+        """Legacy alias for :meth:`is_school_installed` (pre-rename installs)."""
         return self.lerev_plugin_file().is_file()
 
 
@@ -97,38 +96,22 @@ def get_opencode_node_modules() -> Path | None:
 
 
 # Legacy alias - pre-rename imports used LerevConfig.
-LerevConfig = TeacherConfig
+LerevConfig = SchoolConfig
 
 
 def resolve_memory_dir(worktree: str | Path) -> Path:
-    """Return the canonical ``.teacher/memory`` directory for a worktree.
+    """Return the memory directory for a worktree.
 
-    Migration is safe and non-destructive:
-
-    - If ``.teacher/memory`` exists, it is used as-is.
-    - Else, if a legacy ``.lerev/memory`` (or ``.evo/memory``) directory
-      exists, it is **copied** into ``.teacher/memory`` — the legacy source
-      is never modified or deleted, so existing memory stays recoverable.
-    - Otherwise the empty canonical directory is created.
-
-    If the copy fails for any reason, the existing legacy directory is
-    returned directly so memory remains readable (never silently lost).
+    Resolution takes the first existing of ``.school``, ``.teacher``,
+    ``.lerev``, ``.evo`` (checked as ``<root>/memory``); if none exists,
+    ``.school/memory`` is created. Existing roots are used in place —
+    memory is never copied, moved, or deleted.
     """
     root = Path(worktree)
-    canonical = root / ".teacher" / "memory"
-    if canonical.exists():
-        return canonical
-
-    for legacy_name in (".lerev", ".evo"):
-        legacy = root / legacy_name / "memory"
-        if legacy.exists():
-            try:
-                canonical.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(legacy, canonical)
-                return canonical
-            except (OSError, shutil.Error):
-                # Migration failed — keep reading legacy memory in place.
-                return legacy
-
+    for name in (".school", ".teacher", ".lerev", ".evo"):
+        candidate = root / name / "memory"
+        if candidate.exists():
+            return candidate
+    canonical = root / ".school" / "memory"
     canonical.mkdir(parents=True, exist_ok=True)
     return canonical

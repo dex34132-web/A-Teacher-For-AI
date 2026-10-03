@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
-    <id>teacher</id>
+    <id>school</id>
     <version>2.6.0</version>
-    <title>Teacher</title>
-    <authors>Teacher Contributors</authors>
+    <title>School</title>
+    <authors>School Contributors</authors>
     <description>Universal agent learning and memory system for AI coding agents.</description>
     <projectUrl>https://github.com/dex34132-web/lerev</projectUrl>
     <projectSourceUrl>https://github.com/dex34132-web/lerev</projectSourceUrl>

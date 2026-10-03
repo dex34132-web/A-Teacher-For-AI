@@ -1,4 +1,4 @@
-"""Tests for Teacher plugin source and bridge protocol."""
+"""Tests for School plugin source and bridge protocol."""
 
 from __future__ import annotations
 
@@ -7,29 +7,29 @@ import re
 from io import StringIO
 from unittest.mock import patch
 
-from teacher.plugin_source import TS_PLUGIN_SOURCE
+from school.plugin_source import TS_PLUGIN_SOURCE
 
 #: The approved agent-facing OpenCode tool surface (order matters).
 EXPECTED_OPENCODE_TOOLS = [
-    "teacher_status",
-    "teacher_remember",
-    "teacher_recall",
-    "teacher_learn",
-    "teacher_conflict",
-    "teacher_confidence",
-    "teacher_search",
-    "teacher_deduplicate",
-    "teacher_knowledge",
-    "teacher_lifecycle",
-    "teacher_diagnose",
-    "teacher_route",
-    "teacher_route_stats",
+    "school_status",
+    "school_remember",
+    "school_recall",
+    "school_learn",
+    "school_conflict",
+    "school_confidence",
+    "school_search",
+    "school_deduplicate",
+    "school_knowledge",
+    "school_lifecycle",
+    "school_diagnose",
+    "school_route",
+    "school_route_stats",
 ]
 
 
 def _tool_names() -> list[str]:
     """Return the tool names registered by the TypeScript plugin, in order."""
-    return re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+    return re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
 
 
 def _tool_block(name: str) -> str:
@@ -43,9 +43,9 @@ def _tool_block(name: str) -> str:
 class TestPluginSource:
     """Test the bundled TypeScript plugin source."""
 
-    def test_contains_teacher_plugin(self) -> None:
-        """Plugin source defines Teacher plugin."""
-        assert "const Teacher: Plugin" in TS_PLUGIN_SOURCE
+    def test_contains_school_plugin(self) -> None:
+        """Plugin source defines School plugin."""
+        assert "const School: Plugin" in TS_PLUGIN_SOURCE
 
     def test_contains_discover_bridge(self) -> None:
         """Plugin source has bridge discovery."""
@@ -53,33 +53,31 @@ class TestPluginSource:
 
     def test_contains_tools(self) -> None:
         """Plugin source defines all 10 tools."""
-        assert "teacher_status" in TS_PLUGIN_SOURCE
-        assert "teacher_remember" in TS_PLUGIN_SOURCE
-        assert "teacher_recall" in TS_PLUGIN_SOURCE
-        assert "teacher_conflict" in TS_PLUGIN_SOURCE
-        assert "teacher_confidence" in TS_PLUGIN_SOURCE
-        assert "teacher_search" in TS_PLUGIN_SOURCE
-        assert "teacher_deduplicate" in TS_PLUGIN_SOURCE
-        assert "teacher_knowledge" in TS_PLUGIN_SOURCE
-        assert "teacher_lifecycle" in TS_PLUGIN_SOURCE
-        assert "teacher_diagnose" in TS_PLUGIN_SOURCE
+        assert "school_status" in TS_PLUGIN_SOURCE
+        assert "school_remember" in TS_PLUGIN_SOURCE
+        assert "school_recall" in TS_PLUGIN_SOURCE
+        assert "school_conflict" in TS_PLUGIN_SOURCE
+        assert "school_confidence" in TS_PLUGIN_SOURCE
+        assert "school_search" in TS_PLUGIN_SOURCE
+        assert "school_deduplicate" in TS_PLUGIN_SOURCE
+        assert "school_knowledge" in TS_PLUGIN_SOURCE
+        assert "school_lifecycle" in TS_PLUGIN_SOURCE
+        assert "school_diagnose" in TS_PLUGIN_SOURCE
 
     def test_cross_platform_bridge_discovery(self) -> None:
-        """Plugin uses cross-platform PATH detection with legacy fallbacks."""
+        """Plugin uses cross-platform PATH detection."""
         assert 'process.platform === "win32"' in TS_PLUGIN_SOURCE
         assert "where ${command}" in TS_PLUGIN_SOURCE
         assert "which ${command}" in TS_PLUGIN_SOURCE
-        assert "teacher-bridge" in TS_PLUGIN_SOURCE
-        assert "lerev-bridge" in TS_PLUGIN_SOURCE
+        assert "school-bridge" in TS_PLUGIN_SOURCE
+        assert "lerev-bridge" not in TS_PLUGIN_SOURCE
 
     def test_exports_default(self) -> None:
         """Plugin exports default."""
-        assert "export default Teacher" in TS_PLUGIN_SOURCE
+        assert "export default School" in TS_PLUGIN_SOURCE
 
     def test_no_evo_references(self) -> None:
         """No stale EVO references in user-facing output."""
-        # EVO_HOME is allowed as backward-compat
-        # But user-facing strings should say Teacher
         assert "evo_status" not in TS_PLUGIN_SOURCE
         assert "evo_remember" not in TS_PLUGIN_SOURCE
         assert "evo_recall" not in TS_PLUGIN_SOURCE
@@ -99,8 +97,8 @@ class TestBridgeProtocol:
     """Test the bridge JSON protocol."""
 
     def test_bridge_module_importable(self) -> None:
-        """teacher.bridge module is importable."""
-        from teacher.bridge import _COMMANDS
+        """school.bridge module is importable."""
+        from school.bridge import _COMMANDS
 
         assert "status" in _COMMANDS
         assert "remember" in _COMMANDS
@@ -115,7 +113,7 @@ class TestBridgeProtocol:
 
     def test_bridge_handles_malformed_json(self) -> None:
         """Bridge handles malformed JSON input."""
-        from teacher.bridge import main
+        from school.bridge import main
 
         stdin = StringIO("not valid json {{{")
         stdout = StringIO()
@@ -131,7 +129,7 @@ class TestBridgeProtocol:
 
     def test_bridge_handles_unknown_command(self) -> None:
         """Bridge handles unknown commands."""
-        from teacher.bridge import main
+        from school.bridge import main
 
         stdin = StringIO(json.dumps({"command": "nonexistent"}))
         stdout = StringIO()
@@ -147,16 +145,16 @@ class TestBridgeProtocol:
 
     def test_bridge_status_command(self) -> None:
         """Bridge status command returns component info."""
-        from teacher.bridge import _handle_status
+        from school.bridge import _handle_status
 
         result = _handle_status({"worktree": "."})
         assert result["ok"] is True
         assert "components" in result
-        assert "teacher" in result["components"]
+        assert "school" in result["components"]
 
     def test_bridge_remember_requires_content(self) -> None:
         """Bridge remember command requires content."""
-        from teacher.bridge import _handle_remember
+        from school.bridge import _handle_remember
 
         result = _handle_remember({"worktree": ".", "content": "", "observation": ""})
         assert result["ok"] is False
@@ -164,7 +162,7 @@ class TestBridgeProtocol:
 
     def test_bridge_recall_requires_query(self) -> None:
         """Bridge recall command requires query."""
-        from teacher.bridge import _handle_recall
+        from school.bridge import _handle_recall
 
         result = _handle_recall({"worktree": ".", "query": ""})
         assert result["ok"] is False
@@ -184,13 +182,13 @@ class TestPluginToolSurface:
 
     def test_learn_registered_after_recall(self) -> None:
         names = _tool_names()
-        assert "teacher_learn" in names
-        assert names.index("teacher_learn") == names.index("teacher_recall") + 1
+        assert "school_learn" in names
+        assert names.index("school_learn") == names.index("school_recall") + 1
 
     def test_existing_ten_tools_preserved(self) -> None:
         names = set(_tool_names())
         for tool_name in EXPECTED_OPENCODE_TOOLS:
-            if tool_name != "teacher_learn":
+            if tool_name != "school_learn":
                 assert tool_name in names
 
     def test_no_internal_orchestrator_tools_exposed(self) -> None:
@@ -201,30 +199,30 @@ class TestPluginToolSurface:
             "remember_with_learning",
             "trigger_background",
             "process_background",
-            "teacher_pipeline",
-            "teacher_parallel",
-            "teacher_background",
+            "school_pipeline",
+            "school_parallel",
+            "school_background",
         ):
             assert forbidden not in TS_PLUGIN_SOURCE, f"internal API exposed: {forbidden}"
 
 
 class TestLearnTool:
-    """teacher_learn must be a thin passthrough to the existing bridge `learn` command."""
+    """school_learn must be a thin passthrough to the existing bridge `learn` command."""
 
     def test_learn_sends_learn_command(self) -> None:
-        block = _tool_block("teacher_learn")
+        block = _tool_block("school_learn")
         assert 'command: "learn"' in block
         assert 'command: "remember"' not in block
 
     def test_learn_content_is_required(self) -> None:
-        block = _tool_block("teacher_learn")
+        block = _tool_block("school_learn")
         args_section = block.split("async execute")[0]
         content_decl = re.search(r"content: (tool\.schema[\s\S]*?)\n\s+\w+:", args_section)
         assert content_decl is not None, "content argument not declared"
         assert ".optional()" not in content_decl.group(1)
 
     def test_learn_supports_all_approved_arguments(self) -> None:
-        args_section = _tool_block("teacher_learn").split("async execute")[0]
+        args_section = _tool_block("school_learn").split("async execute")[0]
         for arg in (
             "content",
             "outcome",
@@ -239,36 +237,36 @@ class TestLearnTool:
 
     def test_learn_surfaces_bridge_errors(self) -> None:
         """Orchestrator failures arrive as `errors: [...]`, not `error: {...}`."""
-        block = _tool_block("teacher_learn")
+        block = _tool_block("school_learn")
         assert "errors" in block
 
     def test_learn_contains_no_learning_logic(self) -> None:
         """No second learning engine in TypeScript: no orchestrator/storage calls."""
-        block = _tool_block("teacher_learn")
+        block = _tool_block("school_learn")
         for forbidden in ("create_orchestrator", "dispatch(", "store(", "MemoryManager"):
             assert forbidden not in block, f"TS learning logic found: {forbidden}"
 
 
 class TestPluginVersionMetadata:
-    """The installed plugin reports the canonical Teacher version."""
+    """The installed plugin reports the canonical School version."""
 
     def test_version_matches_python_package_version(self) -> None:
-        from teacher import __version__
+        from school import __version__
 
-        assert f'const TEACHER_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE
+        assert f'const SCHOOL_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE
 
     def test_no_unresolved_version_placeholder(self) -> None:
-        assert "__TEACHER_VERSION__" not in TS_PLUGIN_SOURCE
+        assert "__SCHOOL_VERSION__" not in TS_PLUGIN_SOURCE
 
     def test_status_reports_plugin_and_bridge_versions(self) -> None:
-        block = _tool_block("teacher_status")
-        assert "TEACHER_VERSION" in block
+        block = _tool_block("school_status")
+        assert "SCHOOL_VERSION" in block
         assert "bridgeVersion" in block
         assert "Version match" in block
 
     def test_status_mismatch_is_non_fatal(self) -> None:
         """A version mismatch must never block the status call."""
-        block = _tool_block("teacher_status")
+        block = _tool_block("school_status")
         assert "throw" not in block
         assert "MISMATCH" in block
         # mismatch is only ever surfaced in reporting, via metadata
@@ -276,16 +274,16 @@ class TestPluginVersionMetadata:
 
 
 class TestBridgeLearnCommand:
-    """Bridge `learn` command → Orchestrator.dispatch("teacher_remember")."""
+    """Bridge `learn` command → Orchestrator.dispatch("school_remember")."""
 
     def test_learn_command_registered(self) -> None:
-        from teacher.bridge import _COMMANDS
+        from school.bridge import _COMMANDS
 
         assert "learn" in _COMMANDS
 
     def test_learn_dispatches_to_orchestrator(self) -> None:
         from core.routing.v26.tools.base import ToolResult
-        from teacher import bridge as bridge_module
+        from school import bridge as bridge_module
 
         calls: dict[str, object] = {}
 
@@ -299,14 +297,14 @@ class TestBridgeLearnCommand:
         with patch.object(bridge_module, "_get_orchestrator", return_value=StubOrchestrator()):
             resp = bridge_module._handle_learn(request)
 
-        assert calls["command"] == "teacher_remember"
+        assert calls["command"] == "school_remember"
         assert calls["params"]["content"] == "learned something"
         assert "command" not in calls["params"]
         assert resp["ok"] is True
         assert resp["result"] == {"stored": True}
 
     def test_successful_learn_call_through_real_orchestrator(self) -> None:
-        from teacher.bridge import _handle_learn
+        from school.bridge import _handle_learn
 
         resp = _handle_learn(
             {
@@ -319,7 +317,7 @@ class TestBridgeLearnCommand:
         assert resp["result"]["stored"] is True
 
     def test_malformed_learn_input_reports_errors(self) -> None:
-        from teacher.bridge import _handle_learn
+        from school.bridge import _handle_learn
 
         resp = _handle_learn({"command": "learn"})
         assert resp["ok"] is False
@@ -327,7 +325,7 @@ class TestBridgeLearnCommand:
 
     def test_learn_orchestrator_failure_propagates(self) -> None:
         from core.routing.v26.tools.base import ToolResult
-        from teacher import bridge as bridge_module
+        from school import bridge as bridge_module
 
         class FailingOrchestrator:
             def dispatch(self, command: str, **params: object) -> ToolResult:
@@ -342,14 +340,14 @@ class TestBridgeLearnCommand:
         assert resp["errors"] == ["storage rejected"]
 
     def test_bridge_exception_returns_runtime_error(self) -> None:
-        from teacher.bridge import main
+        from school.bridge import main
 
         stdin = StringIO(json.dumps({"command": "learn", "content": "x"}))
         stdout = StringIO()
         with (
             patch("sys.stdin", stdin),
             patch("sys.stdout", stdout),
-            patch("teacher.bridge._get_orchestrator", side_effect=RuntimeError("orch down")),
+            patch("school.bridge._get_orchestrator", side_effect=RuntimeError("orch down")),
         ):
             main()
 
@@ -363,13 +361,13 @@ class TestBridgeVersionCompatibility:
     """Offline plugin/bridge compatibility reporting."""
 
     def test_status_includes_version(self) -> None:
-        from teacher import __version__
-        from teacher.bridge import _handle_status
+        from school import __version__
+        from school.bridge import _handle_status
 
         result = _handle_status({"worktree": "."})
         assert result["version"] == __version__
 
     def test_status_version_matches_plugin_version(self) -> None:
-        from teacher import __version__
+        from school import __version__
 
-        assert f'const TEACHER_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE
+        assert f'const SCHOOL_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE

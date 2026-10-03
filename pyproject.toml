@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "teacher"
+name = "school"
 version = "2.6.0"
 description = "Universal agent learning and memory system"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
-    { name = "Teacher Contributors" },
+    { name = "School Contributors" },
 ]
 keywords = ["ai", "machine-learning", "coding-agent", "harness", "memory", "learning"]
 classifiers = [
@@ -32,9 +32,9 @@ dependencies = [
 ]
 
 [project.scripts]
-teacher = "teacher.cli:main"
+school = "school.cli:main"
 # Legacy alias (pre-rename installs used `lerev`); kept for compatibility.
-lerev = "teacher.cli:main"
+lerev = "school.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -55,7 +55,7 @@ mcp = [
     "mcp>=2.0",
 ]
 all = [
-    "teacher[dev,web,semantic,mcp]",
+    "school[dev,web,semantic,mcp]",
 ]
 
 [project.urls]
@@ -66,7 +66,7 @@ Repository = "https://github.com/dex34132-web/lerev"
 Issues = "https://github.com/dex34132-web/lerev/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["core", "web", "adapters", "storage", "teacher", "lerev"]
+packages = ["core", "web", "adapters", "storage", "school", "lerev"]
 
 [tool.ruff]
 line-length = 100

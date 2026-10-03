@@ -2,7 +2,7 @@
 
 import re
 
-from teacher.plugin_source import TS_PLUGIN_SOURCE
+from school.plugin_source import TS_PLUGIN_SOURCE
 
 
 class TestRoutingCoreHelpers:
@@ -97,12 +97,12 @@ class TestRoutingCoreHelpers:
 
 class TestRouteTools:
     def test_tools_registered(self):
-        names = re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
-        assert "teacher_route" in names
-        assert "teacher_route_stats" in names
+        names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+        assert "school_route" in names
+        assert "school_route_stats" in names
 
     def test_descriptions_are_routing_guided(self):
-        for name in ("teacher_route", "teacher_route_stats"):
+        for name in ("school_route", "school_route_stats"):
             match = re.search(
                 rf"{name}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
                 TS_PLUGIN_SOURCE,
@@ -152,24 +152,24 @@ class TestRouteTools:
         assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE
 
     def test_kill_switch(self):
-        assert 'process.env.TEACHER_ROUTE === "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
 
     def test_report_stores_tagged_lesson(self):
-        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
-        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
+        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
         assert '"routing"' in block
         assert '"helpful"' in block and '"useless"' in block and '"neutral"' in block
         assert '"SUCCESS"' in block and '"FAILURE"' in block and '"NEUTRAL"' in block
         assert 'command: "remember"' in block
 
     def test_assess_appends_evidence_and_metadata(self):
-        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
-        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
+        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
         assert 'kind: "assess"' in block
         assert "engagement:" in block
 
     def test_stats_aggregates(self):
-        idx = TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")
+        idx = TS_PLUGIN_SOURCE.index("school_route_stats: tool(")
         block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index('"tool.execute.before"')]
         assert "aggregates" in block
         assert "avg_ms" in block

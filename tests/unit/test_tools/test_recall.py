@@ -23,7 +23,7 @@ def _make_tool_with_memories():
 
 def test_recall_tool_name():
     tool = _make_tool_with_memories()
-    assert tool.name == "teacher_recall"
+    assert tool.name == "school_recall"
 
 
 def test_recall_tool_schema_has_query():
@@ -73,4 +73,4 @@ def test_recall_tool_execute_with_limit():
 def test_recall_tool_returns_metadata():
     tool = _make_tool_with_memories()
     result = tool.execute(query="Python")
-    assert result.metadata.get("tool") == "teacher_recall"
+    assert result.metadata.get("tool") == "school_recall"

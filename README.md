@@ -1,34 +1,34 @@
-# Teacher
+# School
 
 Universal AI-agent learning and long-term memory system.
 
-Teacher gives coding agents persistent, project-scoped memory that survives restarts.
+School gives coding agents persistent, project-scoped memory that survives restarts.
 
 ## Install
 
 ### Python
 ```bash
-pip install teacher
+pip install school
 ```
 
 ### npm / bun
 ```bash
-npm install -g @dksh/teacher
+npm install -g @dksh/school
 # or
-bun install -g @dksh/teacher
+bun install -g @dksh/school
 ```
 
 ### Windows
-Download `Teacher-Setup.exe` from [releases](https://github.com/dex34132-web/lerev/releases)
+Download `School-Setup.exe` from [releases](https://github.com/dex34132-web/lerev/releases)
 
 ### Chocolatey
 ```bash
-choco install teacher
+choco install school
 ```
 
 ### Homebrew (macOS)
 ```bash
-brew install teacher
+brew install school
 ```
 
 ### Linux
@@ -44,7 +44,7 @@ pip install -e .
 
 Plugin auto-installs on first use. Restart OpenCode after install.
 
-## What Teacher Does
+## What School Does
 
 - Long-term memory across sessions
 - Project isolation (memories never leak between projects)
@@ -58,47 +58,47 @@ Plugin auto-installs on first use. Restart OpenCode after install.
 Your coding agent
     │
     ▼
-Teacher plugin (auto-discovered)
+School plugin (auto-discovered)
     │
     ▼
 Python bridge (JSON over stdin/stdout)
     │
     ▼
-Teacher V2.6 memory engine
+School V2.6 memory engine
     ├── MemoryManager
     ├── Security
     ├── Persistence (project-scoped)
     └── MemoryStore
 ```
 
-Memory is stored in `.teacher/memory/` per project.
+Memory is stored in `.school/memory/` per project.
 
 ## CLI
 
 ```bash
-teacher --help        # Show commands
-teacher version       # Print version
-teacher status        # Show installation status
-teacher doctor        # Run diagnostics
-teacher install       # Reinstall plugin
-teacher uninstall     # Remove plugin
-teacher mcp           # Run MCP server (stdio)
-teacher mcp config claude   # Print client MCP config
+school --help        # Show commands
+school version       # Print version
+school status        # Show installation status
+school doctor        # Run diagnostics
+school install       # Reinstall plugin
+school uninstall     # Remove plugin
+school mcp           # Run MCP server (stdio)
+school mcp config claude   # Print client MCP config
 ```
 
 ## MCP
 
-Teacher ships a production MCP server so any MCP-compatible client (Claude Code,
+School ships a production MCP server so any MCP-compatible client (Claude Code,
 Codex, OpenCode, Cursor, Windsurf, Cline, Roo, Gemini CLI, …) can use the same
 memory core — thin translation over the existing bridge, no second system:
 
 ```bash
-pip install "teacher[mcp]"
-teacher mcp                 # stdio server
-python -m teacher.mcp       # identical entry point
+pip install "school[mcp]"
+school mcp                 # stdio server
+python -m school.mcp       # identical entry point
 ```
 
-Eleven `teacher_*` tools, a budgeted `teacher://` resource set, and a
+Eleven `school_*` tools, a budgeted `school://` resource set, and a
 `relevant_context` prompt. See **[docs/mcp.md](docs/mcp.md)** for copy-paste client
 configs, tool reference, scope rules, and security notes. The JSON bridge and the
 OpenCode plugin keep working unchanged alongside it.
@@ -115,17 +115,17 @@ mypy core/
 ## Migration from LEREV
 
 This project was formerly named **LEREV**. The canonical identity is now
-**Teacher**. Legacy aliases are kept so existing installs keep working:
+**School**. Legacy aliases are kept so existing installs keep working:
 
-- `lerev` console script → runs the Teacher CLI (legacy alias)
-- `import lerev` / `python -m lerev.bridge` → shim over `teacher`
-- `LEREV_HOME` / `EVO_HOME` env vars → honoured as fallbacks after `TEACHER_HOME`
-- `lerev-bridge` on PATH → honoured as fallback after `teacher-bridge`
+- `lerev` console script → runs the School CLI (legacy alias)
+- `import lerev` / `python -m lerev.bridge` → shim over `school`
+- `LEREV_HOME` / `EVO_HOME` env vars → honoured as fallbacks after `SCHOOL_HOME`
+- `lerev-bridge` on PATH → honoured as fallback after `school-bridge`
 - `.lerev/memory/` (and older `.evo/memory/`) → copied non-destructively to
-  `.teacher/memory/` on first use; the original data is never deleted
-- stale `plugins/lerev.ts` / `node_modules/lerev` → removed on `teacher install`
+  `.school/memory/` on first use; the original data is never deleted
+- stale `plugins/lerev.ts` / `node_modules/lerev` → removed on `school install`
 
-New usage should always say **Teacher** / `teacher` / `teacher_*`.
+New usage should always say **School** / `school` / `school_*`.
 
 ## License
 

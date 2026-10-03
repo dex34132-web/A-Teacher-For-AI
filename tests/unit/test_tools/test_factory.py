@@ -8,16 +8,16 @@ class TestFactory:
         orch = create_orchestrator()
         tool_names = [t["name"] for t in orch._registry.list_tools()]
         expected = [
-            "teacher_status",
-            "teacher_remember",
-            "teacher_recall",
-            "teacher_conflict",
-            "teacher_confidence",
-            "teacher_search",
-            "teacher_deduplicate",
-            "teacher_knowledge",
-            "teacher_lifecycle",
-            "teacher_diagnose",
+            "school_status",
+            "school_remember",
+            "school_recall",
+            "school_conflict",
+            "school_confidence",
+            "school_search",
+            "school_deduplicate",
+            "school_knowledge",
+            "school_lifecycle",
+            "school_diagnose",
         ]
         for name in expected:
             assert name in tool_names, f"Tool {name} not registered"
@@ -26,15 +26,15 @@ class TestFactory:
         orch = create_orchestrator()
         # Tools that need specific params - provide defaults
         defaults = {
-            "teacher_remember": {"content": "test"},
-            "teacher_recall": {"query": "test"},
-            "teacher_conflict": {"content": "test"},
-            "teacher_deduplicate": {"content": "test"},
-            "teacher_search": {"query": "test"},
-            "teacher_lifecycle": {"action": "score", "memory_id": "test"},
+            "school_remember": {"content": "test"},
+            "school_recall": {"query": "test"},
+            "school_conflict": {"content": "test"},
+            "school_deduplicate": {"content": "test"},
+            "school_search": {"query": "test"},
+            "school_lifecycle": {"action": "score", "memory_id": "test"},
         }
         # Tools that may fail due to state dependencies (not param issues)
-        state_dependent = {"teacher_lifecycle"}
+        state_dependent = {"school_lifecycle"}
         for tool_info in orch._registry.list_tools():
             params = defaults.get(tool_info["name"], {})
             result = orch.dispatch(tool_info["name"], **params)

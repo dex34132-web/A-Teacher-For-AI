@@ -1,4 +1,4 @@
-"""Remember tool for Teacher V2.6 — store an experience."""
+"""Remember tool for School V2.6 — store an experience."""
 
 from __future__ import annotations
 
@@ -9,18 +9,18 @@ from core.routing.v26.tools.base import Tool, ToolResult
 
 
 class RememberTool(Tool):
-    """Store an experience into Teacher long-term memory."""
+    """Store an experience into School long-term memory."""
 
     def __init__(self, manager: MemoryManager) -> None:
         self._manager = manager
 
     @property
     def name(self) -> str:
-        return "teacher_remember"
+        return "school_remember"
 
     @property
     def description(self) -> str:
-        return "Store an experience into Teacher long-term memory."
+        return "Store an experience into School long-term memory."
 
     @property
     def schema(self) -> dict:

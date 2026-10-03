@@ -1,8 +1,8 @@
-"""Legacy shim — ``python -m lerev`` (alias of the Teacher CLI)."""
+"""Legacy shim — ``python -m lerev`` (alias of the School CLI)."""
 
 from __future__ import annotations
 
-from teacher.cli import main
+from school.cli import main
 
 if __name__ == "__main__":
     main()

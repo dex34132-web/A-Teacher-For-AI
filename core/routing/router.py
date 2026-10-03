@@ -1,8 +1,8 @@
-"""Universal Router for Teacher V2.5.
+"""Universal Router for School V2.5.
 
 The UniversalRouter is the main entry point for agent-agnostic routing.
 It orchestrates the routing pipeline and provides the contracts that
-future adapters can use to connect any AI system to Teacher.
+future adapters can use to connect any AI system to School.
 
 V2.5 boundary:
 - Routes information
@@ -32,10 +32,10 @@ from core.routing.telemetry import TelemetryEvent, TelemetryRecord, TelemetryRec
 
 
 class UniversalRouter:
-    """Agent-agnostic routing layer for Teacher V2.5.
+    """Agent-agnostic routing layer for School V2.5.
 
     The router accepts information packets from any AI system and routes
-    them to the appropriate Teacher subsystems based on type, priority,
+    them to the appropriate School subsystems based on type, priority,
     cost, context, and policy.
 
     This class does not implement any specific agent, model, or harness.
@@ -91,8 +91,8 @@ class UniversalRouter:
             for dest in (
                 Destination(destination_type=DestinationType.AGENT_CONTEXT, name="agent_context"),
                 Destination(
-                    destination_type=DestinationType.TEACHER_CONTEXT,
-                    name="teacher_context",
+                    destination_type=DestinationType.SCHOOL_CONTEXT,
+                    name="school_context",
                 ),
                 Destination(destination_type=DestinationType.LEARNING, name="learning"),
                 Destination(destination_type=DestinationType.RETRIEVAL, name="retrieval"),

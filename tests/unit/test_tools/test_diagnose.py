@@ -10,7 +10,7 @@ def _make_tool():
 
 def test_diagnose_tool_name():
     tool = _make_tool()
-    assert tool.name == "teacher_diagnose"
+    assert tool.name == "school_diagnose"
 
 
 def test_diagnose_tool_schema():
@@ -55,4 +55,4 @@ def test_diagnose_tool_stats_fields():
 def test_diagnose_tool_returns_metadata():
     tool = _make_tool()
     result = tool.execute()
-    assert result.metadata.get("tool") == "teacher_diagnose"
+    assert result.metadata.get("tool") == "school_diagnose"

@@ -1,4 +1,4 @@
-"""Semantic search tool for Teacher V2.6."""
+"""Semantic search tool for School V2.6."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ class SemanticSearchTool(Tool):
 
     @property
     def name(self) -> str:
-        return "teacher_search"
+        return "school_search"
 
     @property
     def description(self) -> str:

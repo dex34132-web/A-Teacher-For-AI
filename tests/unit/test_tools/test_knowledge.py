@@ -10,7 +10,7 @@ def _make_tool():
 
 def test_knowledge_tool_name():
     tool = _make_tool()
-    assert tool.name == "teacher_knowledge"
+    assert tool.name == "school_knowledge"
 
 
 def test_knowledge_tool_schema():
@@ -47,4 +47,4 @@ def test_knowledge_tool_execute_with_agent_id():
 def test_knowledge_tool_returns_metadata():
     tool = _make_tool()
     result = tool.execute()
-    assert result.metadata.get("tool") == "teacher_knowledge"
+    assert result.metadata.get("tool") == "school_knowledge"

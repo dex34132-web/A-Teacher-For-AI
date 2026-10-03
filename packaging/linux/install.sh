@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-TEACHER_VERSION="2.6.0"
+SCHOOL_VERSION="2.6.0"
 INSTALL_DIR="${HOME}/.local/bin"
 
-echo "Teacher Installer"
+echo "School Installer"
 echo "-----------------------------"
 
 # Detect OS
@@ -30,9 +30,9 @@ if ! command -v pip3 >/dev/null 2>&1; then
     exit 1
 fi
 
-# Install Teacher
-echo "Installing Teacher..."
-pip3 install --user teacher
+# Install School
+echo "Installing School..."
+pip3 install --user school
 
 # Ensure ~/.local/bin is on PATH (POSIX-compatible)
 case ":${PATH}:" in
@@ -50,12 +50,12 @@ case ":${PATH}:" in
 esac
 
 # Register with OpenCode
-if command -v teacher >/dev/null 2>&1; then
+if command -v school >/dev/null 2>&1; then
     echo "Registering with OpenCode..."
-    teacher install
+    school install
 else
-    echo "WARNING: teacher command not found on PATH."
-    echo "Please run 'teacher install' manually after ensuring ~/.local/bin is on PATH."
+    echo "WARNING: school command not found on PATH."
+    echo "Please run 'school install' manually after ensuring ~/.local/bin is on PATH."
 fi
 
 echo ""

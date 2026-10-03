@@ -1,4 +1,4 @@
-"""Regression tests: teacher_learn must create durable, project-scoped memory.
+"""Regression tests: school_learn must create durable, project-scoped memory.
 
 Root cause under test (before fix):
 - factory_tools.create_tools() built MemoryManager(storage=None), so
@@ -9,7 +9,7 @@ Root cause under test (before fix):
 
 Each bridge invocation runs in a REAL separate process
 (write -> process death -> fresh process -> read), which is exactly the
-failure mode observed with teacher_learn before the fix.
+failure mode observed with school_learn before the fix.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def _bridge(req: dict) -> dict:
     """Run one bridge command in a fresh OS process (spawn-per-request)."""
     proc = subprocess.run(
-        [sys.executable, "-m", "teacher.bridge"],
+        [sys.executable, "-m", "school.bridge"],
         input=json.dumps(req),
         capture_output=True,
         text=True,
@@ -66,7 +66,7 @@ def _recall(worktree: Path, query: str, project: str, session: str) -> list[dict
 
 
 def _memory_file(worktree: Path) -> Path:
-    return worktree / ".teacher" / "memory" / "v26_memory.json"
+    return worktree / ".school" / "memory" / "v26_memory.json"
 
 
 class TestLearnPersistsAcrossProcesses:
@@ -74,11 +74,11 @@ class TestLearnPersistsAcrossProcesses:
         result = _learn(
             tmp_path,
             "P15 marker ZEBRA-QUARTZ exists in this project.",
-            "teacher-p15",
+            "school-p15",
             "ses_p15_alpha",
         )
         memory_file = _memory_file(tmp_path)
-        assert memory_file.exists(), "learn did not create .teacher/memory/v26_memory.json"
+        assert memory_file.exists(), "learn did not create .school/memory/v26_memory.json"
         serialized = memory_file.read_text(encoding="utf-8")
         assert result["experience_id"] in serialized, (
             "learn experience_id missing from durable store"
@@ -89,11 +89,11 @@ class TestLearnPersistsAcrossProcesses:
         _learn(
             tmp_path,
             "P15 marker ZEBRA-QUARTZ exists in this project.",
-            "teacher-p15",
+            "school-p15",
             "ses_p15_alpha",
         )
         # Fresh bridge process: no in-memory state from the learn call.
-        memories = _recall(tmp_path, "ZEBRA-QUARTZ", "teacher-p15", "ses_p15_alpha")
+        memories = _recall(tmp_path, "ZEBRA-QUARTZ", "school-p15", "ses_p15_alpha")
         assert len(memories) >= 1, "fresh process could not recall learned fact"
         assert "ZEBRA-QUARTZ" in memories[0]["content"]
 
@@ -102,12 +102,12 @@ class TestLearnPersistsAcrossProcesses:
         _learn(
             tmp_path,
             "P15 marker CRIMSON-LANTERN exists in this project.",
-            "teacher-p15b",
+            "school-p15b",
             "ses_p15b_alpha",
         )
         for _ in range(2):
             memories = _recall(
-                tmp_path, "CRIMSON-LANTERN", "teacher-p15b", "ses_p15b_alpha"
+                tmp_path, "CRIMSON-LANTERN", "school-p15b", "ses_p15b_alpha"
             )
             assert len(memories) >= 1, "recall failed in fresh process"
             assert "CRIMSON-LANTERN" in memories[0]["content"]
@@ -120,29 +120,29 @@ class TestLearnProjectIsolation:
         worktree_a.mkdir()
         worktree_b.mkdir()
 
-        _learn(worktree_a, "ALPHA-MARBLE fact.", "teacher-p15-A", "ses_p15_A")
-        _learn(worktree_b, "BETA-SLATE fact.", "teacher-p15-B", "ses_p15_B")
+        _learn(worktree_a, "ALPHA-MARBLE fact.", "school-p15-A", "ses_p15_A")
+        _learn(worktree_b, "BETA-SLATE fact.", "school-p15-B", "ses_p15_B")
 
         # Own memory found from a fresh process.
-        found_a = _recall(worktree_a, "ALPHA-MARBLE", "teacher-p15-A", "ses_p15_A")
+        found_a = _recall(worktree_a, "ALPHA-MARBLE", "school-p15-A", "ses_p15_A")
         assert len(found_a) >= 1, "project A lost its own learned fact"
         assert any("ALPHA-MARBLE" in m["content"] for m in found_a)
 
         # Cross-project: B must NOT see A's memory (fresh processes both sides).
         # Semantic recall may return B's own in-scope candidates for any query,
         # but A's content must never appear in B's results.
-        leak = _recall(worktree_b, "ALPHA-MARBLE", "teacher-p15-B", "ses_p15_B")
+        leak = _recall(worktree_b, "ALPHA-MARBLE", "school-p15-B", "ses_p15_B")
         assert not any("ALPHA-MARBLE" in m["content"] for m in leak), (
             f"project isolation violated: {leak}"
         )
 
-        leak_reverse = _recall(worktree_a, "BETA-SLATE", "teacher-p15-A", "ses_p15_A")
+        leak_reverse = _recall(worktree_a, "BETA-SLATE", "school-p15-A", "ses_p15_A")
         assert not any("BETA-SLATE" in m["content"] for m in leak_reverse), (
             f"reverse isolation violated: {leak_reverse}"
         )
 
     def test_other_project_cannot_read_via_same_worktree_store(self, tmp_path):
         """Scope filter blocks a foreign project id even on the same store."""
-        _learn(tmp_path, "GAMMA-QUILL fact.", "teacher-p15-C", "ses_p15_C")
-        leak = _recall(tmp_path, "GAMMA-QUILL", "teacher-p15-OTHER", "ses_p15_C")
+        _learn(tmp_path, "GAMMA-QUILL fact.", "school-p15-C", "ses_p15_C")
+        leak = _recall(tmp_path, "GAMMA-QUILL", "school-p15-OTHER", "ses_p15_C")
         assert leak == [], f"project scope filter failed: {leak}"

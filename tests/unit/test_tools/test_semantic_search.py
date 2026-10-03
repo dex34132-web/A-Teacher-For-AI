@@ -27,7 +27,7 @@ def _make_tool_with_entries():
 
 def test_semantic_search_tool_name():
     tool = _make_tool_with_entries()
-    assert tool.name == "teacher_search"
+    assert tool.name == "school_search"
 
 
 def test_semantic_search_tool_schema():
@@ -70,4 +70,4 @@ def test_semantic_search_tool_execute_empty_store():
 def test_semantic_search_tool_returns_metadata():
     tool = _make_tool_with_entries()
     result = tool.execute(query="Python")
-    assert result.metadata.get("tool") == "teacher_search"
+    assert result.metadata.get("tool") == "school_search"

@@ -1,4 +1,4 @@
-"""Recall tool for Teacher V2.6 — retrieve memories by query."""
+"""Recall tool for School V2.6 — retrieve memories by query."""
 
 from __future__ import annotations
 
@@ -9,18 +9,18 @@ from core.routing.v26.tools.base import Tool, ToolResult
 
 
 class RecallTool(Tool):
-    """Retrieve memories from Teacher long-term memory by query."""
+    """Retrieve memories from School long-term memory by query."""
 
     def __init__(self, manager: MemoryManager) -> None:
         self._manager = manager
 
     @property
     def name(self) -> str:
-        return "teacher_recall"
+        return "school_recall"
 
     @property
     def description(self) -> str:
-        return "Retrieve memories from Teacher long-term memory by query."
+        return "Retrieve memories from School long-term memory by query."
 
     @property
     def schema(self) -> dict:

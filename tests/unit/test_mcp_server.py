@@ -1,4 +1,4 @@
-"""Unit tests for the Teacher MCP server — thin translation over the bridge."""
+"""Unit tests for the School MCP server — thin translation over the bridge."""
 
 from __future__ import annotations
 
@@ -8,21 +8,21 @@ from typing import Any
 
 import pytest
 
-from teacher import bridge
-from teacher.mcp import server as mcp_server
+from school import bridge
+from school.mcp import server as mcp_server
 
 EXPECTED_TOOL_ORDER = [
-    "teacher_status",
-    "teacher_remember",
-    "teacher_recall",
-    "teacher_learn",
-    "teacher_conflict",
-    "teacher_confidence",
-    "teacher_search",
-    "teacher_deduplicate",
-    "teacher_knowledge",
-    "teacher_lifecycle",
-    "teacher_diagnose",
+    "school_status",
+    "school_remember",
+    "school_recall",
+    "school_learn",
+    "school_conflict",
+    "school_confidence",
+    "school_search",
+    "school_deduplicate",
+    "school_knowledge",
+    "school_lifecycle",
+    "school_diagnose",
 ]
 
 
@@ -59,7 +59,7 @@ class TestToolSurface:
             assert tool.description
 
     def test_recall_schema_contract(self) -> None:
-        schema = mcp_server._TOOLS["teacher_recall"]["schema"]
+        schema = mcp_server._TOOLS["school_recall"]["schema"]
         assert schema["required"] == ["query"]
         assert set(schema["properties"]) == {
             "query",
@@ -72,7 +72,7 @@ class TestToolSurface:
         }
 
     def test_remember_schema_contract(self) -> None:
-        schema = mcp_server._TOOLS["teacher_remember"]["schema"]
+        schema = mcp_server._TOOLS["school_remember"]["schema"]
         assert schema["required"] == ["content"]
         assert schema["properties"]["outcome"]["enum"] == [
             "SUCCESS",
@@ -85,12 +85,12 @@ class TestToolSurface:
         )
 
     def test_learn_schema_contract(self) -> None:
-        schema = mcp_server._TOOLS["teacher_learn"]["schema"]
+        schema = mcp_server._TOOLS["school_learn"]["schema"]
         assert schema["required"] == ["content"]
         assert {"outcome", "project", "session", "agent_id"} <= set(schema["properties"])
 
     def test_lifecycle_schema_enums(self) -> None:
-        schema = mcp_server._TOOLS["teacher_lifecycle"]["schema"]
+        schema = mcp_server._TOOLS["school_lifecycle"]["schema"]
         assert schema["required"] == ["action"]
         assert schema["properties"]["action"]["enum"] == [
             "score",
@@ -102,32 +102,32 @@ class TestToolSurface:
 
 class TestToolCalls:
     def test_status_returns_ok_payload(self, worktree: str) -> None:
-        result = mcp_server._call_tool(worktree, "teacher_status", {})
+        result = mcp_server._call_tool(worktree, "school_status", {})
         assert result.is_error is False
         payload = json.loads(result.content[0].text)
         assert payload["ok"] is True
-        assert payload["components"]["teacher"] == "available"
+        assert payload["components"]["school"] == "available"
         assert result.structured_content == payload
 
     def test_recall_missing_query_is_error(self, worktree: str) -> None:
-        result = mcp_server._call_tool(worktree, "teacher_recall", {})
+        result = mcp_server._call_tool(worktree, "school_recall", {})
         assert result.is_error is True
         payload = json.loads(result.content[0].text)
         assert payload["ok"] is False
         assert payload["error"]["type"] == "validation"
 
     def test_remember_missing_content_is_error(self, worktree: str) -> None:
-        result = mcp_server._call_tool(worktree, "teacher_remember", {})
+        result = mcp_server._call_tool(worktree, "school_remember", {})
         assert result.is_error is True
 
     def test_unknown_tool_raises(self, worktree: str) -> None:
         with pytest.raises(ValueError, match="Unknown tool"):
-            mcp_server._call_tool(worktree, "teacher_bogus", {})
+            mcp_server._call_tool(worktree, "school_bogus", {})
 
     def test_unknown_arguments_are_filtered(self, worktree: str) -> None:
         result = mcp_server._call_tool(
             worktree,
-            "teacher_recall",
+            "school_recall",
             {"query": "anything", "bogus_argument": 123, "nested": {"x": 1}},
         )
         assert result.is_error is False
@@ -135,7 +135,7 @@ class TestToolCalls:
     def test_learn_alias_stores_and_recall_finds(self, worktree: str) -> None:
         stored = mcp_server._call_tool(
             worktree,
-            "teacher_learn",
+            "school_learn",
             {"content": "learn alias unit probe", "outcome": "SUCCESS"},
         )
         assert stored.is_error is False
@@ -144,7 +144,7 @@ class TestToolCalls:
         assert stored.structured_content["result"]["experience_id"]
 
         recalled = mcp_server._call_tool(
-            worktree, "teacher_recall", {"query": "learn alias probe"}
+            worktree, "school_recall", {"query": "learn alias probe"}
         )
         assert recalled.is_error is False
         memories = recalled.structured_content["memories"]
@@ -154,26 +154,26 @@ class TestToolCalls:
     def test_remember_then_recall_same_session_scope(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("TEACHER_PROJECT", raising=False)
-        monkeypatch.delenv("TEACHER_SESSION", raising=False)
-        monkeypatch.delenv("TEACHER_AGENT", raising=False)
+        monkeypatch.delenv("SCHOOL_PROJECT", raising=False)
+        monkeypatch.delenv("SCHOOL_SESSION", raising=False)
+        monkeypatch.delenv("SCHOOL_AGENT", raising=False)
         mcp_server._call_tool(
             worktree,
-            "teacher_remember",
+            "school_remember",
             {"content": "scoped memory probe", "project": "envscope", "session": "s1"},
         )
         recall = mcp_server._call_tool(
-            worktree, "teacher_recall", {"query": "scoped memory probe"}
+            worktree, "school_recall", {"query": "scoped memory probe"}
         )
         # No env project set: recall defaults to worktree basename, so the
         # project-scoped memory must NOT leak through.
         assert recall.is_error is False
         assert recall.structured_content["memories"] == []
 
-        monkeypatch.setenv("TEACHER_PROJECT", "envscope")
-        monkeypatch.setenv("TEACHER_SESSION", "s1")
+        monkeypatch.setenv("SCHOOL_PROJECT", "envscope")
+        monkeypatch.setenv("SCHOOL_SESSION", "s1")
         recall = mcp_server._call_tool(
-            worktree, "teacher_recall", {"query": "scoped memory probe"}
+            worktree, "school_recall", {"query": "scoped memory probe"}
         )
         assert recall.is_error is False
         memories = recall.structured_content["memories"]
@@ -188,12 +188,12 @@ class TestScopeIsolation:
         two.mkdir()
 
         stored = mcp_server._call_tool(
-            str(one), "teacher_remember", {"content": "isolated secret memory"}
+            str(one), "school_remember", {"content": "isolated secret memory"}
         )
         assert stored.is_error is False
 
         leaked = mcp_server._call_tool(
-            str(two), "teacher_recall", {"query": "isolated secret memory"}
+            str(two), "school_recall", {"query": "isolated secret memory"}
         )
         assert leaked.is_error is False
         assert leaked.structured_content["memories"] == []
@@ -201,73 +201,73 @@ class TestScopeIsolation:
     def test_same_worktree_finds_memory(self, tmp_path: Path) -> None:
         one = tmp_path / "one"
         one.mkdir()
-        mcp_server._call_tool(str(one), "teacher_remember", {"content": "visible memory"})
-        found = mcp_server._call_tool(str(one), "teacher_recall", {"query": "visible memory"})
+        mcp_server._call_tool(str(one), "school_remember", {"content": "visible memory"})
+        found = mcp_server._call_tool(str(one), "school_recall", {"query": "visible memory"})
         assert len(found.structured_content["memories"]) >= 1
 
 
 class TestBuildRequest:
     def test_project_defaults_to_worktree_basename(self) -> None:
-        req = mcp_server._build_request("/tmp/proj-xyz", "teacher_recall", {"query": "q"})
+        req = mcp_server._build_request("/tmp/proj-xyz", "school_recall", {"query": "q"})
         assert req["project"] == "proj-xyz"
 
     def test_lifecycle_has_no_basename_default(self) -> None:
-        req = mcp_server._build_request("/tmp/proj-xyz", "teacher_lifecycle", {"action": "score"})
+        req = mcp_server._build_request("/tmp/proj-xyz", "school_lifecycle", {"action": "score"})
         assert "project" not in req
 
     def test_agent_defaults_to_opencode_for_bridge_tools(self) -> None:
         # Matches bridge remember/recall defaults and the OpenCode plugin,
         # so MCP and plugin memories share one agent scope.
-        req = mcp_server._build_request("/tmp/p", "teacher_recall", {"query": "q"})
+        req = mcp_server._build_request("/tmp/p", "school_recall", {"query": "q"})
         assert req["agent"] == "opencode"
         assert "agent_id" not in req
 
     def test_agent_defaults_to_opencode_for_dispatch_tools(self) -> None:
-        req = mcp_server._build_request("/tmp/p", "teacher_learn", {"content": "x"})
+        req = mcp_server._build_request("/tmp/p", "school_learn", {"content": "x"})
         assert req["agent_id"] == "opencode"
         assert "agent" not in req
 
     def test_env_project_overrides_basename(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("TEACHER_PROJECT", "env-proj")
-        req = mcp_server._build_request("/tmp/proj-xyz", "teacher_recall", {"query": "q"})
+        monkeypatch.setenv("SCHOOL_PROJECT", "env-proj")
+        req = mcp_server._build_request("/tmp/proj-xyz", "school_recall", {"query": "q"})
         assert req["project"] == "env-proj"
 
     def test_arg_project_overrides_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("TEACHER_PROJECT", "env-proj")
+        monkeypatch.setenv("SCHOOL_PROJECT", "env-proj")
         req = mcp_server._build_request(
-            "/tmp/proj-xyz", "teacher_recall", {"query": "q", "project": "arg-proj"}
+            "/tmp/proj-xyz", "school_recall", {"query": "q", "project": "arg-proj"}
         )
         assert req["project"] == "arg-proj"
 
     def test_session_env_fill(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("TEACHER_SESSION", "sess-9")
-        req = mcp_server._build_request("/tmp/p", "teacher_recall", {"query": "q"})
+        monkeypatch.setenv("SCHOOL_SESSION", "sess-9")
+        req = mcp_server._build_request("/tmp/p", "school_recall", {"query": "q"})
         assert req["session"] == "sess-9"
 
     def test_agent_env_maps_to_bridge_agent_for_remember(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("TEACHER_AGENT", "mcp-agent")
-        req = mcp_server._build_request("/tmp/p", "teacher_remember", {"content": "x"})
+        monkeypatch.setenv("SCHOOL_AGENT", "mcp-agent")
+        req = mcp_server._build_request("/tmp/p", "school_remember", {"content": "x"})
         assert req["agent"] == "mcp-agent"
         assert "agent_id" not in req
 
     def test_agent_env_maps_to_agent_id_for_dispatch_tools(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("TEACHER_AGENT", "mcp-agent")
-        req = mcp_server._build_request("/tmp/p", "teacher_learn", {"content": "x"})
+        monkeypatch.setenv("SCHOOL_AGENT", "mcp-agent")
+        req = mcp_server._build_request("/tmp/p", "school_learn", {"content": "x"})
         assert req["agent_id"] == "mcp-agent"
         assert "agent" not in req
 
     def test_worktree_always_present(self) -> None:
-        req = mcp_server._build_request("/tmp/p", "teacher_status", {})
+        req = mcp_server._build_request("/tmp/p", "school_status", {})
         assert req["worktree"] == "/tmp/p"
 
     def test_foreign_arguments_dropped(self) -> None:
-        req = mcp_server._build_request("/tmp/p", "teacher_recall", {"query": "q", "zzz": 1})
+        req = mcp_server._build_request("/tmp/p", "school_recall", {"query": "q", "zzz": 1})
         assert "zzz" not in req
 
 
@@ -287,14 +287,14 @@ class TestIntParam:
 class TestResources:
     def test_list_resources_status_only(self) -> None:
         resources = mcp_server._list_resources().resources
-        assert [str(r.uri) for r in resources] == ["teacher://status"]
+        assert [str(r.uri) for r in resources] == ["school://status"]
 
     def test_list_resource_templates(self) -> None:
         templates = mcp_server._list_resource_templates().resource_templates
-        assert templates[0].uri_template == "teacher://context/{project}"
+        assert templates[0].uri_template == "school://context/{project}"
 
     def test_read_status_resource(self, worktree: str) -> None:
-        result = mcp_server._read_resource(worktree, "teacher://status")
+        result = mcp_server._read_resource(worktree, "school://status")
         payload = json.loads(result.contents[0].text)
         assert payload["ok"] is True
         assert result.contents[0].mime_type == "application/json"
@@ -302,15 +302,15 @@ class TestResources:
     def test_read_context_resource_budgeted(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("TEACHER_PROJECT", "ctxproj")
+        monkeypatch.setenv("SCHOOL_PROJECT", "ctxproj")
         for index in range(7):
             mcp_server._call_tool(
                 worktree,
-                "teacher_remember",
+                "school_remember",
                 {"content": f"ctx memory number {index}", "project": "ctxproj"},
             )
         project = Path(worktree).name
-        uri = f"teacher://context/{project}?q=ctx memory&limit=99&budget=99999"
+        uri = f"school://context/{project}?q=ctx memory&limit=99&budget=99999"
         result = mcp_server._read_resource(worktree, uri)
         payload = json.loads(result.contents[0].text)
         assert payload["ok"] is True
@@ -319,11 +319,11 @@ class TestResources:
 
     def test_unknown_resource_raises(self, worktree: str) -> None:
         with pytest.raises(ValueError, match="Unknown resource"):
-            mcp_server._read_resource(worktree, "teacher://bogus")
+            mcp_server._read_resource(worktree, "school://bogus")
 
     def test_context_without_project_raises(self, worktree: str) -> None:
         with pytest.raises(ValueError, match="Unknown resource"):
-            mcp_server._read_resource(worktree, "teacher://context/")
+            mcp_server._read_resource(worktree, "school://context/")
 
 
 class TestPrompts:
@@ -335,11 +335,11 @@ class TestPrompts:
         assert query_arg.required is True
 
     def test_get_prompt_marks_context_block(self, worktree: str) -> None:
-        mcp_server._call_tool(worktree, "teacher_remember", {"content": "prompt memory probe"})
+        mcp_server._call_tool(worktree, "school_remember", {"content": "prompt memory probe"})
         result = mcp_server._get_prompt(worktree, "relevant_context", {"query": "prompt memory"})
         text = result.messages[0].content.text
-        assert text.startswith("[teacher context]")
-        assert text.rstrip().endswith("[/teacher]")
+        assert text.startswith("[school context]")
+        assert text.rstrip().endswith("[/school]")
         assert "prompt memory probe" in text
         assert result.messages[0].role == "user"
 
@@ -359,7 +359,7 @@ class TestPrompts:
 class TestBuildServer:
     def test_build_server_binds_worktree(self, worktree: str) -> None:
         server = mcp_server.build_server(worktree)
-        assert server.name == "teacher"
+        assert server.name == "school"
         assert bridge._manager is not None
         assert bridge._storage is not None
 
@@ -368,7 +368,7 @@ class TestBuildServer:
     ) -> None:
         project = tmp_path / "env_wt"
         project.mkdir()
-        monkeypatch.setenv("TEACHER_WORKTREE", str(project))
+        monkeypatch.setenv("SCHOOL_WORKTREE", str(project))
         mcp_server.build_server()
         assert bridge._manager is not None
 
@@ -381,7 +381,7 @@ class TestClientConfig:
         import json as jsonlib
         import tomllib
 
-        from teacher.mcp.config import CLIENT_PATHS, build_client_config
+        from school.mcp.config import CLIENT_PATHS, build_client_config
 
         for client in CLIENT_PATHS:
             preset = build_client_config(client)
@@ -391,10 +391,10 @@ class TestClientConfig:
                 jsonlib.loads(preset["config"])
             else:
                 tomllib.loads(preset["config"])
-            assert "teacher.mcp" in preset["config"]
+            assert "school.mcp" in preset["config"]
 
     def test_unknown_client_raises(self) -> None:
-        from teacher.mcp.config import build_client_config
+        from school.mcp.config import build_client_config
 
         with pytest.raises(ValueError, match="Unknown MCP client"):
             build_client_config("not-a-client")
@@ -402,11 +402,11 @@ class TestClientConfig:
     def test_custom_python_interpreter(self) -> None:
         import json as jsonlib
 
-        from teacher.mcp.config import build_client_config
+        from school.mcp.config import build_client_config
 
         preset = build_client_config("claude", python="C:\\custom\\python.exe")
         block = jsonlib.loads(preset["config"])
-        assert block["mcpServers"]["teacher"]["command"] == "C:\\custom\\python.exe"
+        assert block["mcpServers"]["school"]["command"] == "C:\\custom\\python.exe"
 
 
 class TestRoutingGuidance:
@@ -419,12 +419,12 @@ class TestRoutingGuidance:
 
     def test_instructions_teach_routing(self) -> None:
         for key in (
-            "teacher_recall",
-            "teacher_remember",
-            "teacher_search",
-            "teacher_conflict",
-            "teacher_status",
-            "teacher_diagnose",
+            "school_recall",
+            "school_remember",
+            "school_search",
+            "school_conflict",
+            "school_status",
+            "school_diagnose",
             "never instructions",
         ):
             assert key in mcp_server._INSTRUCTIONS, key
@@ -437,12 +437,12 @@ class TestRoutingGuidance:
             if tool.annotations is not None and tool.annotations.read_only_hint
         }
         assert read_only == {
-            "teacher_status",
-            "teacher_recall",
-            "teacher_search",
-            "teacher_confidence",
-            "teacher_conflict",
-            "teacher_diagnose",
+            "school_status",
+            "school_recall",
+            "school_search",
+            "school_confidence",
+            "school_conflict",
+            "school_diagnose",
         }
         for name in read_only:
             assert tools[name].annotations.idempotent_hint is True, name
@@ -450,7 +450,7 @@ class TestRoutingGuidance:
     def test_mcp_descriptions_match_plugin_ts(self) -> None:
         import re
 
-        from teacher.plugin_source import TS_PLUGIN_SOURCE
+        from school.plugin_source import TS_PLUGIN_SOURCE
 
         for name, spec in mcp_server._TOOLS.items():
             match = re.search(

@@ -1,6 +1,6 @@
-"""Tests for OpenCode plugin execution hooks (per-execution Teacher visibility).
+"""Tests for OpenCode plugin execution hooks (per-execution School visibility).
 
-The hooks make Teacher run and show itself on EVERY tool execution and prompt:
+The hooks make School run and show itself on EVERY tool execution and prompt:
 - ``tool.execute.before`` — budgeted recall keyed to what the agent is doing
 - ``tool.execute.after``  — always-on visible marker + context injection
 - ``chat.message``        — prompt-time recall stash
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 
-from teacher.plugin_source import TS_PLUGIN_SOURCE
+from school.plugin_source import TS_PLUGIN_SOURCE
 
 #: Hooks the plugin must register (exact OpenCode hook names).
 EXPECTED_HOOKS = (
@@ -39,7 +39,7 @@ class TestExecutionHooksRegistered:
 
     def test_tool_surface_unchanged(self) -> None:
         """Hooks add visibility, not new tools."""
-        names = re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+        names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
         assert len(names) == 13, f"tool surface changed: {names}"
 
 
@@ -78,14 +78,14 @@ class TestAfterHook:
 
     def test_title_marker_on_every_execution(self) -> None:
         """Marker is unconditional: hits, zero hits, and degraded all show."""
-        assert "rec ? ` · teacher: ${rec.hits}`" in TS_PLUGIN_SOURCE
-        assert '" · teacher: –"' in TS_PLUGIN_SOURCE
+        assert "rec ? ` · school: ${rec.hits}`" in TS_PLUGIN_SOURCE
+        assert '" · school: –"' in TS_PLUGIN_SOURCE
 
     def test_zero_hits_still_visible(self) -> None:
         """The marker expression keys on rec presence, not hit count."""
         block = _hook_block("tool.execute.after")
         marker_line = next(
-            (ln for ln in block.splitlines() if "teacher: ${rec.hits}" in ln),
+            (ln for ln in block.splitlines() if "school: ${rec.hits}" in ln),
             "",
         )
         assert "rec ?" in marker_line, marker_line
@@ -93,8 +93,8 @@ class TestAfterHook:
 
     def test_context_block_injected_only_on_hits(self) -> None:
         block = _hook_block("tool.execute.after")
-        assert "[teacher context]" in block
-        assert "[/teacher]" in block
+        assert "[school context]" in block
+        assert "[/school]" in block
         assert "rec.hits > 0" in block
 
     def test_never_throws(self) -> None:
@@ -125,8 +125,8 @@ class TestPromptHooks:
         block = _hook_block("experimental.chat.messages.transform")
         assert 'type: "text"' in block
         assert "synthetic: true" in block
-        assert "[teacher context]" in block
-        assert "[/teacher]" in block
+        assert "[school context]" in block
+        assert "[/school]" in block
 
     def test_both_prompt_hooks_never_throw(self) -> None:
         for hook in ("chat.message", "experimental.chat.messages.transform"):
@@ -162,11 +162,11 @@ class TestRecallBudgetAndCostGuards:
 
     def test_fast_skip_when_no_memory(self) -> None:
         assert "hasMemoryRoot" in TS_PLUGIN_SOURCE
-        for legacy in ('".teacher"', '".lerev"', '".evo"'):
+        for legacy in ('".school"', '".lerev"', '".evo"'):
             assert legacy in TS_PLUGIN_SOURCE, legacy
 
     def test_kill_switch_env_var(self) -> None:
-        assert 'process.env.TEACHER_HOOKS !== "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.SCHOOL_HOOKS !== "0"' in TS_PLUGIN_SOURCE
 
     def test_no_npm_dependency_added(self) -> None:
         """Hooks use only existing imports — no new runtime dependencies."""

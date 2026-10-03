@@ -1,11 +1,11 @@
-"""Teacher bridge — importable entry point for the bridge protocol.
+"""School bridge — importable entry point for the bridge protocol.
 
 Reads a single JSON request from stdin, processes it through the V2.6
 memory architecture, and writes a single JSON response to stdout.
 
 Protocol:
     stdin  → JSON request  → bridge → V2.6 components
-    stdout → JSON response → Teacher plugin
+    stdout → JSON response → School plugin
 
 Commands:
     status   — check component availability
@@ -35,8 +35,8 @@ from core.routing.v26.security import (
     detect_injection,
     validate_memory_request,
 )
-from teacher import __version__
-from teacher.config import resolve_memory_dir
+from school import __version__
+from school.config import resolve_memory_dir
 
 # ---------------------------------------------------------------------------
 # Bridge state (lazily initialised, lives for one process invocation)
@@ -55,8 +55,8 @@ def _init_manager(worktree: str) -> MemoryManager:
         return _manager
 
     try:
-        # Canonical .teacher/memory — legacy .lerev/.evo dirs are copied
-        # over non-destructively on first use (see resolve_memory_dir).
+        # Memory root: first existing of .school/.teacher/.lerev/.evo,
+        # else .school — read in place, never migrated (see resolve_memory_dir).
         storage_dir = resolve_memory_dir(worktree)
         _storage = ScopeIsolatedStorage(base_path=storage_dir)
         _manager = MemoryManager(storage=_storage)
@@ -78,10 +78,10 @@ def _handle_status(req: dict[str, Any]) -> dict[str, Any]:
     worktree = req.get("worktree", "")
     checks: dict[str, str] = {}
 
-    checks["teacher"] = "available"
+    checks["school"] = "available"
 
     try:
-        from core.routing.integration import TeacherIntegrationBridge  # noqa: F401
+        from core.routing.integration import SchoolIntegrationBridge  # noqa: F401
         checks["v2_5"] = "available"
     except Exception:
         checks["v2_5"] = "not_importable"
@@ -269,14 +269,14 @@ def _dispatch_to_orchestrator(tool_name, req):
     result = orch.dispatch(tool_name, **params)
     return {"ok": result.success, "result": result.data, "errors": result.errors}
 
-def _handle_learn(req): return _dispatch_to_orchestrator("teacher_remember", req)
-def _handle_diagnose(req): return _dispatch_to_orchestrator("teacher_diagnose", req)
-def _handle_conflict(req): return _dispatch_to_orchestrator("teacher_conflict", req)
-def _handle_confidence(req): return _dispatch_to_orchestrator("teacher_confidence", req)
-def _handle_deduplicate(req): return _dispatch_to_orchestrator("teacher_deduplicate", req)
-def _handle_lifecycle(req): return _dispatch_to_orchestrator("teacher_lifecycle", req)
-def _handle_search(req): return _dispatch_to_orchestrator("teacher_search", req)
-def _handle_knowledge(req): return _dispatch_to_orchestrator("teacher_knowledge", req)
+def _handle_learn(req): return _dispatch_to_orchestrator("school_remember", req)
+def _handle_diagnose(req): return _dispatch_to_orchestrator("school_diagnose", req)
+def _handle_conflict(req): return _dispatch_to_orchestrator("school_conflict", req)
+def _handle_confidence(req): return _dispatch_to_orchestrator("school_confidence", req)
+def _handle_deduplicate(req): return _dispatch_to_orchestrator("school_deduplicate", req)
+def _handle_lifecycle(req): return _dispatch_to_orchestrator("school_lifecycle", req)
+def _handle_search(req): return _dispatch_to_orchestrator("school_search", req)
+def _handle_knowledge(req): return _dispatch_to_orchestrator("school_knowledge", req)
 
 
 # ---------------------------------------------------------------------------

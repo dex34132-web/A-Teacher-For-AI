@@ -1,4 +1,4 @@
-"""Efficiency controller for Teacher V2.5 routing.
+"""Efficiency controller for School V2.5 routing.
 
 Decides whether operations should be executed, deferred, batched,
 simplified, or rejected based on expected value vs cost.

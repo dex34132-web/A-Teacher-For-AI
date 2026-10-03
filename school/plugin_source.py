@@ -1,8 +1,8 @@
-"""Teacher plugin source — bundled TypeScript plugin for OpenCode."""
+"""School plugin source — bundled TypeScript plugin for OpenCode."""
 
 from __future__ import annotations
 
-from teacher import __version__ as _TEACHER_VERSION
+from school import __version__ as _SCHOOL_VERSION
 
 _TS_PLUGIN_TEMPLATE = r'''import { tool } from "@opencode-ai/plugin/tool"
 import type { Plugin } from "@opencode-ai/plugin"
@@ -15,8 +15,8 @@ import { execSync } from "node:child_process"
 
 const execFileAsync = promisify(execFile)
 
-/** Teacher version this plugin was generated from — canonical source: teacher.__version__. */
-const TEACHER_VERSION = "__TEACHER_VERSION__"
+/** School version this plugin was generated from — canonical source: school.__version__. */
+const SCHOOL_VERSION = "__SCHOOL_VERSION__"
 
 /**
  * Find a usable Python interpreter.
@@ -72,30 +72,22 @@ interface BridgeInfo {
 }
 
 /**
- * Discover the Teacher bridge using a 4-tier cascade.
- * Each tier also honours legacy pre-rename aliases (LEREV_HOME,
- * lerev-bridge, lerev.bridge, lerev_bridge.py) so existing installs
- * keep working; Teacher is always tried first.
+ * Discover the School bridge using a 4-tier cascade.
  */
 async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
   const python = await findPython()
 
-  // Tier 1: TEACHER_HOME env var (legacy aliases: LEREV_HOME / EVO_HOME)
-  const teacherHome =
-    process.env.TEACHER_HOME ||
-    process.env.LEREV_HOME ||
-    process.env.EVO_HOME
-  if (teacherHome) {
-    for (const pkg of ["teacher", "lerev"]) {
-      const bridgePath = resolve(teacherHome, pkg, "bridge.py")
-      if (fileExists(bridgePath)) {
-        return { python: python ?? "python3", bridgePath, tier: "TEACHER_HOME" }
-      }
+  // Tier 1: SCHOOL_HOME env var
+  const schoolHome = process.env.SCHOOL_HOME
+  if (schoolHome) {
+    const bridgePath = resolve(schoolHome, "school", "bridge.py")
+    if (fileExists(bridgePath)) {
+      return { python: python ?? "python3", bridgePath, tier: "SCHOOL_HOME" }
     }
   }
 
-  // Tier 2: bridge launcher on PATH (legacy alias: lerev-bridge)
-  for (const command of ["teacher-bridge", "lerev-bridge"]) {
+  // Tier 2: bridge launcher on PATH
+  for (const command of ["school-bridge"]) {
     try {
       const isWin = process.platform === "win32"
       const whereCmd = isWin ? `where ${command}` : `which ${command}`
@@ -105,13 +97,13 @@ async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
         return { python: "", bridgePath: bridgeCmd, tier: "PATH" }
       }
     } catch {
-      // Not on PATH — try next alias
+      // Not on PATH — next tier
     }
   }
 
-  // Tier 3: installed module (legacy alias: lerev.bridge)
+  // Tier 3: installed module
   if (python) {
-    for (const module of ["teacher.bridge", "lerev.bridge"]) {
+    for (const module of ["school.bridge"]) {
       const available = await testModule(python, module)
       if (available) {
         return { python, bridgePath: `-m ${module}`, tier: "installed_module" }
@@ -119,8 +111,8 @@ async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
     }
   }
 
-  // Tier 4: Dev fallback (legacy alias: lerev_bridge.py)
-  for (const script of ["teacher_bridge.py", "lerev_bridge.py"]) {
+  // Tier 4: Dev fallback
+  for (const script of ["school_bridge.py"]) {
     const devBridge = resolve(worktree, "scripts", script)
     if (fileExists(devBridge)) {
       return { python: python ?? "python3", bridgePath: devBridge, tier: "dev_fallback" }
@@ -187,7 +179,7 @@ function runBridge(
 }
 
 /**
- * Invoke the Teacher bridge with a JSON request.
+ * Invoke the School bridge with a JSON request.
  */
 async function invokeBridge(
   python: string,
@@ -196,7 +188,7 @@ async function invokeBridge(
   timeoutMs?: number,
 ): Promise<Record<string, unknown>> {
   const json = JSON.stringify(request)
-  // Module invocations arrive as "-m <module>" (teacher.bridge, or the
+  // Module invocations arrive as "-m <module>" (school.bridge, or the
   // legacy lerev.bridge alias); anything else is a direct script path.
   const args = bridgePath.startsWith("-m ")
     ? ["-m", ...bridgePath.slice(3).split(" ")]
@@ -204,7 +196,7 @@ async function invokeBridge(
 
   try {
     const { stdout, stderr } = await runBridge(python, args, json, timeoutMs)
-    if (stderr) console.error("[teacher bridge stderr]", stderr)
+    if (stderr) console.error("[school bridge stderr]", stderr)
     if (!stdout.trim()) {
       return {
         ok: false,
@@ -221,7 +213,7 @@ async function invokeBridge(
 }
 
 // ---------------------------------------------------------------------------
-// Execution hooks — Teacher runs and shows itself on every tool execution
+// Execution hooks — School runs and shows itself on every tool execution
 // and every prompt. All hook work is budgeted (top-3, thresholded, timeboxed)
 // and must never break the execution it observes.
 // ---------------------------------------------------------------------------
@@ -246,7 +238,7 @@ const promptRecalls = new Map<string, RecallOutcome>()
 const executionStart = new Map<string, number>()
 
 function hooksEnabled(): boolean {
-  return process.env.TEACHER_HOOKS !== "0"
+  return process.env.SCHOOL_HOOKS !== "0"
 }
 
 const ROUTE_TIMEOUT_MS = 10000
@@ -280,11 +272,11 @@ function normalizeSeverity(value: unknown): string {
 }
 
 function memoryRoot(worktree: string): string {
-  for (const dir of [".teacher", ".lerev", ".evo"]) {
+  for (const dir of [".school", ".teacher", ".lerev", ".evo"]) {
     const root = resolve(worktree, dir)
     if (fileExists(resolve(root, "memory"))) return root
   }
-  return resolve(worktree, ".teacher")
+  return resolve(worktree, ".school")
 }
 
 function clampNum(v: unknown, fallback: number, lo: number, hi: number): number {
@@ -339,7 +331,7 @@ function appendEvidence(worktree: string, entry: Record<string, unknown>): void 
 }
 
 function hasMemoryRoot(worktree: string): boolean {
-  for (const dir of [".teacher", ".lerev", ".evo"]) {
+  for (const dir of [".school", ".teacher", ".lerev", ".evo"]) {
     if (fileExists(resolve(worktree, dir, "memory"))) return true
   }
   return false
@@ -395,12 +387,12 @@ function formatRecallLines(memories: any[]): string[] {
   })
 }
 
-const Teacher: Plugin = async (ctx) => {
+const School: Plugin = async (ctx) => {
   const bridge = await discoverBridge(ctx.worktree)
 
   if (!bridge) {
-    console.error("[teacher] No bridge found. Teacher tools will return errors.")
-    console.error("[teacher] Run `teacher install` to set up Teacher globally.")
+    console.error("[school] No bridge found. School tools will return errors.")
+    console.error("[school] Run `school install` to set up School globally.")
   }
 
   const python = bridge?.python ?? ""
@@ -408,7 +400,7 @@ const Teacher: Plugin = async (ctx) => {
 
   /**
    * Budgeted recall for one execution or prompt through the existing bridge.
-   * Returns null whenever Teacher is unavailable, the worktree has no memory,
+   * Returns null whenever School is unavailable, the worktree has no memory,
    * or the bridge fails/times out — callers degrade to a bare marker.
    */
   const recallForExecution = async (
@@ -449,7 +441,7 @@ const Teacher: Plugin = async (ctx) => {
 
   function routePrompt(situation: string): string {
     return [
-      "You are a routing classifier for teacher tools. Situation: " + situation.slice(0, 200),
+      "You are a routing classifier for school tools. Situation: " + situation.slice(0, 200),
       "severity: light (trivial) | medium (real task) | high (critical).",
       "engage: skill for light, both for medium/high (tool and skill together).",
       "Never choose engage none unless the situation is unrelated to tool routing.",
@@ -480,7 +472,7 @@ const Teacher: Plugin = async (ctx) => {
     directory: string,
     situation: string,
   ): Promise<RouteDecision | null> {
-    if (process.env.TEACHER_ROUTE === "0") return null
+    if (process.env.SCHOOL_ROUTE === "0") return null
     const c = client as any
     if (!c?.session?.create || !c?.session?.prompt) return null
     try {
@@ -489,7 +481,7 @@ const Teacher: Plugin = async (ctx) => {
       )
       const work = (async (): Promise<RouteDecision | null> => {
         const created = await c.session.create({
-          body: { title: "teacher-route" },
+          body: { title: "school-route" },
           query: { directory },
         })
         const sessionID = created?.data?.id ?? created?.id
@@ -536,18 +528,18 @@ const Teacher: Plugin = async (ctx) => {
 
   return {
     tool: {
-      teacher_status: tool({
+      school_status: tool({
         description:
-          "Check Teacher runtime status: versions and component health " +
+          "Check School runtime status: versions and component health " +
           "(V2.5 routing, V2.6 memory, persistence, security). Use when " +
-          "Teacher behaves unexpectedly or right after install/upgrade - " +
+          "School behaves unexpectedly or right after install/upgrade - " +
           "start here, before deeper diagnostics.",
         args: {},
         async execute(_args, context) {
           if (!bridge) {
             return {
-              title: "Teacher Status",
-              output: "Teacher: unavailable — no bridge found. Run `teacher install`.",
+              title: "School Status",
+              output: "School: unavailable — no bridge found. Run `school install`.",
             }
           }
 
@@ -558,27 +550,27 @@ const Teacher: Plugin = async (ctx) => {
 
           if (!resp.ok) {
             return {
-              title: "Teacher Status",
-              output: `Teacher bridge error: ${(resp as any).error?.message ?? "unknown"}`,
+              title: "School Status",
+              output: `School bridge error: ${(resp as any).error?.message ?? "unknown"}`,
             }
           }
 
           const components = (resp as any).components ?? {}
           const bridgeVersion = (resp as any).version ?? "unknown"
-          const versionMatch = bridgeVersion === TEACHER_VERSION
+          const versionMatch = bridgeVersion === SCHOOL_VERSION
           const lines = Object.entries(components).map(
             ([k, v]) => `  ${k}: ${v}`,
           )
-          lines.push(`  Plugin version: ${TEACHER_VERSION}`)
+          lines.push(`  Plugin version: ${SCHOOL_VERSION}`)
           lines.push(`  Bridge version: ${bridgeVersion}`)
           lines.push(`  Version match: ${versionMatch ? "yes" : "MISMATCH"}`)
           return {
-            title: "Teacher Status",
-            output: `Teacher V2.6 Component Status:\n${lines.join("\n")}`,
+            title: "School Status",
+            output: `School V2.6 Component Status:\n${lines.join("\n")}`,
             metadata: {
               ...components,
               compat: {
-                plugin: TEACHER_VERSION,
+                plugin: SCHOOL_VERSION,
                 bridge: bridgeVersion,
                 match: versionMatch,
               },
@@ -587,12 +579,12 @@ const Teacher: Plugin = async (ctx) => {
         },
       }),
 
-      teacher_remember: tool({
+      school_remember: tool({
         description:
-          "Store an experience or memory in Teacher V2.6 long-term memory; " +
+          "Store an experience or memory in School V2.6 long-term memory; " +
           "returns the stored memory ID. Use when you learned a durable fact " +
           "(decision, fix, preference, outcome) worth keeping across sessions " +
-          "- include outcome and observation. Run teacher_conflict first if " +
+          "- include outcome and observation. Run school_conflict first if " +
           "it may contradict existing memories.",
         args: {
           content: tool.schema
@@ -622,8 +614,8 @@ const Teacher: Plugin = async (ctx) => {
         async execute(args, context) {
           if (!bridge) {
             return {
-              title: "Teacher Remember",
-              output: "Teacher: unavailable — no bridge found. Run `teacher install`.",
+              title: "School Remember",
+              output: "School: unavailable — no bridge found. Run `school install`.",
             }
           }
 
@@ -645,7 +637,7 @@ const Teacher: Plugin = async (ctx) => {
           if (!resp.ok) {
             const err = (resp as any).error ?? {}
             return {
-              title: "Teacher Remember — Failed",
+              title: "School Remember — Failed",
               output: `Error [${err.type}]: ${err.message}`,
             }
           }
@@ -660,7 +652,7 @@ const Teacher: Plugin = async (ctx) => {
             .join(", ")
 
           return {
-            title: "Teacher Remember",
+            title: "School Remember",
             output: [
               `Memory stored successfully.`,
               `  ID: ${(resp as any).id}`,
@@ -676,12 +668,12 @@ const Teacher: Plugin = async (ctx) => {
         },
       }),
 
-      teacher_recall: tool({
+      school_recall: tool({
         description:
-          "Retrieve memories from Teacher V2.6 long-term memory, scoped to " +
+          "Retrieve memories from School V2.6 long-term memory, scoped to " +
           "project/session. Use when starting a task or answering " +
           "project-specific questions: one short query first - the cheapest " +
-          "way to load prior context. Prefer teacher_search only if recall " +
+          "way to load prior context. Prefer school_search only if recall " +
           "misses.",
         args: {
           query: tool.schema
@@ -716,8 +708,8 @@ const Teacher: Plugin = async (ctx) => {
         async execute(args, context) {
           if (!bridge) {
             return {
-              title: "Teacher Recall",
-              output: "Teacher: unavailable — no bridge found. Run `teacher install`.",
+              title: "School Recall",
+              output: "School: unavailable — no bridge found. Run `school install`.",
             }
           }
 
@@ -739,7 +731,7 @@ const Teacher: Plugin = async (ctx) => {
           if (!resp.ok) {
             const err = (resp as any).error ?? {}
             return {
-              title: "Teacher Recall — Failed",
+              title: "School Recall — Failed",
               output: `Error [${err.type}]: ${err.message}`,
             }
           }
@@ -747,7 +739,7 @@ const Teacher: Plugin = async (ctx) => {
           const memories = (resp as any).memories ?? []
           if (memories.length === 0) {
             return {
-              title: "Teacher Recall",
+              title: "School Recall",
               output: "No matching memories found.",
               metadata: { total: 0 },
             }
@@ -759,7 +751,7 @@ const Teacher: Plugin = async (ctx) => {
           )
 
           return {
-            title: "Teacher Recall",
+            title: "School Recall",
             output: [
               `Found ${(resp as any).total} matching memories (${memories.length} returned, cost=${(resp as any).context_cost} tokens):`,
               "",
@@ -782,12 +774,12 @@ const Teacher: Plugin = async (ctx) => {
         },
       }),
 
-      teacher_learn: tool({
+      school_learn: tool({
         description:
-          "Record a learning through Teacher's learn bridge; returns the " +
+          "Record a learning through School's learn bridge; returns the " +
           "stored memory ID. Use after a meaningful outcome (what worked or " +
-          "failed). Stores to the same memory as teacher_remember - prefer " +
-          "this for lessons with an outcome, teacher_remember for plain facts.",
+          "failed). Stores to the same memory as school_remember - prefer " +
+          "this for lessons with an outcome, school_remember for plain facts.",
         args: {
           content: tool.schema
             .string()
@@ -826,8 +818,8 @@ const Teacher: Plugin = async (ctx) => {
         async execute(args, context) {
           if (!bridge) {
             return {
-              title: "Teacher Learn",
-              output: "Teacher: unavailable — no bridge found. Run `teacher install`.",
+              title: "School Learn",
+              output: "School: unavailable — no bridge found. Run `school install`.",
             }
           }
 
@@ -853,14 +845,14 @@ const Teacher: Plugin = async (ctx) => {
             const errors = (resp as any).errors ?? []
             const detail = err.message ?? errors.join("; ") ?? "unknown error"
             return {
-              title: "Teacher Learn — Failed",
+              title: "School Learn — Failed",
               output: `Error [${err.type ?? "orchestrator"}]: ${detail}`,
             }
           }
 
           const result = (resp as any).result ?? resp
           return {
-            title: "Teacher Learn",
+            title: "School Learn",
             output: [
               "Learning recorded.",
               `  ID: ${result.experience_id ?? (resp as any).id ?? "unknown"}`,
@@ -874,12 +866,12 @@ const Teacher: Plugin = async (ctx) => {
         },
       }),
 
-      teacher_conflict: tool({
+      school_conflict: tool({
         description:
           "Detect conflicts between incoming content and stored memories, " +
           "with similarity scores. Use BEFORE saving new information that " +
-          "might contradict what Teacher already knows (before " +
-          "teacher_remember when the topic changed).",
+          "might contradict what School already knows (before " +
+          "school_remember when the topic changed).",
         args: {
           content: tool.schema
             .string()
@@ -895,7 +887,7 @@ const Teacher: Plugin = async (ctx) => {
         },
         async execute(args, context) {
           if (!bridge) {
-            return { title: "Teacher Conflict", output: "Teacher: unavailable." }
+            return { title: "School Conflict", output: "School: unavailable." }
           }
           const resp = await invokeBridge(python, bridgePath, {
             command: "conflict",
@@ -906,24 +898,24 @@ const Teacher: Plugin = async (ctx) => {
             content: args.content,
           })
           if (!resp.ok) {
-            return { title: "Teacher Conflict — Failed", output: `Error: ${(resp as any).error?.message}` }
+            return { title: "School Conflict — Failed", output: `Error: ${(resp as any).error?.message}` }
           }
           const conflicts = (resp as any).result?.conflicts ?? (resp as any).conflicts ?? []
           if (conflicts.length === 0) {
-            return { title: "Teacher Conflict", output: "No conflicts detected." }
+            return { title: "School Conflict", output: "No conflicts detected." }
           }
           const lines = conflicts.map((c: any, i: number) =>
             `${i + 1}. [${c.type ?? "unknown"}] sim=${(c.similarity ?? 0).toFixed(2)}: ${(c.content ?? "").slice(0, 100)}`
           )
           return {
-            title: "Teacher Conflict",
+            title: "School Conflict",
             output: `Found ${conflicts.length} conflict(s):\n${lines.join("\n")}`,
             metadata: { conflicts },
           }
         },
       }),
 
-      teacher_confidence: tool({
+      school_confidence: tool({
         description:
           "Score how well-supported a claim or memory is (0-1 score, band, " +
           "factors). Use when about to assert something from memory and you " +
@@ -937,7 +929,7 @@ const Teacher: Plugin = async (ctx) => {
         },
         async execute(args, context) {
           if (!bridge) {
-            return { title: "Teacher Confidence", output: "Teacher: unavailable." }
+            return { title: "School Confidence", output: "School: unavailable." }
           }
           const resp = await invokeBridge(python, bridgePath, {
             command: "confidence",
@@ -948,21 +940,21 @@ const Teacher: Plugin = async (ctx) => {
             conflict_count: args.conflict_count ?? 0,
           })
           if (!resp.ok) {
-            return { title: "Teacher Confidence — Failed", output: `Error: ${(resp as any).error?.message}` }
+            return { title: "School Confidence — Failed", output: `Error: ${(resp as any).error?.message}` }
           }
           const result = (resp as any).result ?? resp
           return {
-            title: "Teacher Confidence",
+            title: "School Confidence",
             output: `Confidence: ${(result.confidence ?? 0).toFixed(3)} [${result.band ?? "unknown"}]`,
             metadata: result,
           }
         },
       }),
 
-      teacher_search: tool({
+      school_search: tool({
         description:
           "Semantic TF-IDF search across stored memories, ranked. Use when " +
-          "teacher_recall's scoped query misses or you want broad exploration " +
+          "school_recall's scoped query misses or you want broad exploration " +
           "by topic; recall is the better first stop for specific questions.",
         args: {
           query: tool.schema.string().describe("Search query"),
@@ -971,7 +963,7 @@ const Teacher: Plugin = async (ctx) => {
         },
         async execute(args, context) {
           if (!bridge) {
-            return { title: "Teacher Search", output: "Teacher: unavailable." }
+            return { title: "School Search", output: "School: unavailable." }
           }
           const resp = await invokeBridge(python, bridgePath, {
             command: "search",
@@ -982,24 +974,24 @@ const Teacher: Plugin = async (ctx) => {
             limit: args.limit ?? 10,
           })
           if (!resp.ok) {
-            return { title: "Teacher Search — Failed", output: `Error: ${(resp as any).error?.message}` }
+            return { title: "School Search — Failed", output: `Error: ${(resp as any).error?.message}` }
           }
           const memories = (resp as any).result?.memories ?? (resp as any).memories ?? []
           if (memories.length === 0) {
-            return { title: "Teacher Search", output: "No matching memories found." }
+            return { title: "School Search", output: "No matching memories found." }
           }
           const lines = memories.map((m: any, i: number) =>
             `${i + 1}. [${m.kind}] (conf=${(m.confidence ?? 0).toFixed(2)}) ${m.content}`
           )
           return {
-            title: "Teacher Search",
+            title: "School Search",
             output: `Found ${memories.length} result(s):\n${lines.join("\n")}`,
             metadata: { memories },
           }
         },
       }),
 
-      teacher_deduplicate: tool({
+      school_deduplicate: tool({
         description:
           "Find (and optionally merge) duplicate or near-duplicate memories, " +
           "with similarity scores. Use for occasional maintenance when recall " +
@@ -1011,7 +1003,7 @@ const Teacher: Plugin = async (ctx) => {
         },
         async execute(args, context) {
           if (!bridge) {
-            return { title: "Teacher Deduplicate", output: "Teacher: unavailable." }
+            return { title: "School Deduplicate", output: "School: unavailable." }
           }
           const resp = await invokeBridge(python, bridgePath, {
             command: "deduplicate",
@@ -1022,25 +1014,25 @@ const Teacher: Plugin = async (ctx) => {
             threshold: args.threshold ?? 0.85,
           })
           if (!resp.ok) {
-            return { title: "Teacher Deduplicate — Failed", output: `Error: ${(resp as any).error?.message}` }
+            return { title: "School Deduplicate — Failed", output: `Error: ${(resp as any).error?.message}` }
           }
           const result = (resp as any).result ?? resp
           const dups = result.duplicates ?? []
           if (dups.length === 0) {
-            return { title: "Teacher Deduplicate", output: "No duplicates found." }
+            return { title: "School Deduplicate", output: "No duplicates found." }
           }
           const lines = dups.map((d: any, i: number) =>
             `${i + 1}. sim=${(d.similarity ?? 0).toFixed(2)}: ${(d.content ?? "").slice(0, 100)}`
           )
           return {
-            title: "Teacher Deduplicate",
+            title: "School Deduplicate",
             output: `Found ${dups.length} duplicate(s):\n${lines.join("\n")}`,
             metadata: { duplicates: dups },
           }
         },
       }),
 
-      teacher_knowledge: tool({
+      school_knowledge: tool({
         description:
           "Extract recurring learnings and knowledge patterns from " +
           "consolidated memories. Use for occasional synthesis of what keeps " +
@@ -1052,7 +1044,7 @@ const Teacher: Plugin = async (ctx) => {
         },
         async execute(args, context) {
           if (!bridge) {
-            return { title: "Teacher Knowledge", output: "Teacher: unavailable." }
+            return { title: "School Knowledge", output: "School: unavailable." }
           }
           const resp = await invokeBridge(python, bridgePath, {
             command: "knowledge",
@@ -1063,18 +1055,18 @@ const Teacher: Plugin = async (ctx) => {
             min_occurrences: args.min_occurrences ?? 3,
           })
           if (!resp.ok) {
-            return { title: "Teacher Knowledge — Failed", output: `Error: ${(resp as any).error?.message}` }
+            return { title: "School Knowledge — Failed", output: `Error: ${(resp as any).error?.message}` }
           }
           const result = (resp as any).result ?? resp
           return {
-            title: "Teacher Knowledge",
+            title: "School Knowledge",
             output: `Knowledge extraction: promoted=${result.promoted_count ?? 0}, retained=${result.retained_count ?? 0}`,
             metadata: result,
           }
         },
       }),
 
-      teacher_lifecycle: tool({
+      school_lifecycle: tool({
         description:
           "Manage memory lifecycle: score, decay, promote, or archive " +
           "(action required). Use for maintenance: promote durable memories, " +
@@ -1092,7 +1084,7 @@ const Teacher: Plugin = async (ctx) => {
         },
         async execute(args, context) {
           if (!bridge) {
-            return { title: "Teacher Lifecycle", output: "Teacher: unavailable." }
+            return { title: "School Lifecycle", output: "School: unavailable." }
           }
           const resp = await invokeBridge(python, bridgePath, {
             command: "lifecycle",
@@ -1102,21 +1094,21 @@ const Teacher: Plugin = async (ctx) => {
             project: args.project ?? "",
           })
           if (!resp.ok) {
-            return { title: "Teacher Lifecycle — Failed", output: `Error: ${(resp as any).error?.message}` }
+            return { title: "School Lifecycle — Failed", output: `Error: ${(resp as any).error?.message}` }
           }
           const result = (resp as any).result ?? resp
           return {
-            title: "Teacher Lifecycle",
+            title: "School Lifecycle",
             output: `Action '${args.action}' completed: ${JSON.stringify(result)}`,
             metadata: result,
           }
         },
       }),
 
-      teacher_diagnose: tool({
+      school_diagnose: tool({
         description:
           "Full system diagnostics: health, stats, pipeline. Use when " +
-          "teacher_status suggests trouble or recall results look wrong - " +
+          "school_status suggests trouble or recall results look wrong - " +
           "deeper than status, heavier to run.",
         args: {
           detail: tool.schema
@@ -1126,7 +1118,7 @@ const Teacher: Plugin = async (ctx) => {
         },
         async execute(args, context) {
           if (!bridge) {
-            return { title: "Teacher Diagnose", output: "Teacher: unavailable." }
+            return { title: "School Diagnose", output: "School: unavailable." }
           }
           const resp = await invokeBridge(python, bridgePath, {
             command: "diagnose",
@@ -1134,22 +1126,22 @@ const Teacher: Plugin = async (ctx) => {
             detail: args.detail ?? "summary",
           })
           if (!resp.ok) {
-            return { title: "Teacher Diagnose — Failed", output: `Error: ${(resp as any).error?.message}` }
+            return { title: "School Diagnose — Failed", output: `Error: ${(resp as any).error?.message}` }
           }
           const result = (resp as any).result ?? resp
           const health = result.health ?? {}
           const lines = Object.entries(health).map(([k, v]) => `  ${k}: ${v}`)
           return {
-            title: "Teacher Diagnose",
+            title: "School Diagnose",
             output: `System Health:\n${lines.join("\n")}`,
             metadata: result,
           }
         },
       }),
 
-      teacher_route: tool({
+      school_route: tool({
         description:
-          "Assess how much Teacher routing machinery a situation needs " +
+          "Assess how much School routing machinery a situation needs " +
           "(mode assess: tiny real model call -> engage skill or both) or " +
           "store a routing lesson (mode report: what worked where, tagged " +
           "and retrievable). Use when starting non-trivial work or after a " +
@@ -1180,7 +1172,7 @@ const Teacher: Plugin = async (ctx) => {
           const situation = String(args.situation ?? "").slice(0, 500)
           if (!situation.trim()) {
             return {
-              title: "Teacher Route — Failed",
+              title: "School Route — Failed",
               output: "Error: situation is required (max 500 chars).",
               metadata: { engagement: "failed" },
             }
@@ -1189,15 +1181,15 @@ const Teacher: Plugin = async (ctx) => {
           if (mode === "report") {
             if (!bridge) {
               return {
-                title: "Teacher Route — Failed",
-                output: "Teacher: unavailable — no bridge found. Run `teacher install`.",
+                title: "School Route — Failed",
+                output: "School: unavailable — no bridge found. Run `school install`.",
                 metadata: { engagement: "failed" },
               }
             }
             const lesson = String(args.lesson ?? "").trim().slice(0, 1000)
             if (!lesson) {
               return {
-                title: "Teacher Route — Failed",
+                title: "School Route — Failed",
                 output: "Error: lesson is required for mode=report.",
                 metadata: { engagement: "failed" },
               }
@@ -1225,7 +1217,7 @@ const Teacher: Plugin = async (ctx) => {
             if (hooksEnabled()) {
               appendEvidence(context.worktree, {
                 kind: "report",
-                tool: "teacher_route",
+                tool: "school_route",
                 ms: 0,
                 ok: Boolean(resp.ok),
                 outcome,
@@ -1234,13 +1226,13 @@ const Teacher: Plugin = async (ctx) => {
             if (!resp.ok) {
               const err = (resp as any).error ?? {}
               return {
-                title: "Teacher Route — Failed",
+                title: "School Route — Failed",
                 output: `Error [${err.type}]: ${err.message}`,
                 metadata: { engagement: "failed" },
               }
             }
             return {
-              title: "Teacher Route — Reported",
+              title: "School Route — Reported",
               output:
                 `Stored routing lesson (id ${(resp as any).id ?? "?"}, ` +
                 `outcome ${outcome}).`,
@@ -1250,7 +1242,7 @@ const Teacher: Plugin = async (ctx) => {
 
           if (mode !== "assess") {
             return {
-              title: "Teacher Route — Failed",
+              title: "School Route — Failed",
               output: 'Error: mode must be "assess" or "report".',
               metadata: { engagement: "failed" },
             }
@@ -1267,7 +1259,7 @@ const Teacher: Plugin = async (ctx) => {
                 ? "self-rated (severity argument)"
                 : "fallback default (micro-call unavailable)",
             }
-            source = process.env.TEACHER_ROUTE === "0"
+            source = process.env.SCHOOL_ROUTE === "0"
               ? "self-rated"
               : args.severity
                 ? "self-rated"
@@ -1276,7 +1268,7 @@ const Teacher: Plugin = async (ctx) => {
           if (hooksEnabled()) {
             appendEvidence(context.worktree, {
               kind: "assess",
-              tool: "teacher_route",
+              tool: "school_route",
               ms: 0,
               ok: true,
               severity: decision.severity,
@@ -1286,10 +1278,10 @@ const Teacher: Plugin = async (ctx) => {
           const nextStep =
             decision.engage === "none"
               ? "\nNo routing machinery needed for this situation."
-              : "\nNext: load the `teacher-routing` skill (skill tool) " +
+              : "\nNext: load the `school-routing` skill (skill tool) " +
                 "so the tool and skill work together."
           return {
-            title: `Teacher Route — ${decision.severity}`,
+            title: `School Route — ${decision.severity}`,
             output:
               JSON.stringify({ source, ...decision }, null, 2) + nextStep,
             metadata: { engagement: decision.engage },
@@ -1297,11 +1289,11 @@ const Teacher: Plugin = async (ctx) => {
         },
       }),
 
-      teacher_route_stats: tool({
+      school_route_stats: tool({
         description:
           "Aggregated routing evidence: per-tool call counts and average " +
           "durations, recent assess/report entries, current knobs, and " +
-          "recent routing lessons. Use before adjusting how Teacher routes, " +
+          "recent routing lessons. Use before adjusting how School routes, " +
           "or when the routing skill asks for current numbers - for " +
           "anything, not only coding.",
         args: {
@@ -1368,7 +1360,7 @@ const Teacher: Plugin = async (ctx) => {
           const knobs = readKnobs(context.worktree)
           const last = entries.length ? entries[entries.length - 1] : null
           return {
-            title: "Teacher Routing Stats",
+            title: "School Routing Stats",
             output: JSON.stringify(
               {
                 last_activity: last ? last.ts : null,
@@ -1414,7 +1406,7 @@ const Teacher: Plugin = async (ctx) => {
         const rec = executionRecalls.get(input.callID) ?? null
         executionRecalls.delete(input.callID)
         // Visible marker on EVERY execution — hits, zero hits, and degraded.
-        const marker = rec ? ` · teacher: ${rec.hits}` : " · teacher: –"
+        const marker = rec ? ` · school: ${rec.hits}` : " · school: –"
         const started = executionStart.get(input.callID) ?? Date.now()
         executionStart.delete(input.callID)
         const meta = (output as any).metadata as Record<string, unknown> | undefined
@@ -1429,11 +1421,11 @@ const Teacher: Plugin = async (ctx) => {
           hits: rec ? rec.hits : null,
         })
         if (rec && rec.hits > 0 && typeof output.output === "string") {
-          const block = `[teacher context]\n${rec.lines.join("\n")}\n[/teacher]`
+          const block = `[school context]\n${rec.lines.join("\n")}\n[/school]`
           output.output = `${output.output}\n\n${block}`
         }
       } catch {
-        // Teacher visibility must never break tool execution.
+        // School visibility must never break tool execution.
       }
     },
 
@@ -1469,12 +1461,12 @@ const Teacher: Plugin = async (ctx) => {
         if (!rec) return
         promptRecalls.delete(info.sessionID)
         last.parts.push({
-          id: `teacher-context-${info.id}`,
+          id: `school-context-${info.id}`,
           sessionID: info.sessionID,
           messageID: info.id,
           type: "text",
           synthetic: true,
-          text: `[teacher context]\n${rec.lines.join("\n")}\n[/teacher]`,
+          text: `[school context]\n${rec.lines.join("\n")}\n[/school]`,
         })
       } catch {
         // Context injection is best-effort.
@@ -1483,7 +1475,7 @@ const Teacher: Plugin = async (ctx) => {
   }
 }
 
-export default Teacher
+export default School
 '''
 
-TS_PLUGIN_SOURCE = _TS_PLUGIN_TEMPLATE.replace("__TEACHER_VERSION__", _TEACHER_VERSION)
+TS_PLUGIN_SOURCE = _TS_PLUGIN_TEMPLATE.replace("__SCHOOL_VERSION__", _SCHOOL_VERSION)

@@ -1,8 +1,8 @@
 !include "MUI2.nsh"
 
-Name "Teacher"
-OutFile "Teacher-Setup.exe"
-InstallDir "$LOCALAPPDATA\Teacher"
+Name "School"
+OutFile "School-Setup.exe"
+InstallDir "$LOCALAPPDATA\School"
 RequestExecutionLevel user
 
 !define MUI_ABORTWARNING
@@ -23,40 +23,40 @@ RequestExecutionLevel user
 Section "Install"
     SetOutPath "$INSTDIR"
 
-    ; Copy teacher.exe
-    File "dist\teacher.exe"
+    ; Copy school.exe
+    File "dist\school.exe"
 
     ; Add to PATH
     EnVar::AddValue "PATH" "$INSTDIR"
     Pop $0
 
-    ; Run teacher install to register OpenCode plugin
-    nsExec::ExecToStack '"$INSTDIR\teacher.exe" install'
+    ; Run school install to register OpenCode plugin
+    nsExec::ExecToStack '"$INSTDIR\school.exe" install'
     Pop $0
 
     ; Write uninstaller
     WriteUninstaller "$INSTDIR\uninstall.exe"
 
     ; Add to Programs Menu
-    CreateDirectory "$SMPROGRAMS\Teacher"
-    CreateShortCut "$SMPROGRAMS\Teacher\Teacher.lnk" "$INSTDIR\teacher.exe"
-    CreateShortCut "$SMPROGRAMS\Teacher\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+    CreateDirectory "$SMPROGRAMS\School"
+    CreateShortCut "$SMPROGRAMS\School\School.lnk" "$INSTDIR\school.exe"
+    CreateShortCut "$SMPROGRAMS\School\Uninstall.lnk" "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "Uninstall"
-    ; Run teacher uninstall to deregister OpenCode plugin
-    nsExec::ExecToStack '"$INSTDIR\teacher.exe" uninstall'
+    ; Run school uninstall to deregister OpenCode plugin
+    nsExec::ExecToStack '"$INSTDIR\school.exe" uninstall'
 
     ; Remove from PATH
     EnVar::RemoveValue "PATH" "$INSTDIR"
 
     ; Remove files
-    Delete "$INSTDIR\teacher.exe"
+    Delete "$INSTDIR\school.exe"
     Delete "$INSTDIR\uninstall.exe"
     RMDir "$INSTDIR"
 
     ; Remove Programs Menu
-    Delete "$SMPROGRAMS\Teacher\Teacher.lnk"
-    Delete "$SMPROGRAMS\Teacher\Uninstall.lnk"
-    RMDir "$SMPROGRAMS\Teacher"
+    Delete "$SMPROGRAMS\School\School.lnk"
+    Delete "$SMPROGRAMS\School\Uninstall.lnk"
+    RMDir "$SMPROGRAMS\School"
 SectionEnd

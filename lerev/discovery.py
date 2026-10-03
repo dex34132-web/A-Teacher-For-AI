@@ -1,8 +1,8 @@
-"""Legacy shim — ``lerev.discovery`` (alias of teacher.discovery)."""
+"""Legacy shim — ``lerev.discovery`` (alias of school.discovery)."""
 
 from __future__ import annotations
 
-from teacher.discovery import (
+from school.discovery import (
     BridgeDiscovery,
     _find_python,
     discover_bridge,

@@ -4,7 +4,7 @@ from core.routing.v26.tools.confidence import ConfidenceTool
 
 def test_confidence_tool_name():
     tool = ConfidenceTool()
-    assert tool.name == "teacher_confidence"
+    assert tool.name == "school_confidence"
 
 
 def test_confidence_tool_schema():
@@ -70,4 +70,4 @@ def test_confidence_tool_execute_returns_all_fields():
 def test_confidence_tool_returns_metadata():
     tool = ConfidenceTool()
     result = tool.execute()
-    assert result.metadata.get("tool") == "teacher_confidence"
+    assert result.metadata.get("tool") == "school_confidence"

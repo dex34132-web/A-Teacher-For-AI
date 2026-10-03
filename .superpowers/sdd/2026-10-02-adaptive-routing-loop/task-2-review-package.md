@@ -1,19 +1,19 @@
 ﻿## Commits
-e555fb9 feat(plugin): teacher_route (micro-model assess + lesson report) and teacher_route_stats tools
+e555fb9 feat(plugin): school_route (micro-model assess + lesson report) and school_route_stats tools
 
 ## Stat
- teacher/plugin_source.py                 | 330 +++++++++++++++++++++++++++++++
- tests/unit/test_teacher_plugin_bridge.py |  13 +-
- tests/unit/test_teacher_plugin_hooks.py  |   2 +-
- tests/unit/test_teacher_routing.py       |  65 ++++++
+ school/plugin_source.py                 | 330 +++++++++++++++++++++++++++++++
+ tests/unit/test_school_plugin_bridge.py |  13 +-
+ tests/unit/test_school_plugin_hooks.py  |   2 +-
+ tests/unit/test_school_routing.py       |  65 ++++++
  4 files changed, 403 insertions(+), 7 deletions(-)
 
 ## Diff (-U10)
-diff --git a/teacher/plugin_source.py b/teacher/plugin_source.py
+diff --git a/school/plugin_source.py b/school/plugin_source.py
 index ca4799a..a20133f 100644
---- a/teacher/plugin_source.py
-+++ b/teacher/plugin_source.py
-@@ -438,20 +438,109 @@ const Teacher: Plugin = async (ctx) => {
+--- a/school/plugin_source.py
++++ b/school/plugin_source.py
+@@ -438,20 +438,109 @@ const School: Plugin = async (ctx) => {
          knobs.hook_timeout_ms,
        )
        if (!resp.ok) return null
@@ -28,7 +28,7 @@ index ca4799a..a20133f 100644
 +
 +  function routePrompt(situation: string): string {
 +    return [
-+      "You are a routing classifier for teacher tools. Situation: " + situation,
++      "You are a routing classifier for school tools. Situation: " + situation,
 +      "severity: light (trivial) | medium (real task) | high (critical).",
 +      "engage: skill for light, both for medium/high (tool and skill together).",
 +      "Never choose engage none unless the situation is unrelated to tool routing.",
@@ -59,7 +59,7 @@ index ca4799a..a20133f 100644
 +    directory: string,
 +    situation: string,
 +  ): Promise<RouteDecision | null> {
-+    if (process.env.TEACHER_ROUTE === "0") return null
++    if (process.env.SCHOOL_ROUTE === "0") return null
 +    const c = client as any
 +    if (!c?.session?.create || !c?.session?.prompt) return null
 +    try {
@@ -68,7 +68,7 @@ index ca4799a..a20133f 100644
 +      )
 +      const work = (async (): Promise<RouteDecision | null> => {
 +        const created = await c.session.create({
-+          body: { title: "teacher-route" },
++          body: { title: "school-route" },
 +          query: { directory },
 +        })
 +        const sessionID = created?.data?.id ?? created?.id
@@ -115,29 +115,29 @@ index ca4799a..a20133f 100644
 +
    return {
      tool: {
-       teacher_status: tool({
+       school_status: tool({
          description:
-           "Check Teacher runtime status: versions and component health " +
+           "Check School runtime status: versions and component health " +
            "(V2.5 routing, V2.6 memory, persistence, security). Use when " +
-           "Teacher behaves unexpectedly or right after install/upgrade - " +
+           "School behaves unexpectedly or right after install/upgrade - " +
            "start here, before deeper diagnostics.",
          args: {},
          async execute(_args, context) {
-@@ -1050,20 +1139,261 @@ const Teacher: Plugin = async (ctx) => {
+@@ -1050,20 +1139,261 @@ const School: Plugin = async (ctx) => {
            const result = (resp as any).result ?? resp
            const health = result.health ?? {}
            const lines = Object.entries(health).map(([k, v]) => `  ${k}: ${v}`)
            return {
-             title: "Teacher Diagnose",
+             title: "School Diagnose",
              output: `System Health:\n${lines.join("\n")}`,
              metadata: result,
            }
          },
        }),
 +
-+      teacher_route: tool({
++      school_route: tool({
 +        description:
-+          "Assess how much Teacher routing machinery a situation needs " +
++          "Assess how much School routing machinery a situation needs " +
 +          "(mode assess: tiny real model call -> engage skill or both) or " +
 +          "store a routing lesson (mode report: what worked where, tagged " +
 +          "and retrievable). Use when starting non-trivial work or after a " +
@@ -168,7 +168,7 @@ index ca4799a..a20133f 100644
 +          const situation = String(args.situation ?? "").slice(0, 500)
 +          if (!situation.trim()) {
 +            return {
-+              title: "Teacher Route ΓÇö Failed",
++              title: "School Route ΓÇö Failed",
 +              output: "Error: situation is required (max 500 chars).",
 +              metadata: { engagement: "failed" },
 +            }
@@ -177,15 +177,15 @@ index ca4799a..a20133f 100644
 +          if (mode === "report") {
 +            if (!bridge) {
 +              return {
-+                title: "Teacher Route ΓÇö Failed",
-+                output: "Teacher: unavailable ΓÇö no bridge found. Run `teacher install`.",
++                title: "School Route ΓÇö Failed",
++                output: "School: unavailable ΓÇö no bridge found. Run `school install`.",
 +                metadata: { engagement: "failed" },
 +              }
 +            }
 +            const lesson = String(args.lesson ?? "").trim().slice(0, 1000)
 +            if (!lesson) {
 +              return {
-+                title: "Teacher Route ΓÇö Failed",
++                title: "School Route ΓÇö Failed",
 +                output: "Error: lesson is required for mode=report.",
 +                metadata: { engagement: "failed" },
 +              }
@@ -213,7 +213,7 @@ index ca4799a..a20133f 100644
 +            if (hooksEnabled()) {
 +              appendEvidence(context.worktree, {
 +                kind: "report",
-+                tool: "teacher_route",
++                tool: "school_route",
 +                ms: 0,
 +                ok: Boolean(resp.ok),
 +                outcome,
@@ -222,13 +222,13 @@ index ca4799a..a20133f 100644
 +            if (!resp.ok) {
 +              const err = (resp as any).error ?? {}
 +              return {
-+                title: "Teacher Route ΓÇö Failed",
++                title: "School Route ΓÇö Failed",
 +                output: `Error [${err.type}]: ${err.message}`,
 +                metadata: { engagement: "failed" },
 +              }
 +            }
 +            return {
-+              title: "Teacher Route ΓÇö Reported",
++              title: "School Route ΓÇö Reported",
 +              output:
 +                `Stored routing lesson (id ${(resp as any).id ?? "?"}, ` +
 +                `outcome ${outcome}).`,
@@ -238,7 +238,7 @@ index ca4799a..a20133f 100644
 +
 +          if (mode !== "assess") {
 +            return {
-+              title: "Teacher Route ΓÇö Failed",
++              title: "School Route ΓÇö Failed",
 +              output: 'Error: mode must be "assess" or "report".',
 +              metadata: { engagement: "failed" },
 +            }
@@ -255,7 +255,7 @@ index ca4799a..a20133f 100644
 +                ? "self-rated (severity argument)"
 +                : "fallback default (micro-call unavailable)",
 +            }
-+            source = process.env.TEACHER_ROUTE === "0"
++            source = process.env.SCHOOL_ROUTE === "0"
 +              ? "self-rated"
 +              : args.severity
 +                ? "self-rated"
@@ -264,7 +264,7 @@ index ca4799a..a20133f 100644
 +          if (hooksEnabled()) {
 +            appendEvidence(context.worktree, {
 +              kind: "assess",
-+              tool: "teacher_route",
++              tool: "school_route",
 +              ms: 0,
 +              ok: true,
 +              severity: decision.severity,
@@ -274,10 +274,10 @@ index ca4799a..a20133f 100644
 +          const nextStep =
 +            decision.engage === "none"
 +              ? "\nNo routing machinery needed for this situation."
-+              : "\nNext: load the `teacher-routing` skill (skill tool) " +
++              : "\nNext: load the `school-routing` skill (skill tool) " +
 +                "so the tool and skill work together."
 +          return {
-+            title: `Teacher Route ΓÇö ${decision.severity}`,
++            title: `School Route ΓÇö ${decision.severity}`,
 +            output:
 +              JSON.stringify({ source, ...decision }, null, 2) + nextStep,
 +            metadata: { engagement: decision.engage },
@@ -285,11 +285,11 @@ index ca4799a..a20133f 100644
 +        },
 +      }),
 +
-+      teacher_route_stats: tool({
++      school_route_stats: tool({
 +        description:
 +          "Aggregated routing evidence: per-tool call counts and average " +
 +          "durations, recent assess/report entries, current knobs, and " +
-+          "recent routing lessons. Use before adjusting how Teacher routes, " +
++          "recent routing lessons. Use before adjusting how School routes, " +
 +          "or when the routing skill asks for current numbers - for " +
 +          "anything, not only coding.",
 +        args: {
@@ -356,7 +356,7 @@ index ca4799a..a20133f 100644
 +          const knobs = readKnobs(context.worktree)
 +          const last = entries.length ? entries[entries.length - 1] : null
 +          return {
-+            title: "Teacher Routing Stats",
++            title: "School Routing Stats",
 +            output: JSON.stringify(
 +              {
 +                last_activity: last ? last.ts : null,
@@ -385,12 +385,12 @@ index ca4799a..a20133f 100644
            executionRecalls.set(input.callID, null)
            return
          }
-diff --git a/tests/unit/test_teacher_plugin_bridge.py b/tests/unit/test_teacher_plugin_bridge.py
+diff --git a/tests/unit/test_school_plugin_bridge.py b/tests/unit/test_school_plugin_bridge.py
 index 81be17a..3adf659 100644
---- a/tests/unit/test_teacher_plugin_bridge.py
-+++ b/tests/unit/test_teacher_plugin_bridge.py
+--- a/tests/unit/test_school_plugin_bridge.py
++++ b/tests/unit/test_school_plugin_bridge.py
 @@ -1,36 +1,36 @@
- """Tests for Teacher plugin source and bridge protocol."""
+ """Tests for School plugin source and bridge protocol."""
  
  from __future__ import annotations
  
@@ -401,29 +401,29 @@ index 81be17a..3adf659 100644
  
 -import pytest
 -
- from teacher.plugin_source import TS_PLUGIN_SOURCE
+ from school.plugin_source import TS_PLUGIN_SOURCE
  
  #: The approved agent-facing OpenCode tool surface (order matters).
  EXPECTED_OPENCODE_TOOLS = [
-     "teacher_status",
-     "teacher_remember",
-     "teacher_recall",
-     "teacher_learn",
-     "teacher_conflict",
-     "teacher_confidence",
-     "teacher_search",
-     "teacher_deduplicate",
-     "teacher_knowledge",
-     "teacher_lifecycle",
-     "teacher_diagnose",
-+    "teacher_route",
-+    "teacher_route_stats",
+     "school_status",
+     "school_remember",
+     "school_recall",
+     "school_learn",
+     "school_conflict",
+     "school_confidence",
+     "school_search",
+     "school_deduplicate",
+     "school_knowledge",
+     "school_lifecycle",
+     "school_diagnose",
++    "school_route",
++    "school_route_stats",
  ]
  
  
  def _tool_names() -> list[str]:
      """Return the tool names registered by the TypeScript plugin, in order."""
-     return re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+     return re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
  
  
  def _tool_block(name: str) -> str:
@@ -438,9 +438,9 @@ index 81be17a..3adf659 100644
      """Test the bridge JSON protocol."""
  
      def test_bridge_module_importable(self) -> None:
-         """teacher.bridge module is importable."""
--        from teacher.bridge import main, _COMMANDS
-+        from teacher.bridge import _COMMANDS
+         """school.bridge module is importable."""
+-        from school.bridge import main, _COMMANDS
++        from school.bridge import _COMMANDS
 +
          assert "status" in _COMMANDS
          assert "remember" in _COMMANDS
@@ -455,7 +455,7 @@ index 81be17a..3adf659 100644
 @@ -164,25 +165,25 @@ class TestBridgeProtocol:
      def test_bridge_recall_requires_query(self) -> None:
          """Bridge recall command requires query."""
-         from teacher.bridge import _handle_recall
+         from school.bridge import _handle_recall
  
          result = _handle_recall({"worktree": ".", "query": ""})
          assert result["ok"] is False
@@ -478,13 +478,13 @@ index 81be17a..3adf659 100644
  
      def test_learn_registered_after_recall(self) -> None:
          names = _tool_names()
-         assert "teacher_learn" in names
-         assert names.index("teacher_learn") == names.index("teacher_recall") + 1
+         assert "school_learn" in names
+         assert names.index("school_learn") == names.index("school_recall") + 1
  
-diff --git a/tests/unit/test_teacher_plugin_hooks.py b/tests/unit/test_teacher_plugin_hooks.py
+diff --git a/tests/unit/test_school_plugin_hooks.py b/tests/unit/test_school_plugin_hooks.py
 index eb97c90..84b6d3c 100644
---- a/tests/unit/test_teacher_plugin_hooks.py
-+++ b/tests/unit/test_teacher_plugin_hooks.py
+--- a/tests/unit/test_school_plugin_hooks.py
++++ b/tests/unit/test_school_plugin_hooks.py
 @@ -33,21 +33,21 @@ def _hook_block(name: str) -> str:
  class TestExecutionHooksRegistered:
      """The plugin registers every execution/prompt hook."""
@@ -495,7 +495,7 @@ index eb97c90..84b6d3c 100644
  
      def test_tool_surface_unchanged(self) -> None:
          """Hooks add visibility, not new tools."""
-         names = re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+         names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
 -        assert len(names) == 11, f"tool surface changed: {names}"
 +        assert len(names) == 13, f"tool surface changed: {names}"
  
@@ -508,10 +508,10 @@ index eb97c90..84b6d3c 100644
          assert "executionRecalls.set(input.callID" in block
  
      def test_query_is_built_from_tool_and_args(self) -> None:
-diff --git a/tests/unit/test_teacher_routing.py b/tests/unit/test_teacher_routing.py
+diff --git a/tests/unit/test_school_routing.py b/tests/unit/test_school_routing.py
 index 4dd49d1..7557cc0 100644
---- a/tests/unit/test_teacher_routing.py
-+++ b/tests/unit/test_teacher_routing.py
+--- a/tests/unit/test_school_routing.py
++++ b/tests/unit/test_school_routing.py
 @@ -86,10 +86,75 @@ class TestRoutingCoreHelpers:
          block = TS_PLUGIN_SOURCE[idx:end]
          assert "routing: " in block
@@ -527,12 +527,12 @@ index 4dd49d1..7557cc0 100644
 +
 +class TestRouteTools:
 +    def test_tools_registered(self):
-+        names = re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
-+        assert "teacher_route" in names
-+        assert "teacher_route_stats" in names
++        names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
++        assert "school_route" in names
++        assert "school_route_stats" in names
 +
 +    def test_descriptions_are_routing_guided(self):
-+        for name in ("teacher_route", "teacher_route_stats"):
++        for name in ("school_route", "school_route_stats"):
 +            match = re.search(
 +                rf"{name}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
 +                TS_PLUGIN_SOURCE,
@@ -564,24 +564,24 @@ index 4dd49d1..7557cc0 100644
 +        assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE
 +
 +    def test_kill_switch(self):
-+        assert 'process.env.TEACHER_ROUTE === "0"' in TS_PLUGIN_SOURCE
++        assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
 +
 +    def test_report_stores_tagged_lesson(self):
-+        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
-+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
++        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
++        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
 +        assert '"routing"' in block
 +        assert '"helpful"' in block and '"useless"' in block and '"neutral"' in block
 +        assert '"SUCCESS"' in block and '"FAILURE"' in block and '"NEUTRAL"' in block
 +        assert 'command: "remember"' in block
 +
 +    def test_assess_appends_evidence_and_metadata(self):
-+        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
-+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
++        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
++        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
 +        assert 'kind: "assess"' in block
 +        assert "engagement:" in block
 +
 +    def test_stats_aggregates(self):
-+        idx = TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")
++        idx = TS_PLUGIN_SOURCE.index("school_route_stats: tool(")
 +        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index('"tool.execute.before"')]
 +        assert "aggregates" in block
 +        assert "avg_ms" in block

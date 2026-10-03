@@ -37,9 +37,9 @@ class Orchestrator:
     def remember_with_learning(self, content: str, outcome: str = "NEUTRAL",
                                 project: str = "", session: str = "", **kwargs) -> PipelineResult:
         steps = [
-            ("teacher_remember", {"content": content, "outcome": outcome, "project": project, "session": session, **kwargs}),
-            ("teacher_conflict", {"content": content, "project": project}),
-            ("teacher_deduplicate", {"content": content, "project": project}),
+            ("school_remember", {"content": content, "outcome": outcome, "project": project, "session": session, **kwargs}),
+            ("school_conflict", {"content": content, "project": project}),
+            ("school_deduplicate", {"content": content, "project": project}),
         ]
         return self.pipeline(steps)
 

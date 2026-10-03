@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 # Unregister from OpenCode
-teacher uninstall
+school uninstall
 
 # Uninstall via pip
-pip uninstall teacher -y
+pip uninstall school -y

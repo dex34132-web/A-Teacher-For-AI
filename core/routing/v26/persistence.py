@@ -1,4 +1,4 @@
-"""Persistent storage for Teacher V2.6 long-term memory.
+"""Persistent storage for School V2.6 long-term memory.
 
 Provides scope-isolated, versioned, atomic JSON persistence for
 V2.6 memory entries. Rejects malformed/truncated state explicitly.

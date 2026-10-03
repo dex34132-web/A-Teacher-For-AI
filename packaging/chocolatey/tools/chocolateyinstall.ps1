@@ -1,13 +1,13 @@
 $ErrorActionPreference = 'Stop'
 
-$packageName = 'teacher'
+$packageName = 'school'
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# Install teacher.exe
+# Install school.exe
 Install-ChocolateyPackage -PackageName $packageName `
     -FileType 'exe' `
-    -File "$toolsDir\teacher.exe" `
+    -File "$toolsDir\school.exe" `
     -SilentArgs 'install'
 
-Write-Host "Teacher has been installed successfully."
-Write-Host "Restart OpenCode to use Teacher tools."
+Write-Host "School has been installed successfully."
+Write-Host "Restart OpenCode to use School tools."

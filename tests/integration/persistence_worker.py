@@ -1,7 +1,7 @@
 """Subprocess worker for persistence concurrency regression tests.
 
 Runs the REAL production ScopeIsolatedStorage in a separate OS process,
-mirroring the Teacher bridge model (one fresh Python process per tool call).
+mirroring the School bridge model (one fresh Python process per tool call).
 
 Modes (argv):
   load-wait-store <base> <mid> <content> <loaded_marker> <go_marker>

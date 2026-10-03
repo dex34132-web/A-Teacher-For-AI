@@ -1,4 +1,4 @@
-"""Comprehensive tests for Teacher bridge discovery."""
+"""Comprehensive tests for School bridge discovery."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from teacher.discovery import BridgeDiscovery, discover_bridge, _find_python
+from school.discovery import BridgeDiscovery, discover_bridge, _find_python
 
 
 class TestFindPython:
@@ -45,75 +45,53 @@ class TestFindPython:
 class TestBridgeDiscoveryCascade:
     """Test the full bridge discovery cascade."""
 
-    def test_tier1_teacher_home(self, tmp_path: Path) -> None:
-        """Tier 1: TEACHER_HOME env var."""
-        bridge_dir = tmp_path / "teacher"
+    def test_tier1_school_home(self, tmp_path: Path) -> None:
+        """Tier 1: SCHOOL_HOME env var."""
+        bridge_dir = tmp_path / "school"
         bridge_dir.mkdir()
         bridge_file = bridge_dir / "bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
-        with patch.dict(os.environ, {"TEACHER_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"SCHOOL_HOME": str(tmp_path)}):
             result = discover_bridge(str(tmp_path))
 
         assert result is not None
-        assert result.tier == "TEACHER_HOME"
+        assert result.tier == "SCHOOL_HOME"
         assert result.bridge_path == str(bridge_file)
 
-    def test_tier1_evo_home_fallback(self, tmp_path: Path) -> None:
-        """Tier 1: EVO_HOME env var as fallback."""
-        bridge_dir = tmp_path / "teacher"
-        bridge_dir.mkdir()
-        bridge_file = bridge_dir / "bridge.py"
-        bridge_file.write_text("# bridge", encoding="utf-8")
+    def test_tier1_legacy_home_envs_not_honoured(self, tmp_path: Path) -> None:
+        """LEREV_HOME / EVO_HOME are no longer honoured (no compat fallbacks)."""
+        home = tmp_path / "legacy_home"
+        (home / "school").mkdir(parents=True)
+        (home / "school" / "bridge.py").write_text("", encoding="utf-8")
 
-        env = os.environ.copy()
-        env.pop("TEACHER_HOME", None)
-        env["EVO_HOME"] = str(tmp_path)
-        with patch.dict(os.environ, env, clear=True):
-            with patch("importlib.util.find_spec", return_value=None):
-                result = discover_bridge(str(tmp_path))
-
-        assert result is not None
-        assert result.tier == "TEACHER_HOME"
-
-    def test_tier1_teacher_home_takes_precedence(self, tmp_path: Path) -> None:
-        """Tier 1: TEACHER_HOME takes precedence over EVO_HOME."""
-        bridge_dir = tmp_path / "teacher"
-        bridge_dir.mkdir()
-        bridge_file = bridge_dir / "bridge.py"
-        bridge_file.write_text("# bridge", encoding="utf-8")
-
-        env = os.environ.copy()
-        env["TEACHER_HOME"] = str(tmp_path)
-        env["EVO_HOME"] = "/some/other/path"
-        with patch.dict(os.environ, env, clear=True):
+        with patch.dict(os.environ, {"LEREV_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
             result = discover_bridge(str(tmp_path))
 
-        assert result is not None
-        assert result.tier == "TEACHER_HOME"
+        assert result is None or not result.bridge_path.startswith(str(home))
 
     def test_tier2_path_bridge(self, tmp_path: Path) -> None:
-        """Tier 2: teacher-bridge on PATH."""
+        """Tier 2: school-bridge on PATH."""
         with (
             patch.dict(os.environ, {}, clear=True),
             patch("shutil.which") as mock_which,
         ):
-            mock_which.side_effect = lambda cmd: "/usr/bin/teacher-bridge" if cmd == "teacher-bridge" else None
+            mock_which.side_effect = lambda cmd: "/usr/bin/school-bridge" if cmd == "school-bridge" else None
             result = discover_bridge(str(tmp_path))
 
         assert result is not None
         assert result.tier == "PATH"
-        assert result.bridge_path == "/usr/bin/teacher-bridge"
+        assert result.bridge_path == "/usr/bin/school-bridge"
 
     def test_tier3_installed_module(self, tmp_path: Path) -> None:
-        """Tier 3: python -m teacher.bridge."""
+        """Tier 3: python -m school.bridge."""
         with (
             patch.dict(os.environ, {}, clear=True),
             patch("shutil.which") as mock_which,
             patch("importlib.util.find_spec") as mock_find,
         ):
             mock_which.side_effect = lambda cmd: "/usr/bin/python3" if cmd == "python3" else None
-            mock_find.return_value = type("Spec", (), {"origin": "/some/path/teacher/bridge.py"})()
+            mock_find.return_value = type("Spec", (), {"origin": "/some/path/school/bridge.py"})()
             result = discover_bridge(str(tmp_path))
 
         assert result is not None
@@ -123,7 +101,7 @@ class TestBridgeDiscoveryCascade:
         """Tier 4: Development fallback."""
         scripts_dir = tmp_path / "scripts"
         scripts_dir.mkdir()
-        bridge_file = scripts_dir / "teacher_bridge.py"
+        bridge_file = scripts_dir / "school_bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
         with patch.dict(os.environ, {}, clear=True):

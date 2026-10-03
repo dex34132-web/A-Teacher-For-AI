@@ -5,7 +5,7 @@ Covers: V26Bridge — memory requests, experience storage, routing integration.
 
 from __future__ import annotations
 
-from core.routing.integration import TeacherIntegrationBridge
+from core.routing.integration import SchoolIntegrationBridge
 from core.routing.v26.experience import Experience, ExperienceOutcome
 from core.routing.v26.identity import AgentIdentity, MemoryScope, ProjectIdentity, SessionIdentity
 from core.routing.v26.memory_bridge import V26Bridge
@@ -90,7 +90,7 @@ class TestV26Bridge:
 class TestV26BridgeRouting:
     def test_connect_to_routing(self) -> None:
         manager = MemoryManager()
-        integration = TeacherIntegrationBridge()
+        integration = SchoolIntegrationBridge()
         bridge = V26Bridge(manager, integration_bridge=integration)
         bridge.connect_to_routing()
         assert bridge.has_handler()

@@ -23,7 +23,7 @@ def _make_tool_with_memory():
 
 def test_conflict_tool_name():
     tool = _make_tool_with_memory()
-    assert tool.name == "teacher_conflict"
+    assert tool.name == "school_conflict"
 
 
 def test_conflict_tool_schema_has_content():
@@ -66,4 +66,4 @@ def test_conflict_tool_execute_empty_store():
 def test_conflict_tool_returns_metadata():
     tool = _make_tool_with_memory()
     result = tool.execute(content="test")
-    assert result.metadata.get("tool") == "teacher_conflict"
+    assert result.metadata.get("tool") == "school_conflict"

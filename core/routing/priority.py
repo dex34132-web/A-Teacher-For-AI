@@ -1,4 +1,4 @@
-"""Priority system for Teacher V2.5 routing.
+"""Priority system for School V2.5 routing.
 
 Defines priority levels and configuration for routing decisions.
 Priority influences routing, processing, and deferral decisions.

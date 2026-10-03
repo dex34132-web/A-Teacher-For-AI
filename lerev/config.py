@@ -1,10 +1,10 @@
-"""Legacy shim — ``lerev.config`` (alias of teacher.config)."""
+"""Legacy shim — ``lerev.config`` (alias of school.config)."""
 
 from __future__ import annotations
 
-from teacher.config import (
+from school.config import (
     LerevConfig,
-    TeacherConfig,
+    SchoolConfig,
     get_opencode_config_path,
     get_opencode_node_modules,
     resolve_memory_dir,
@@ -12,7 +12,7 @@ from teacher.config import (
 
 __all__ = [
     "LerevConfig",
-    "TeacherConfig",
+    "SchoolConfig",
     "get_opencode_config_path",
     "get_opencode_node_modules",
     "resolve_memory_dir",

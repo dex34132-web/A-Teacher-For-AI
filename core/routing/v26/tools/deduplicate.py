@@ -1,4 +1,4 @@
-"""Deduplication tool for Teacher V2.6."""
+"""Deduplication tool for School V2.6."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ class DeduplicateTool(Tool):
 
     @property
     def name(self) -> str:
-        return "teacher_deduplicate"
+        return "school_deduplicate"
 
     @property
     def description(self) -> str:

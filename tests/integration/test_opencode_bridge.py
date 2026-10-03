@@ -1,6 +1,6 @@
-"""Integration tests for the Teacher V2.6 ↔ OpenCode bridge.
+"""Integration tests for the School V2.6 ↔ OpenCode bridge.
 
-Tests the actual bridge CLI (scripts/teacher_bridge.py) as a subprocess,
+Tests the actual bridge CLI (scripts/school_bridge.py) as a subprocess,
 verifying the full V2.6 memory pipeline through the real integration boundary.
 
 These tests exercise:
@@ -25,7 +25,7 @@ from pathlib import Path
 # Helpers
 # ---------------------------------------------------------------------------
 
-BRIDGE = str(Path(__file__).resolve().parent.parent.parent / "scripts" / "teacher_bridge.py")
+BRIDGE = str(Path(__file__).resolve().parent.parent.parent / "scripts" / "school_bridge.py")
 PYTHON = sys.executable
 
 
@@ -58,7 +58,7 @@ class TestBridgeStatus:
         resp = _bridge({"command": "status"})
         assert resp["ok"] is True
         components = resp["components"]
-        assert "teacher" in components
+        assert "school" in components
         assert "v2_5" in components
         assert "v2_6" in components
         assert "persistence" in components
@@ -66,7 +66,7 @@ class TestBridgeStatus:
 
     def test_status_components_are_real(self) -> None:
         resp = _bridge({"command": "status"})
-        assert resp["components"]["teacher"] == "available"
+        assert resp["components"]["school"] == "available"
         assert resp["components"]["v2_6"] == "available"
 
     def test_status_persistence_is_real(self) -> None:
@@ -132,8 +132,8 @@ class TestBridgeRemember:
                 },
                 worktree=tmpdir,
             )
-            # Verify file was created (new .teacher/memory/ path)
-            mem_file = Path(tmpdir) / ".teacher" / "memory" / "v26_memory.json"
+            # Verify file was created (new .school/memory/ path)
+            mem_file = Path(tmpdir) / ".school" / "memory" / "v26_memory.json"
             assert mem_file.exists()
             data = json.loads(mem_file.read_text(encoding="utf-8"))
             assert len(data["entries"]) == 1

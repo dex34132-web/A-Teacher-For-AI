@@ -1,8 +1,8 @@
 ﻿### Task 1: TS routing core — helpers, knobs, evidence tracking, routing marker
 
 **Files:**
-- Modify: `teacher/plugin_source.py` (imports line 12; helpers after `hooksEnabled` ~line 246; `recallForExecution` ~line 321; `tool.execute.before/after` ~lines 968-996)
-- Test: `tests/unit/test_teacher_routing.py` (create)
+- Modify: `school/plugin_source.py` (imports line 12; helpers after `hooksEnabled` ~line 246; `recallForExecution` ~line 321; `tool.execute.before/after` ~lines 968-996)
+- Test: `tests/unit/test_school_routing.py` (create)
 
 **Interfaces:**
 - Consumes: existing `fileExists`, `resolve`, `hooksEnabled`, `HOOK_*` consts, `executionRecalls` map, `hasMemoryRoot`.
@@ -10,14 +10,14 @@
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `tests/unit/test_teacher_routing.py`:
+Create `tests/unit/test_school_routing.py`:
 
 ```python
 """TS-source contract tests for the adaptive routing loop (Phase 1)."""
 
 import re
 
-from teacher.plugin_source import TS_PLUGIN_SOURCE
+from school.plugin_source import TS_PLUGIN_SOURCE
 
 
 class TestRoutingCoreHelpers:
@@ -92,12 +92,12 @@ class TestRoutingCoreHelpers:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_teacher_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
 Expected: FAIL (helpers/markers absent).
 
 - [ ] **Step 3: Implement TS core**
 
-In `teacher/plugin_source.py`:
+In `school/plugin_source.py`:
 
 1. Replace the import line:
 ```python
@@ -138,11 +138,11 @@ function normalizeSeverity(value: unknown): string {
 }
 
 function memoryRoot(worktree: string): string {
-  for (const dir of [".teacher", ".lerev", ".evo"]) {
+  for (const dir of [".school", ".lerev", ".evo"]) {
     const root = resolve(worktree, dir)
     if (fileExists(resolve(root, "memory"))) return root
   }
-  return resolve(worktree, ".teacher")
+  return resolve(worktree, ".school")
 }
 
 function clampNum(v: unknown, fallback: number, lo: number, hi: number): number {
@@ -231,20 +231,20 @@ appendEvidence(ctx.worktree, {
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-& ".venv\Scripts\python.exe" -c "import pathlib; from teacher.plugin_source import TS_PLUGIN_SOURCE; p=pathlib.Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\teacher_check.ts'); p.parent.mkdir(parents=True, exist_ok=True); p.write_text(TS_PLUGIN_SOURCE, encoding='utf-8'); print(p)"
-node --check "C:\Users\dex34\AppData\Local\Temp\opencode\teacher_check.ts"
+& ".venv\Scripts\python.exe" -c "import pathlib; from school.plugin_source import TS_PLUGIN_SOURCE; p=pathlib.Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\school_check.ts'); p.parent.mkdir(parents=True, exist_ok=True); p.write_text(TS_PLUGIN_SOURCE, encoding='utf-8'); print(p)"
+node --check "C:\Users\dex34\AppData\Local\Temp\opencode\school_check.ts"
 ```
-Expected: exit 0. Then `& ".venv\Scripts\python.exe" -m teacher install --force` and the MATCH snippet from prior sessions (read installed file, compare to `TS_PLUGIN_SOURCE`).
+Expected: exit 0. Then `& ".venv\Scripts\python.exe" -m school install --force` and the MATCH snippet from prior sessions (read installed file, compare to `TS_PLUGIN_SOURCE`).
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_teacher_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
 Expected: PASS (all).
 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add teacher/plugin_source.py tests/unit/test_teacher_routing.py; if ($?) { git commit -m "feat(plugin): routing core - knobs, evidence tracking, engage mapping, routing marker" }
+git add school/plugin_source.py tests/unit/test_school_routing.py; if ($?) { git commit -m "feat(plugin): routing core - knobs, evidence tracking, engage mapping, routing marker" }
 ```
 
 ---

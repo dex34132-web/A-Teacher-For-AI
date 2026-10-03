@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rename the entire product surface from `teacher` to `school` (Python package, CLI, bridge, all 13+13 tools, plugin file, env vars, packaging, docs, tests) while every existing memory root stays readable in place.
+**Goal:** Rename the entire product surface from `school` to `school` (Python package, CLI, bridge, all 13+13 tools, plugin file, env vars, packaging, docs, tests) while every existing memory root stays readable in place.
 
-**Architecture:** One scripted, ordered, byte-exact text replacement over all tracked files (with two deliberate exclusions), plus git-mv file/dir renames, followed by a short list of hand-written semantic edits where a blind replace would be wrong: the memory-root chain (must keep reading `.teacher`), bridge discovery (legacy aliases removed, not renamed), and the tests that pin those two behaviors. Then console entry points, install-time stale-artifact cleanup, and a repo-wide audit before pushing to the `school` remote.
+**Architecture:** One scripted, ordered, byte-exact text replacement over all tracked files (with two deliberate exclusions), plus git-mv file/dir renames, followed by a short list of hand-written semantic edits where a blind replace would be wrong: the memory-root chain (must keep reading `.school`), bridge discovery (legacy aliases removed, not renamed), and the tests that pin those two behaviors. Then console entry points, install-time stale-artifact cleanup, and a repo-wide audit before pushing to the `school` remote.
 
 **Tech Stack:** Python 3.14 (`C:\Users\dex34\OneDrive\Documents\Teach\.venv`), pytest (baseline **2507 passed**), ruff, hatchling editable install, TypeScript plugin source embedded as a Python string (`school/plugin_source.py` after rename), PowerShell 5.1 shell (no `&&`; chain with `; if ($?) { ... }`).
 
@@ -12,11 +12,11 @@
 
 ## Global Constraints
 
-- Brand: all public names become `school`. Breaking change accepted. Console aliases `teacher` and `lerev` are dropped. GitHub repo name/URL are NOT changed (pyproject `project.urls` keep their current pre-rename values — intentional, pre-existing comment says so).
-- Memory root (spec Decision 2): first existing of `.school`, `.teacher`, `.lerev`, `.evo` (checked as `<root>/memory`); if none exists, create `.school/memory`. Existing roots are read **in place** — never copied, moved, or deleted. No migration code may remain.
-- No code-surface compatibility (spec Decision 3): bridge discovery = `SCHOOL_HOME` env, `school-bridge` on PATH, `school.bridge` module, `scripts/school_bridge.py` dev fallback — no `TEACHER_*`/`LEREV_HOME`/`EVO_HOME`/`lerev-bridge` aliases anywhere in discovery (TS or Python). Env vars are `SCHOOL_HOOKS`, `SCHOOL_ROUTE`, `SCHOOL_AGENT`, `SCHOOL_PROJECT`, `SCHOOL_SESSION`, `SCHOOL_WORKTREE`, `SCHOOL_HOME`.
+- Brand: all public names become `school`. Breaking change accepted. Console aliases `school` and `lerev` are dropped. GitHub repo name/URL are NOT changed (pyproject `project.urls` keep their current pre-rename values — intentional, pre-existing comment says so).
+- Memory root (spec Decision 2): first existing of `.school`, `.school`, `.lerev`, `.evo` (checked as `<root>/memory`); if none exists, create `.school/memory`. Existing roots are read **in place** — never copied, moved, or deleted. No migration code may remain.
+- No code-surface compatibility (spec Decision 3): bridge discovery = `SCHOOL_HOME` env, `school-bridge` on PATH, `school.bridge` module, `scripts/school_bridge.py` dev fallback — no `SCHOOL_*`/`LEREV_HOME`/`EVO_HOME`/`lerev-bridge` aliases anywhere in discovery (TS or Python). Env vars are `SCHOOL_HOOKS`, `SCHOOL_ROUTE`, `SCHOOL_AGENT`, `SCHOOL_PROJECT`, `SCHOOL_SESSION`, `SCHOOL_WORKTREE`, `SCHOOL_HOME`.
 - Tools: all 13 plugin + 13 MCP tools are `school_*` (`school_status`, `school_remember`, `school_recall`, `school_learn`, `school_conflict`, `school_confidence`, `school_search`, `school_deduplicate`, `school_knowledge`, `school_lifecycle`, `school_diagnose`, `school_route`, `school_route_stats`). `const School`, `export default School`, `SCHOOL_VERSION`, `__SCHOOL_VERSION__`. TS↔MCP description parity is asserted by existing regex tests — keep descriptions byte-identical on both surfaces (mechanical replace guarantees this; do not hand-edit one side only).
-- The `lerev/` Python package stays (tests import it as a shim); its `teacher` references are mechanically renamed to `school`.
+- The `lerev/` Python package stays (tests import it as a shim); its `school` references are mechanically renamed to `school`.
 - Full suite green at the end of every task (baseline 2507; a count shift is acceptable only where the test itself was brand-literal). ruff: **no NEW errors** on changed files. Never stage `.opencode/**` (excluded from rename; leave untouched).
 - The rebrand script is ephemeral: lives in `C:\Users\dex34\AppData\Local\Temp\opencode\`, never committed, never run twice.
 - Exclusions from the text replacement (exactly these): `.gitignore`, `docs/superpowers/specs/2026-10-03-school-rebrand-design.md`, and everything under `.opencode/`.
@@ -30,12 +30,12 @@
 
 **Files:**
 - Create (ephemeral, NOT committed): `C:\Users\dex34\AppData\Local\Temp\opencode\rebrand_school.py`
-- Rename (git mv): `teacher/` → `school/`, `scripts/teacher_bridge.py` → `scripts/school_bridge.py`, `teacher.spec` → `school.spec`, `packaging/chocolatey/teacher.nuspec` → `school.nuspec`, `packaging/homebrew/teacher.rb` → `school.rb`, `packaging/windows/teacher-installer.nsi` → `school-installer.nsi`, 8 test files `tests/unit/test_teacher_*.py` → `test_school_*.py`
+- Rename (git mv): `school/` → `school/`, `scripts/school_bridge.py` → `scripts/school_bridge.py`, `school.spec` → `school.spec`, `packaging/chocolatey/school.nuspec` → `school.nuspec`, `packaging/homebrew/school.rb` → `school.rb`, `packaging/windows/school-installer.nsi` → `school-installer.nsi`, 8 test files `tests/unit/test_school_*.py` → `test_school_*.py`
 - Modify (semantic hand-edits): `school/config.py`, `school/plugin_source.py`, `school/discovery.py`, `school/bridge.py`, `tests/unit/test_school_identity_compat.py`, `tests/unit/test_school_discovery_comprehensive.py`, `tests/unit/test_school_plugin_bridge.py`
 - Every other tracked text file: mechanical replace only
 
 **Interfaces:**
-- Produces: package `school` importable (`school.cli`, `school.bridge`, `school.mcp`, `school.plugin_source`, `school.discovery`, `school.config`); tools `school_*`; `resolve_memory_dir(worktree) -> Path` with chain semantics; `discover_bridge(worktree) -> BridgeDiscovery | None` school-only; TS `discoverBridge` school-only; `TEACHER_*` → `SCHOOL_*` everywhere.
+- Produces: package `school` importable (`school.cli`, `school.bridge`, `school.mcp`, `school.plugin_source`, `school.discovery`, `school.config`); tools `school_*`; `resolve_memory_dir(worktree) -> Path` with chain semantics; `discover_bridge(worktree) -> BridgeDiscovery | None` school-only; TS `discoverBridge` school-only; `SCHOOL_*` → `SCHOOL_*` everywhere.
 - Consumes: nothing (first task).
 
 - [ ] **Step 1: Capture pre-state**
@@ -49,20 +49,20 @@ git status --porcelain      # only .opencode/goals junk expected untracked
 - [ ] **Step 2: Enumerate the file renames (authoritative check)**
 
 ```powershell
-git ls-files "*teacher*"
+git ls-files "*school*"
 ```
 
-Expected (15 paths): `teacher/` package (many files), `scripts/teacher_bridge.py`, `teacher.spec`, `packaging/chocolatey/teacher.nuspec`, `packaging/homebrew/teacher.rb`, `packaging/windows/teacher-installer.nsi`, and the 8 test files:
+Expected (15 paths): `school/` package (many files), `scripts/school_bridge.py`, `school.spec`, `packaging/chocolatey/school.nuspec`, `packaging/homebrew/school.rb`, `packaging/windows/school-installer.nsi`, and the 8 test files:
 
 ```
-tests/unit/test_teacher_cli_comprehensive.py
-tests/unit/test_teacher_discovery_comprehensive.py
-tests/unit/test_teacher_identity_compat.py
-tests/unit/test_teacher_learn_persistence.py
-tests/unit/test_teacher_packaging.py
-tests/unit/test_teacher_plugin_bridge.py
-tests/unit/test_teacher_plugin_hooks.py
-tests/unit/test_teacher_routing.py
+tests/unit/test_school_cli_comprehensive.py
+tests/unit/test_school_discovery_comprehensive.py
+tests/unit/test_school_identity_compat.py
+tests/unit/test_school_learn_persistence.py
+tests/unit/test_school_packaging.py
+tests/unit/test_school_plugin_bridge.py
+tests/unit/test_school_plugin_hooks.py
+tests/unit/test_school_routing.py
 ```
 
 If any additional path appears, git-mv it to the obvious `school` name as well (report it in the task report).
@@ -70,20 +70,20 @@ If any additional path appears, git-mv it to the obvious `school` name as well (
 - [ ] **Step 3: git mv everything**
 
 ```powershell
-git mv teacher school
-git mv scripts/teacher_bridge.py scripts/school_bridge.py
-git mv teacher.spec school.spec
-git mv packaging/chocolatey/teacher.nuspec packaging/chocolatey/school.nuspec
-git mv packaging/homebrew/teacher.rb packaging/homebrew/school.rb
-git mv packaging/windows/teacher-installer.nsi packaging/windows/school-installer.nsi
-git mv tests/unit/test_teacher_cli_comprehensive.py tests/unit/test_school_cli_comprehensive.py
-git mv tests/unit/test_teacher_discovery_comprehensive.py tests/unit/test_school_discovery_comprehensive.py
-git mv tests/unit/test_teacher_identity_compat.py tests/unit/test_school_identity_compat.py
-git mv tests/unit/test_teacher_learn_persistence.py tests/unit/test_school_learn_persistence.py
-git mv tests/unit/test_teacher_packaging.py tests/unit/test_school_packaging.py
-git mv tests/unit/test_teacher_plugin_bridge.py tests/unit/test_school_plugin_bridge.py
-git mv tests/unit/test_teacher_plugin_hooks.py tests/unit/test_school_plugin_hooks.py
-git mv tests/unit/test_teacher_routing.py tests/unit/test_school_routing.py
+git mv school school
+git mv scripts/school_bridge.py scripts/school_bridge.py
+git mv school.spec school.spec
+git mv packaging/chocolatey/school.nuspec packaging/chocolatey/school.nuspec
+git mv packaging/homebrew/school.rb packaging/homebrew/school.rb
+git mv packaging/windows/school-installer.nsi packaging/windows/school-installer.nsi
+git mv tests/unit/test_school_cli_comprehensive.py tests/unit/test_school_cli_comprehensive.py
+git mv tests/unit/test_school_discovery_comprehensive.py tests/unit/test_school_discovery_comprehensive.py
+git mv tests/unit/test_school_identity_compat.py tests/unit/test_school_identity_compat.py
+git mv tests/unit/test_school_learn_persistence.py tests/unit/test_school_learn_persistence.py
+git mv tests/unit/test_school_packaging.py tests/unit/test_school_packaging.py
+git mv tests/unit/test_school_plugin_bridge.py tests/unit/test_school_plugin_bridge.py
+git mv tests/unit/test_school_plugin_hooks.py tests/unit/test_school_plugin_hooks.py
+git mv tests/unit/test_school_routing.py tests/unit/test_school_routing.py
 ```
 
 - [ ] **Step 4: Write the ephemeral rebrand script** (byte-exact, ordered, excludes; save to `C:\Users\dex34\AppData\Local\Temp\opencode\rebrand_school.py`):
@@ -98,7 +98,7 @@ EXCLUDE = {
     "docs/superpowers/specs/2026-10-03-school-rebrand-design.md",
 }
 # Order matters: uppercase first, then capitalized, then lowercase.
-REPLACEMENTS = [("TEACHER", "SCHOOL"), ("Teacher", "School"), ("teacher", "school")]
+REPLACEMENTS = [("SCHOOL", "SCHOOL"), ("School", "School"), ("school", "school")]
 
 out = subprocess.run(["git", "ls-files", "-z"], capture_output=True, check=True)
 changed = excluded = skipped_non_utf8 = 0
@@ -134,15 +134,15 @@ Expected: `changed=<~130> excluded=2 skipped=0`. Verify exclusions survived:
 
 ```powershell
 git diff -- .gitignore   # must be EMPTY (excluded)
-git grep -c "teacher" -- docs/superpowers/specs/2026-10-03-school-rebrand-design.md   # still > 0 (excluded)
-git grep -l "teacher_" -- tests | Select-Object -First 5   # expect empty
+git grep -c "school" -- docs/superpowers/specs/2026-10-03-school-rebrand-design.md   # still > 0 (excluded)
+git grep -l "school_" -- tests | Select-Object -First 5   # expect empty
 ```
 
 - [ ] **Step 6: Semantic fallout A — memory-root chain (TDD, RED first)**
 
-The bulk replace turned `.teacher` into `.school` everywhere, which silently DELETED the legacy `.teacher` read. Restore it as a chain.
+The bulk replace turned `.school` into `.school` everywhere, which silently DELETED the legacy `.school` read. Restore it as a chain.
 
-6a. In `tests/unit/test_school_identity_compat.py` replace the whole `class TestMemoryMigration:` block (docstring says "``.lerev`` / ``.evo`` memories migrate into ``.teacher`` safely.") with:
+6a. In `tests/unit/test_school_identity_compat.py` replace the whole `class TestMemoryMigration:` block (docstring says "``.lerev`` / ``.evo`` memories migrate into ``.school`` safely.") with:
 
 ```python
 class TestMemoryRootChain:
@@ -153,8 +153,8 @@ class TestMemoryRootChain:
         assert out == tmp_path / ".school" / "memory"
         assert out.is_dir()
 
-    def test_existing_teacher_root_read_in_place(self, tmp_path: Path) -> None:
-        legacy = tmp_path / ".teacher" / "memory"
+    def test_existing_school_root_read_in_place(self, tmp_path: Path) -> None:
+        legacy = tmp_path / ".school" / "memory"
         legacy.mkdir(parents=True)
         (legacy / "m.json").write_text('{"id": "x"}', encoding="utf-8")
 
@@ -177,7 +177,7 @@ class TestMemoryRootChain:
         school = tmp_path / ".school" / "memory"
         school.mkdir(parents=True)
         (school / "new.json").write_text("{}", encoding="utf-8")
-        old = tmp_path / ".teacher" / "memory"
+        old = tmp_path / ".school" / "memory"
         old.mkdir(parents=True)
         (old / "old.json").write_text("{}", encoding="utf-8")
 
@@ -187,7 +187,7 @@ class TestMemoryRootChain:
         assert (old / "old.json").exists(), "legacy root untouched"
 ```
 
-6b. Run — expect RED (current code copies `.lerev` into `.school` and has no `.teacher` check):
+6b. Run — expect RED (current code copies `.lerev` into `.school` and has no `.school` check):
 
 ```powershell
 & ".venv\Scripts\python.exe" -m pytest tests\unit\test_school_identity_compat.py -q --no-header -p no:cacheprovider
@@ -199,13 +199,13 @@ class TestMemoryRootChain:
 def resolve_memory_dir(worktree: str | Path) -> Path:
     """Return the memory directory for a worktree.
 
-    Resolution takes the first existing of ``.school``, ``.teacher``,
+    Resolution takes the first existing of ``.school``, ``.school``,
     ``.lerev``, ``.evo`` (checked as ``<root>/memory``); if none exists,
     ``.school/memory`` is created. Existing roots are used in place —
     memory is never copied, moved, or deleted.
     """
     root = Path(worktree)
-    for name in (".school", ".teacher", ".lerev", ".evo"):
+    for name in (".school", ".school", ".lerev", ".evo"):
         candidate = root / name / "memory"
         if candidate.exists():
             return candidate
@@ -219,7 +219,7 @@ Then remove `import shutil` from `school/config.py` if ruff reports it unused (i
 6d. In `school/bridge.py` (~line 58) replace the stale comment:
 
 ```python
-        # Memory root: first existing of .school/.teacher/.lerev/.evo,
+        # Memory root: first existing of .school/.school/.lerev/.evo,
         # else .school — read in place, never migrated (see resolve_memory_dir).
         storage_dir = resolve_memory_dir(worktree)
 ```
@@ -227,7 +227,7 @@ Then remove `import shutil` from `school/config.py` if ruff reports it unused (i
 6e. In `school/plugin_source.py` the two chain literals were bulk-renamed to `[".school", ".lerev", ".evo"]` — reinsert the legacy entry so both read exactly:
 
 ```ts
-  for (const dir of [".school", ".teacher", ".lerev", ".evo"]) {
+  for (const dir of [".school", ".school", ".lerev", ".evo"]) {
 ```
 
 (There is one at the old line 283 inside `memoryRoot` — whose fallback line `return resolve(worktree, ".school")` is already correct post-bulk — and one at the old line 342 inside `hasMemoryRoot`. Change ONLY the two array literals; verify the fallback returns `.school`.)
@@ -236,7 +236,7 @@ Then remove `import shutil` from `school/config.py` if ruff reports it unused (i
 
 - [ ] **Step 7: Semantic fallout B — bridge discovery school-only (TDD, RED first)**
 
-7a. Rewrite the legacy-env tests. In `tests/unit/test_school_discovery_comprehensive.py`: DELETE `test_tier1_evo_home_fallback` and `test_tier1_teacher_home_takes_precedence` (they pin removed behavior), and ADD:
+7a. Rewrite the legacy-env tests. In `tests/unit/test_school_discovery_comprehensive.py`: DELETE `test_tier1_evo_home_fallback` and `test_tier1_school_home_takes_precedence` (they pin removed behavior), and ADD:
 
 ```python
     def test_tier1_legacy_home_envs_not_honoured(self, tmp_path: Path) -> None:
@@ -360,7 +360,7 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     return None
 ```
 
-7d. In `school/plugin_source.py`, the bulk replace already renamed `TEACHER_HOME`→`SCHOOL_HOME`, `teacherHome`→`schoolHome`, `teacher-bridge`→`school-bridge`, `teacher.bridge`→`school.bridge`, `teacher_bridge.py`→`school_bridge.py`. What remains is stripping the legacy aliases. Post-state of `discoverBridge` and its doc comment (keep the surrounding helpers and the single-element `for` loops — tests pin the `where ${command}` / `which ${command}` strings):
+7d. In `school/plugin_source.py`, the bulk replace already renamed `SCHOOL_HOME`→`SCHOOL_HOME`, `schoolHome`→`schoolHome`, `school-bridge`→`school-bridge`, `school.bridge`→`school.bridge`, `school_bridge.py`→`school_bridge.py`. What remains is stripping the legacy aliases. Post-state of `discoverBridge` and its doc comment (keep the surrounding helpers and the single-element `for` loops — tests pin the `where ${command}` / `which ${command}` strings):
 
 ```ts
 /**
@@ -431,7 +431,7 @@ Delete the old doc-comment lines mentioning `LEREV_HOME / EVO_HOME / lerev-bridg
 The venv currently carries a stale editable dist `ai-learning-engine` (old brand) whose finder predates the rename.
 
 ```powershell
-& ".venv\Scripts\python.exe" -m pip uninstall -y ai-learning-engine teacher lerev school
+& ".venv\Scripts\python.exe" -m pip uninstall -y ai-learning-engine school lerev school
 ```
 
 Ignore "not installed" warnings. Then:
@@ -466,7 +466,7 @@ Expected failure classes if anything remains (fix in place, do not weaken assert
 - `ModuleNotFoundError: school` in subprocess/integration tests → Step 8 was skipped or failed; rerun it.
 - Tests asserting copy/migration semantics elsewhere (search `copytree`/`copied` under `tests/`) → rewrite to chain semantics (same rules as Step 6).
 - `lerev-bridge` / `LEREV_HOME` / `EVO_HOME` pins outside Step 7's files → grep: `git grep -ln "lerev-bridge\|LEREV_HOME\|EVO_HOME" -- tests` and apply the same not-honoured treatment.
-- Literal-brand pins (`"teacher ..."` assertions) that bulk-rename should have caught but did not (odd casing/split strings) → fix the literal on both sides of the assertion.
+- Literal-brand pins (`"school ..."` assertions) that bulk-rename should have caught but did not (odd casing/split strings) → fix the literal on both sides of the assertion.
 
 Ruff gate (no NEW errors):
 
@@ -480,7 +480,7 @@ Compare against pre-task baseline (16 pre-existing E501 in `plugin_source` were 
 
 ```powershell
 git add -A -- ':!.opencode'
-git commit -m "refactor(rebrand): rename teacher to school across package, tests, packaging, and docs"
+git commit -m "refactor(rebrand): rename school to school across package, tests, packaging, and docs"
 git rev-parse --short HEAD
 ```
 
@@ -496,7 +496,7 @@ Do not stage `.opencode/**` (must show no changes anyway).
 
 **Interfaces:**
 - Consumes: Task 1's `school` package (`school.cli:main`, `school.bridge:main` both exist — `main` in `school/bridge.py` is imported by the identity shim test already).
-- Produces: console scripts `school` and `school-bridge` in `.venv\Scripts`; no `teacher`/`lerev`/`ai-learning-engine` scripts. Later tasks smoke-test `school doctor` and `school install --force`.
+- Produces: console scripts `school` and `school-bridge` in `.venv\Scripts`; no `school`/`lerev`/`ai-learning-engine` scripts. Later tasks smoke-test `school doctor` and `school install --force`.
 
 - [ ] **Step 1: Rewrite the pyproject test (RED first)**
 
@@ -508,7 +508,7 @@ In `tests/unit/test_school_identity_compat.py`, replace `test_pyproject_keeps_le
         assert 'name = "school"' in text
         assert 'school = "school.cli:main"' in text
         assert 'school-bridge = "school.bridge:main"' in text
-        assert "teacher =" not in text
+        assert "school =" not in text
         assert "lerev =" not in text
 ```
 
@@ -544,7 +544,7 @@ school-bridge = "school.bridge:main"
 ```powershell
 Test-Path .venv\Scripts\school.exe            # True
 Test-Path .venv\Scripts\school-bridge.exe     # True
-Test-Path .venv\Scripts\teacher.exe           # False
+Test-Path .venv\Scripts\school.exe           # False
 Test-Path .venv\Scripts\lerev.exe             # False
 ```
 
@@ -571,7 +571,7 @@ Expected: doctor checks PASS (bridge tier found — `PATH` or `installed_module`
 & ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider
 & ".venv\Scripts\python.exe" -m ruff check pyproject.toml tests\unit\test_school_identity_compat.py
 git add pyproject.toml tests/unit/test_school_identity_compat.py
-git commit -m "feat(cli): add school and school-bridge console scripts; drop teacher/lerev aliases"
+git commit -m "feat(cli): add school and school-bridge console scripts; drop school/lerev aliases"
 ```
 
 ---
@@ -584,12 +584,12 @@ git commit -m "feat(cli): add school and school-bridge console scripts; drop tea
 
 **Interfaces:**
 - Consumes: Task 1's `school.ts` plugin file name (`config.school_plugin_file()`), `config.opencode_plugins_dir()` (returns `~/.config/opencode/plugins`).
-- Produces: `_clean_stale_brand(config, verbose=True) -> bool` called from `_cmd_install` before the write; guarantees `plugins/teacher.ts` and `skills/teacher-routing/` are deleted on every install (with or without `--force`) so OpenCode never registers duplicate `teacher_*` + `school_*` tools.
+- Produces: `_clean_stale_brand(config, verbose=True) -> bool` called from `_cmd_install` before the write; guarantees `plugins/school.ts` and `skills/school-routing/` are deleted on every install (with or without `--force`) so OpenCode never registers duplicate `school_*` + `school_*` tools.
 
 - [ ] **Step 1: Failing test** (add to `tests/unit/test_cli.py`, class `TestCLI`):
 
 ```python
-    def test_install_removes_stale_teacher_artifacts(self, tmp_path: Path) -> None:
+    def test_install_removes_stale_school_artifacts(self, tmp_path: Path) -> None:
         """school install deletes the previous brand's plugin and skill."""
         config_dir = tmp_path / ".config" / "opencode"
         config_dir.mkdir(parents=True)
@@ -597,11 +597,11 @@ git commit -m "feat(cli): add school and school-bridge console scripts; drop tea
         config_file.write_text('{"plugin": []}', encoding="utf-8")
         plugins_dir = config_dir / "plugins"
         plugins_dir.mkdir(parents=True)
-        stale_plugin = plugins_dir / "teacher.ts"
+        stale_plugin = plugins_dir / "school.ts"
         stale_plugin.write_text("// stale previous brand", encoding="utf-8")
-        stale_skill = config_dir / "skills" / "teacher-routing"
+        stale_skill = config_dir / "skills" / "school-routing"
         stale_skill.mkdir(parents=True)
-        (stale_skill / "SKILL.md").write_text("name: teacher-routing", encoding="utf-8")
+        (stale_skill / "SKILL.md").write_text("name: school-routing", encoding="utf-8")
 
         with (
             patch("sys.argv", ["school", "install", "--force"]),
@@ -614,18 +614,18 @@ git commit -m "feat(cli): add school and school-bridge console scripts; drop tea
             config.opencode_config_file.return_value = config_file
             main()
 
-        assert not stale_plugin.exists(), "stale teacher.ts must be deleted"
-        assert not stale_skill.exists(), "stale teacher-routing skill must be deleted"
+        assert not stale_plugin.exists(), "stale school.ts must be deleted"
+        assert not stale_skill.exists(), "stale school-routing skill must be deleted"
         assert (plugins_dir / "school.ts").exists()
 ```
 
 - [ ] **Step 2: Run to verify it fails**
 
 ```powershell
-& ".venv\Scripts\python.exe" -m pytest tests\unit\test_cli.py::TestCLI::test_install_removes_stale_teacher_artifacts -q --no-header -p no:cacheprovider
+& ".venv\Scripts\python.exe" -m pytest tests\unit\test_cli.py::TestCLI::test_install_removes_stale_school_artifacts -q --no-header -p no:cacheprovider
 ```
 
-Expected: FAIL — `stale teacher.ts must be deleted`.
+Expected: FAIL — `stale school.ts must be deleted`.
 
 - [ ] **Step 3: Implement** — in `school/cli.py`, add after the `_clean_legacy_plugin` function definition (make sure `shutil` is already imported — it is):
 
@@ -633,12 +633,12 @@ Expected: FAIL — `stale teacher.ts must be deleted`.
 def _clean_stale_brand(config: SchoolConfig, verbose: bool = True) -> bool:
     """Remove previous-brand artefacts so OpenCode never loads duplicates.
 
-    Deletes ``plugins/teacher.ts`` and ``skills/teacher-routing/`` written
+    Deletes ``plugins/school.ts`` and ``skills/school-routing/`` written
     by pre-rebrand installs of this product.
     """
     removed = False
 
-    stale_plugin = config.opencode_plugins_dir() / "teacher.ts"
+    stale_plugin = config.opencode_plugins_dir() / "school.ts"
     if stale_plugin.is_file():
         try:
             stale_plugin.unlink()
@@ -648,7 +648,7 @@ def _clean_stale_brand(config: SchoolConfig, verbose: bool = True) -> bool:
         except OSError:
             pass
 
-    stale_skill = config.opencode_plugins_dir().parent / "skills" / "teacher-routing"
+    stale_skill = config.opencode_plugins_dir().parent / "skills" / "school-routing"
     if stale_skill.is_dir():
         try:
             shutil.rmtree(stale_skill)
@@ -668,7 +668,7 @@ def _clean_stale_brand(config: SchoolConfig, verbose: bool = True) -> bool:
     _clean_stale_brand(config)
 ```
 
-The literal `"teacher.ts"` and `"teacher-routing"` strings are INTENTIONAL — they name the stale artifacts; never re-rename them.
+The literal `"school.ts"` and `"school-routing"` strings are INTENTIONAL — they name the stale artifacts; never re-rename them.
 
 - [ ] **Step 4: GREEN**
 
@@ -681,7 +681,7 @@ The literal `"teacher.ts"` and `"teacher-routing"` strings are INTENTIONAL — t
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
 & ".venv\Scripts\school.exe" install --force
-Test-Path $env:USERPROFILE\.config\opencode\plugins\teacher.ts    # must be False
+Test-Path $env:USERPROFILE\.config\opencode\plugins\school.ts    # must be False
 Test-Path $env:USERPROFILE\.config\opencode\plugins\school.ts     # must be True
 & ".venv\Scripts\python.exe" -c "from school.plugin_source import TS_PLUGIN_SOURCE; from pathlib import Path; ip = Path.home() / '.config/opencode/plugins/school.ts'; print('MATCH' if ip.exists() and ip.read_text(encoding='utf-8') == TS_PLUGIN_SOURCE else 'MISMATCH')"
 ```
@@ -712,7 +712,7 @@ git commit -m "feat(cli): school install removes stale previous-brand plugin and
 **Files:**
 - Modify: `.gitignore` (memory block)
 - Modify: `docs/superpowers/specs/2026-10-03-school-rebrand-design.md` (status line only — file is excluded from bulk)
-- Modify (as audit finds): any doc with a stale/incorrect `teacher` reference
+- Modify (as audit finds): any doc with a stale/incorrect `school` reference
 - Verify-only: everything else
 
 **Interfaces:**
@@ -724,13 +724,13 @@ git commit -m "feat(cli): school install removes stale previous-brand plugin and
 Replace the block (post-Task-1 state is unchanged because the file was excluded) so it reads:
 
 ```gitignore
-# School runtime memory (legacy .teacher/ and .lerev/ kept for existing projects)
+# School runtime memory (legacy .school/ and .lerev/ kept for existing projects)
 .school/
-.teacher/
+.school/
 .lerev/
 ```
 
-(The old comment said "Teacher runtime memory (legacy .lerev/ kept ...)". Keep `.teacher/` and `.lerev/` — stale dirs remain on disk per spec.)
+(The old comment said "School runtime memory (legacy .lerev/ kept ...)". Keep `.school/` and `.lerev/` — stale dirs remain on disk per spec.)
 
 - [ ] **Step 2: Spec status line**
 
@@ -746,28 +746,28 @@ with:
 **Status:** approved (spec reviewed by user; implemented by docs/superpowers/plans/2026-10-03-school-rebrand.md)
 ```
 
-- [ ] **Step 3: Repo-wide `teacher` audit**
+- [ ] **Step 3: Repo-wide `school` audit**
 
 ```powershell
-git grep -in "teacher" -- ':!.gitignore' ':!docs/superpowers/specs/2026-10-03-school-rebrand-design.md'
+git grep -in "school" -- ':!.gitignore' ':!docs/superpowers/specs/2026-10-03-school-rebrand-design.md'
 ```
 
 Every hit must fall into one of these allowlisted classes — anything else is a bug to fix in this step:
-1. `.teacher` memory-root chain literals (in `school/config.py`, `school/plugin_source.py`, the chain tests, and comments naming the legacy root).
-2. Stale-artifact names: `"teacher.ts"`, `"teacher-routing"` in `school/cli.py` + `tests/unit/test_cli.py` (intentional — they name the previous brand's files).
-3. Intentional legacy prose that documents the chain (e.g. docstrings saying "legacy `.teacher` roots are read in place").
+1. `.school` memory-root chain literals (in `school/config.py`, `school/plugin_source.py`, the chain tests, and comments naming the legacy root).
+2. Stale-artifact names: `"school.ts"`, `"school-routing"` in `school/cli.py` + `tests/unit/test_cli.py` (intentional — they name the previous brand's files).
+3. Intentional legacy prose that documents the chain (e.g. docstrings saying "legacy `.school` roots are read in place").
 
-Fix all other hits (this includes `tests/conftest.py`'s docstring only if it mentions teacher — it does not; and any README/docs leftovers). Also run:
+Fix all other hits (this includes `tests/conftest.py`'s docstring only if it mentions school — it does not; and any README/docs leftovers). Also run:
 
 ```powershell
-git grep -in "teacher" -- README.md docs packaging scripts teacher.spec school
+git grep -in "school" -- README.md docs packaging scripts school.spec school
 ```
 
 twice-verified clean (or down to allowlist items only). Check the in-flight adaptive-routing docs are fully rebranded:
 
 ```powershell
 git grep -c "school_" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loop.md .superpowers/sdd/2026-10-02-adaptive-routing-loop/task-3-brief.md
-git grep -in "teacher" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loop.md .superpowers/sdd
+git grep -in "school" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loop.md .superpowers/sdd
 ```
 
 (Second command: only allowlist hits 1-3 may appear.)
@@ -775,7 +775,7 @@ git grep -in "teacher" -- docs/superpowers/plans/2026-10-02-adaptive-routing-loo
 - [ ] **Step 4: Append ledger note** (append to `.superpowers/sdd/2026-10-02-adaptive-routing-loop/progress.md` — the Phase 1 ledger — as a new line):
 
 ```
-Note (rebrand): teacher→school rebrand completed; all plan/brief paths now school/. plugin_source.py line numbers shifted (discovery/memory-chain edits) — re-locate symbols by grep when resuming Task 3. Description strings bulk-renamed identically on TS and MCP; parity tests hold.
+Note (rebrand): school→school rebrand completed; all plan/brief paths now school/. plugin_source.py line numbers shifted (discovery/memory-chain edits) — re-locate symbols by grep when resuming Task 3. Description strings bulk-renamed identically on TS and MCP; parity tests hold.
 ```
 
 - [ ] **Step 5: Full verification battery**
@@ -817,4 +817,4 @@ Verify: `git log school/main --oneline -3` matches local HEAD.
 
 - [ ] **Step 8: Handoff note (report only)**
 
-In the task report state: (a) restart OpenCode to load `school.ts` (the running session still has the old `teacher.ts` loaded); (b) Phase 1 resumes at adaptive-routing Task 3 using the rebranded brief — re-locate `plugin_source.py` line anchors by symbol.
+In the task report state: (a) restart OpenCode to load `school.ts` (the running session still has the old `school.ts` loaded); (b) Phase 1 resumes at adaptive-routing Task 3 using the rebranded brief — re-locate `plugin_source.py` line anchors by symbol.

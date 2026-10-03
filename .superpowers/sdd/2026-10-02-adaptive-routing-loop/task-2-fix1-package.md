@@ -2,16 +2,16 @@
 740d6c4 fix(plugin): routePrompt truncates situation to 200 chars for <=150-token micro-call contract
 
 ## Stat
- teacher/plugin_source.py           |  2 +-
- tests/unit/test_teacher_routing.py | 18 ++++++++++++++++++
+ school/plugin_source.py           |  2 +-
+ tests/unit/test_school_routing.py | 18 ++++++++++++++++++
  2 files changed, 19 insertions(+), 1 deletion(-)
 
 ## Diff (-U10)
-diff --git a/teacher/plugin_source.py b/teacher/plugin_source.py
+diff --git a/school/plugin_source.py b/school/plugin_source.py
 index a20133f..90c9459 100644
---- a/teacher/plugin_source.py
-+++ b/teacher/plugin_source.py
-@@ -442,21 +442,21 @@ const Teacher: Plugin = async (ctx) => {
+--- a/school/plugin_source.py
++++ b/school/plugin_source.py
+@@ -442,21 +442,21 @@ const School: Plugin = async (ctx) => {
        return { hits: memories.length, lines: formatRecallLines(memories) }
      } catch {
        return null
@@ -22,8 +22,8 @@ index a20133f..90c9459 100644
  
    function routePrompt(situation: string): string {
      return [
--      "You are a routing classifier for teacher tools. Situation: " + situation,
-+      "You are a routing classifier for teacher tools. Situation: " + situation.slice(0, 200),
+-      "You are a routing classifier for school tools. Situation: " + situation,
++      "You are a routing classifier for school tools. Situation: " + situation.slice(0, 200),
        "severity: light (trivial) | medium (real task) | high (critical).",
        "engage: skill for light, both for medium/high (tool and skill together).",
        "Never choose engage none unless the situation is unrelated to tool routing.",
@@ -34,10 +34,10 @@ index a20133f..90c9459 100644
    function parseRouteDecision(text: string): RouteDecision | null {
      try {
        const match = text.match(/\{[\s\S]*\}/)
-diff --git a/tests/unit/test_teacher_routing.py b/tests/unit/test_teacher_routing.py
+diff --git a/tests/unit/test_school_routing.py b/tests/unit/test_school_routing.py
 index 7557cc0..711b771 100644
---- a/tests/unit/test_teacher_routing.py
-+++ b/tests/unit/test_teacher_routing.py
+--- a/tests/unit/test_school_routing.py
++++ b/tests/unit/test_school_routing.py
 @@ -122,20 +122,38 @@ class TestRouteTools:
          assert "Promise.race" in TS_PLUGIN_SOURCE
          assert "ROUTE_TIMEOUT_MS" in TS_PLUGIN_SOURCE
@@ -72,9 +72,9 @@ index 7557cc0..711b771 100644
          assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE
  
      def test_kill_switch(self):
-         assert 'process.env.TEACHER_ROUTE === "0"' in TS_PLUGIN_SOURCE
+         assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
  
      def test_report_stores_tagged_lesson(self):
-         idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
-         block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
+         idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
+         block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
 

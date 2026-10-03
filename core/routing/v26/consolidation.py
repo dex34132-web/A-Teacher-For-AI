@@ -1,4 +1,4 @@
-"""Session/experience consolidation for Teacher V2.6.
+"""Session/experience consolidation for School V2.6.
 
 Consolidation processes episodic experiences into more durable forms,
 potentially promoting them to learned knowledge.

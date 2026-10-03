@@ -1,4 +1,4 @@
-"""R2 regression tests: natural-language teacher_recall via semantic retrieval.
+"""R2 regression tests: natural-language school_recall via semantic retrieval.
 
 The R2 defect: MemoryManager.request_memory passed query_text to
 MemoryStore.query WITHOUT an extractor, so the store fell back to
@@ -14,7 +14,7 @@ These tests exercise the full desired pipeline:
              -> deterministic MemoryResponse
 
 Persistence tests use real bridge subprocesses (write -> process death ->
-fresh process -> read), mirroring test_teacher_learn_persistence.
+fresh process -> read), mirroring test_school_learn_persistence.
 """
 
 from __future__ import annotations
@@ -538,7 +538,7 @@ class TestDeterminism:
 
 def _bridge(req: dict) -> dict:
     proc = subprocess.run(
-        [sys.executable, "-m", "teacher.bridge"],
+        [sys.executable, "-m", "school.bridge"],
         input=json.dumps(req),
         capture_output=True,
         text=True,

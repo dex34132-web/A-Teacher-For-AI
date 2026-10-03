@@ -2,23 +2,23 @@
 c31fb54 fix(plugin): clampNum falls back to per-key default for null/boolean knob values
 
 ## Stat
- teacher/plugin_source.py           |  1 +
- tests/unit/test_teacher_routing.py | 20 ++++++++++++++++++++
+ school/plugin_source.py           |  1 +
+ tests/unit/test_school_routing.py | 20 ++++++++++++++++++++
  2 files changed, 21 insertions(+)
 
 ## Diff (-U10)
-diff --git a/teacher/plugin_source.py b/teacher/plugin_source.py
+diff --git a/school/plugin_source.py b/school/plugin_source.py
 index 77d760a..ca4799a 100644
---- a/teacher/plugin_source.py
-+++ b/teacher/plugin_source.py
+--- a/school/plugin_source.py
++++ b/school/plugin_source.py
 @@ -281,20 +281,21 @@ function normalizeSeverity(value: unknown): string {
  
  function memoryRoot(worktree: string): string {
-   for (const dir of [".teacher", ".lerev", ".evo"]) {
+   for (const dir of [".school", ".lerev", ".evo"]) {
      const root = resolve(worktree, dir)
      if (fileExists(resolve(root, "memory"))) return root
    }
-   return resolve(worktree, ".teacher")
+   return resolve(worktree, ".school")
  }
  
  function clampNum(v: unknown, fallback: number, lo: number, hi: number): number {
@@ -33,10 +33,10 @@ index 77d760a..ca4799a 100644
  
  let knobsCache: { mtimeMs: number; knobs: RoutingKnobs } | null = null
  
-diff --git a/tests/unit/test_teacher_routing.py b/tests/unit/test_teacher_routing.py
+diff --git a/tests/unit/test_school_routing.py b/tests/unit/test_school_routing.py
 index dabeef1..4dd49d1 100644
---- a/tests/unit/test_teacher_routing.py
-+++ b/tests/unit/test_teacher_routing.py
+--- a/tests/unit/test_school_routing.py
++++ b/tests/unit/test_school_routing.py
 @@ -29,20 +29,40 @@ class TestRoutingCoreHelpers:
          assert "appendFileSync" in TS_PLUGIN_SOURCE
          assert "mkdirSync" in TS_PLUGIN_SOURCE

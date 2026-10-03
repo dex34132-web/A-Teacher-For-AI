@@ -4,7 +4,7 @@ from core.routing.v26.tools.status import StatusTool
 
 def test_status_tool_name():
     tool = StatusTool()
-    assert tool.name == "teacher_status"
+    assert tool.name == "school_status"
 
 
 def test_status_tool_description():
@@ -57,4 +57,4 @@ def test_status_tool_validate_always_empty():
 def test_status_tool_returns_metadata():
     tool = StatusTool()
     result = tool.execute()
-    assert result.metadata.get("tool") == "teacher_status"
+    assert result.metadata.get("tool") == "school_status"

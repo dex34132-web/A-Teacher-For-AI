@@ -1,12 +1,12 @@
 ﻿### Task 3: MCP parity — two tools + helpers
 
 **Files:**
-- Modify: `teacher/mcp/server.py` (`_TOOLS` dict after `teacher_diagnose`; helpers after `_build_request`; `_call_tool` special-cases)
+- Modify: `school/mcp/server.py` (`_TOOLS` dict after `school_diagnose`; helpers after `_build_request`; `_call_tool` special-cases)
 - Test: `tests/unit/test_mcp_server.py` (extend)
 
 **Interfaces:**
 - Consumes: `_TOOLS`, `_build_request(worktree, tool, args)`, `_bridge_call(command, req)`, `_list_tools`, existing `types` import; `pathlib`/`json`/`os` already imported or to be imported.
-- Produces: `_engage_for(severity: str) -> str`, `_append_evidence(worktree: str, entry: dict) -> None`, `_read_stats(worktree: str, limit: int) -> dict`, `_call_route(worktree: str, arguments: dict) -> types.CallToolResult`, `_call_route_stats(worktree: str, arguments: dict) -> types.CallToolResult`; `_call_tool` dispatches `teacher_route` / `teacher_route_stats` to them before `_build_request`.
+- Produces: `_engage_for(severity: str) -> str`, `_append_evidence(worktree: str, entry: dict) -> None`, `_read_stats(worktree: str, limit: int) -> dict`, `_call_route(worktree: str, arguments: dict) -> types.CallToolResult`, `_call_route_stats(worktree: str, arguments: dict) -> types.CallToolResult`; `_call_tool` dispatches `school_route` / `school_route_stats` to them before `_build_request`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -15,58 +15,58 @@ Append to `tests/unit/test_mcp_server.py`:
 ```python
 class TestRouteToolsMCP:
     def test_tools_present_with_use_guidance(self):
-        from teacher.mcp.server import _TOOLS
-        for name in ("teacher_route", "teacher_route_stats"):
+        from school.mcp.server import _TOOLS
+        for name in ("school_route", "school_route_stats"):
             assert name in _TOOLS
             assert "Use" in _TOOLS[name]["description"]
             assert "coding" in _TOOLS[name]["description"]
 
     def test_route_schema(self):
-        from teacher.mcp.server import _TOOLS
-        props = _TOOLS["teacher_route"]["schema"]["properties"]
+        from school.mcp.server import _TOOLS
+        props = _TOOLS["school_route"]["schema"]["properties"]
         assert props["mode"]["enum"] == ["assess", "report"]
         assert props["severity"]["enum"] == ["light", "medium", "high"]
-        assert "situation" in _TOOLS["teacher_route"]["schema"]["required"]
+        assert "situation" in _TOOLS["school_route"]["schema"]["required"]
 
     def test_stats_annotations(self):
-        from teacher.mcp.server import _TOOLS
-        ann = _TOOLS["teacher_route_stats"]["annotations"]
+        from school.mcp.server import _TOOLS
+        ann = _TOOLS["school_route_stats"]["annotations"]
         assert ann["read_only_hint"] is True
 
     def test_engage_mapping_parity(self):
-        from teacher.mcp.server import _engage_for
+        from school.mcp.server import _engage_for
         assert _engage_for("light") == "skill"
         assert _engage_for("medium") == "both"
         assert _engage_for("high") == "both"
 
     def test_assess_requires_severity_and_writes_evidence(self, tmp_path):
-        from teacher.mcp.server import _call_tool
+        from school.mcp.server import _call_tool
         wt = str(tmp_path)
         with pytest.raises(ValueError) as exc:
-            _call_tool(wt, "teacher_route",
+            _call_tool(wt, "school_route",
                        {"mode": "assess", "situation": "planning a trip"})
         assert "severity" in str(exc.value).lower()
-        res = _call_tool(wt, "teacher_route",
+        res = _call_tool(wt, "school_route",
                          {"mode": "assess", "situation": "planning a trip",
                           "severity": "light"})
         assert res.is_error is False
         data = res.structured_content
         assert data["source"] == "self-rated"
         assert data["engage"] == "skill"
-        ev = tmp_path / ".teacher" / "routing-stats.jsonl"
+        ev = tmp_path / ".school" / "routing-stats.jsonl"
         assert ev.exists()
         assert "assess" in ev.read_text(encoding="utf-8")
 
     def test_report_stores_tagged_lesson(self, tmp_path, monkeypatch):
-        from teacher.mcp.server import _call_tool
-        res = _call_tool(str(tmp_path), "teacher_route",
+        from school.mcp.server import _call_tool
+        res = _call_tool(str(tmp_path), "school_route",
                          {"mode": "report", "situation": "debugging session",
                           "lesson": "recall first, search second",
                           "outcome": "helpful"})
         assert res.is_error is False
         assert res.structured_content["ok"] is True
         # Lesson is retrievable through the normal recall path.
-        res2 = _call_tool(str(tmp_path), "teacher_recall",
+        res2 = _call_tool(str(tmp_path), "school_recall",
                           {"query": "routing lesson"})
         assert res2.is_error is False
         found = " ".join(
@@ -76,10 +76,10 @@ class TestRouteToolsMCP:
         assert "recall first" in found
 
     def test_stats_aggregates(self, tmp_path):
-        from teacher.mcp.server import _call_tool
-        _call_tool(str(tmp_path), "teacher_route",
+        from school.mcp.server import _call_tool
+        _call_tool(str(tmp_path), "school_route",
                    {"mode": "assess", "situation": "x", "severity": "high"})
-        res = _call_tool(str(tmp_path), "teacher_route_stats", {"limit": 5})
+        res = _call_tool(str(tmp_path), "school_route_stats", {"limit": 5})
         assert res.is_error is False
         data = res.structured_content
         assert data["last_activity"]
@@ -88,9 +88,9 @@ class TestRouteToolsMCP:
 
     def test_default_assess_without_severity_fails(self, tmp_path):
         # MCP has no model client: severity is mandatory.
-        from teacher.mcp.server import _call_tool
+        from school.mcp.server import _call_tool
         with pytest.raises(ValueError):
-            _call_tool(str(tmp_path), "teacher_route",
+            _call_tool(str(tmp_path), "school_route",
                        {"mode": "assess", "situation": "x"})
 ```
 
@@ -101,14 +101,14 @@ Expected: FAIL (`_engage_for` missing, tools missing).
 
 - [ ] **Step 3: Implement MCP parity**
 
-In `teacher/mcp/server.py`:
+In `school/mcp/server.py`:
 
-1. Append to `_TOOLS` (after `teacher_diagnose`):
+1. Append to `_TOOLS` (after `school_diagnose`):
 
 ```python
-    "teacher_route": {
+    "school_route": {
         "description": (
-            "Assess how much Teacher routing machinery a situation needs "
+            "Assess how much School routing machinery a situation needs "
             "(MCP fallback: self-rated severity - light engages the skill, "
             "medium/high engages tool and skill together) or store a "
             "routing lesson tagged for later review. Use when starting "
@@ -145,11 +145,11 @@ In `teacher/mcp/server.py`:
             "required": ["mode", "situation"],
         },
     },
-    "teacher_route_stats": {
+    "school_route_stats": {
         "description": (
             "Aggregated routing evidence: per-tool call counts and average "
             "durations, recent assess/report entries, current knobs, and "
-            "recent routing lessons. Use before adjusting how Teacher "
+            "recent routing lessons. Use before adjusting how School "
             "routes, or when the routing skill asks for current numbers - "
             "for anything, not only coding."
         ),
@@ -191,11 +191,11 @@ def _engage_for(severity: str) -> str:
 
 
 def _memory_root(worktree: str) -> "Path":
-    for sub in (".teacher", ".lerev", ".evo"):
+    for sub in (".school", ".lerev", ".evo"):
         root = Path(worktree) / sub
         if (root / "memory").is_dir():
             return root
-    return Path(worktree) / ".teacher"
+    return Path(worktree) / ".school"
 
 
 def _append_evidence(worktree: str, entry: dict[str, Any]) -> None:
@@ -281,12 +281,12 @@ def _read_stats(worktree: str, limit: int) -> dict[str, Any]:
 def _call_tool(worktree: str, name: str, arguments: dict[str, Any]) -> types.CallToolResult:
     if name not in _TOOLS:
         raise ValueError(f"Unknown tool: {name}")
-    if name == "teacher_route":
+    if name == "school_route":
         return _call_route(worktree, arguments)
-    if name == "teacher_route_stats":
+    if name == "school_route_stats":
         return _call_route_stats(worktree, arguments)
     req = _build_request(worktree, name, arguments)
-    resp = _bridge_call(name.removeprefix("teacher_"), req)
+    resp = _bridge_call(name.removeprefix("school_"), req)
     payload = json.dumps(resp, default=str, ensure_ascii=False)
     structured = json.loads(payload)
     return types.CallToolResult(
@@ -324,7 +324,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
             worktree,
             {
                 "kind": "assess",
-                "tool": "teacher_route",
+                "tool": "school_route",
                 "ms": 0,
                 "ok": True,
                 "severity": severity,
@@ -337,7 +337,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
                 "severity": severity,
                 "engage": engage,
                 "reason": "self-rated (MCP has no model client)",
-                "next": "Load the `teacher-routing` skill so tool and skill work together.",
+                "next": "Load the `school-routing` skill so tool and skill work together.",
             }
         )
     if mode == "report":
@@ -351,7 +351,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
         )
         req = _build_request(
             worktree,
-            "teacher_remember",
+            "school_remember",
             {
                 "content": f"Routing lesson ({outcome}): {lesson}",
                 "observation": situation or None,
@@ -368,7 +368,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
             worktree,
             {
                 "kind": "report",
-                "tool": "teacher_route",
+                "tool": "school_route",
                 "ms": 0,
                 "ok": bool(resp.get("ok")),
                 "outcome": outcome,
@@ -387,7 +387,7 @@ def _call_route_stats(worktree: str, arguments: dict[str, Any]) -> types.CallToo
     data = _read_stats(worktree, limit)
     recall_req = _build_request(
         worktree,
-        "teacher_recall",
+        "school_recall",
         {"query": "routing lesson", "confidence_threshold": 0, "limit": min(limit, 10)},
     )
     recall_req["context_budget"] = 1500
@@ -410,13 +410,13 @@ Expected: PASS — including the pre-existing description-parity test, which now
 
 - [ ] **Step 5: Ruff on changed files**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check teacher/mcp/server.py tests/unit/test_mcp_server.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check school/mcp/server.py tests/unit/test_mcp_server.py`
 Expected: clean (fix any line-length/import issues it reports).
 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add teacher/mcp/server.py tests/unit/test_mcp_server.py; if ($?) { git commit -m "feat(mcp): teacher_route and teacher_route_stats with self-rated fallback" }
+git add school/mcp/server.py tests/unit/test_mcp_server.py; if ($?) { git commit -m "feat(mcp): school_route and school_route_stats with self-rated fallback" }
 ```
 
 ---

@@ -1,26 +1,26 @@
-﻿### Task 2: `teacher_route` + `teacher_route_stats` plugin tools
+﻿### Task 2: `school_route` + `school_route_stats` plugin tools
 
 **Files:**
-- Modify: `teacher/plugin_source.py` (helpers after Task 1 block; new tools inside `tool: {` object, after `teacher_diagnose`)
-- Test: `tests/unit/test_teacher_routing.py` (extend)
+- Modify: `school/plugin_source.py` (helpers after Task 1 block; new tools inside `tool: {` object, after `school_diagnose`)
+- Test: `tests/unit/test_school_routing.py` (extend)
 
 **Interfaces:**
 - Consumes: `engageFor`, `normalizeSeverity`, `memoryRoot`, `appendEvidence`, `readKnobs`, `invokeBridge/python/bridgePath`, `ctx.client`.
-- Produces: TS functions `routePrompt(situation: string): string`, `parseRouteDecision(text: string): RouteDecision | null`, `microAssess(client: unknown, directory: string, situation: string): Promise<RouteDecision | null>`; tools `teacher_route` (args: `mode, situation, severity?, lesson?, outcome?`), `teacher_route_stats` (arg: `limit?`) returning `{title, output, metadata: {engagement}}`.
+- Produces: TS functions `routePrompt(situation: string): string`, `parseRouteDecision(text: string): RouteDecision | null`, `microAssess(client: unknown, directory: string, situation: string): Promise<RouteDecision | null>`; tools `school_route` (args: `mode, situation, severity?, lesson?, outcome?`), `school_route_stats` (arg: `limit?`) returning `{title, output, metadata: {engagement}}`.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `tests/unit/test_teacher_routing.py`:
+Append to `tests/unit/test_school_routing.py`:
 
 ```python
 class TestRouteTools:
     def test_tools_registered(self):
-        names = re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
-        assert "teacher_route" in names
-        assert "teacher_route_stats" in names
+        names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+        assert "school_route" in names
+        assert "school_route_stats" in names
 
     def test_descriptions_are_routing_guided(self):
-        for name in ("teacher_route", "teacher_route_stats"):
+        for name in ("school_route", "school_route_stats"):
             match = re.search(
                 rf"{name}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
                 TS_PLUGIN_SOURCE,
@@ -49,24 +49,24 @@ class TestRouteTools:
         assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE
 
     def test_kill_switch(self):
-        assert 'process.env.TEACHER_ROUTE === "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
 
     def test_report_stores_tagged_lesson(self):
-        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
-        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
+        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
         assert '"routing"' in block
         assert '"helpful"' in block and '"useless"' in block and '"neutral"' in block
         assert '"SUCCESS"' in block and '"FAILURE"' in block and '"NEUTRAL"' in block
         assert 'command: "remember"' in block
 
     def test_assess_appends_evidence_and_metadata(self):
-        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
-        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
+        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
         assert 'kind: "assess"' in block
         assert "engagement:" in block
 
     def test_stats_aggregates(self):
-        idx = TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")
+        idx = TS_PLUGIN_SOURCE.index("school_route_stats: tool(")
         block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index('"tool.execute.before"')]
         assert "aggregates" in block
         assert "avg_ms" in block
@@ -77,19 +77,19 @@ class TestRouteTools:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_teacher_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
 Expected: FAIL on the new class.
 
 - [ ] **Step 3: Implement the tools**
 
-In `teacher/plugin_source.py`, inside the `Teacher` function (so `bridge/python/bridgePath/ctx` are in scope), after `recallForExecution` add:
+In `school/plugin_source.py`, inside the `School` function (so `bridge/python/bridgePath/ctx` are in scope), after `recallForExecution` add:
 
 ```ts
   interface RouteDecision { severity: string; engage: string; reason: string }
 
   const routePrompt = (situation: string): string =>
     [
-      "You are a routing classifier for teacher tools. Situation: " + situation,
+      "You are a routing classifier for school tools. Situation: " + situation,
       "severity: light (trivial) | medium (real task) | high (critical).",
       "engage: skill for light, both for medium/high (tool and skill together).",
       "Never choose engage none unless the situation is unrelated to tool routing.",
@@ -117,7 +117,7 @@ In `teacher/plugin_source.py`, inside the `Teacher` function (so `bridge/python/
     directory: string,
     situation: string,
   ): Promise<RouteDecision | null> => {
-    if (process.env.TEACHER_ROUTE === "0") return null
+    if (process.env.SCHOOL_ROUTE === "0") return null
     const c = client as any
     if (!c?.session?.create || !c?.session?.prompt) return null
     try {
@@ -126,7 +126,7 @@ In `teacher/plugin_source.py`, inside the `Teacher` function (so `bridge/python/
       )
       const work = (async (): Promise<RouteDecision | null> => {
         const created = await c.session.create({
-          body: { title: "teacher-route" },
+          body: { title: "school-route" },
           query: { directory },
         })
         const sessionID = created?.data?.id ?? created?.id
@@ -172,12 +172,12 @@ In `teacher/plugin_source.py`, inside the `Teacher` function (so `bridge/python/
   }
 ```
 
-Inside the `tool: {` object, after `teacher_diagnose`, add:
+Inside the `tool: {` object, after `school_diagnose`, add:
 
 ```ts
-      teacher_route: tool({
+      school_route: tool({
         description:
-          "Assess how much Teacher routing machinery a situation needs " +
+          "Assess how much School routing machinery a situation needs " +
           "(mode assess: tiny real model call -> engage skill or both) or " +
           "store a routing lesson (mode report: what worked where, tagged " +
           "and retrievable). Use when starting non-trivial work or after a " +
@@ -208,7 +208,7 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
           const situation = String(args.situation ?? "").slice(0, 500)
           if (!situation.trim()) {
             return {
-              title: "Teacher Route — Failed",
+              title: "School Route — Failed",
               output: "Error: situation is required (max 500 chars).",
               metadata: { engagement: "failed" },
             }
@@ -217,15 +217,15 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
           if (mode === "report") {
             if (!bridge) {
               return {
-                title: "Teacher Route — Failed",
-                output: "Teacher: unavailable — no bridge found. Run `teacher install`.",
+                title: "School Route — Failed",
+                output: "School: unavailable — no bridge found. Run `school install`.",
                 metadata: { engagement: "failed" },
               }
             }
             const lesson = String(args.lesson ?? "").trim().slice(0, 1000)
             if (!lesson) {
               return {
-                title: "Teacher Route — Failed",
+                title: "School Route — Failed",
                 output: "Error: lesson is required for mode=report.",
                 metadata: { engagement: "failed" },
               }
@@ -248,7 +248,7 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
             })
             appendEvidence(context.worktree, {
               kind: "report",
-              tool: "teacher_route",
+              tool: "school_route",
               ms: 0,
               ok: Boolean(resp.ok),
               outcome,
@@ -256,13 +256,13 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
             if (!resp.ok) {
               const err = (resp as any).error ?? {}
               return {
-                title: "Teacher Route — Failed",
+                title: "School Route — Failed",
                 output: `Error [${err.type}]: ${err.message}`,
                 metadata: { engagement: "failed" },
               }
             }
             return {
-              title: "Teacher Route — Reported",
+              title: "School Route — Reported",
               output: `Stored routing lesson (id ${(resp as any).id ?? "?"}, outcome ${outcome}).`,
               metadata: { engagement: "reported" },
             }
@@ -270,7 +270,7 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
 
           if (mode !== "assess") {
             return {
-              title: "Teacher Route — Failed",
+              title: "School Route — Failed",
               output: 'Error: mode must be "assess" or "report".',
               metadata: { engagement: "failed" },
             }
@@ -287,7 +287,7 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
                 ? "self-rated (severity argument)"
                 : "fallback default (micro-call unavailable)",
             }
-            source = process.env.TEACHER_ROUTE === "0"
+            source = process.env.SCHOOL_ROUTE === "0"
               ? "self-rated"
               : args.severity
                 ? "self-rated"
@@ -295,7 +295,7 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
           }
           appendEvidence(context.worktree, {
             kind: "assess",
-            tool: "teacher_route",
+            tool: "school_route",
             ms: 0,
             ok: true,
             severity: decision.severity,
@@ -304,9 +304,9 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
           const nextStep =
             decision.engage === "none"
               ? "\nNo routing machinery needed for this situation."
-              : "\nNext: load the `teacher-routing` skill (skill tool) so the tool and skill work together."
+              : "\nNext: load the `school-routing` skill (skill tool) so the tool and skill work together."
           return {
-            title: `Teacher Route — ${decision.severity}`,
+            title: `School Route — ${decision.severity}`,
             output:
               JSON.stringify({ source, ...decision }, null, 2) + nextStep,
             metadata: { engagement: decision.engage },
@@ -314,11 +314,11 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
         },
       }),
 
-      teacher_route_stats: tool({
+      school_route_stats: tool({
         description:
           "Aggregated routing evidence: per-tool call counts and average " +
           "durations, recent assess/report entries, current knobs, and " +
-          "recent routing lessons. Use before adjusting how Teacher routes, " +
+          "recent routing lessons. Use before adjusting how School routes, " +
           "or when the routing skill asks for current numbers - for " +
           "anything, not only coding.",
         args: {
@@ -385,7 +385,7 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
           const knobs = readKnobs(context.worktree)
           const last = entries.length ? entries[entries.length - 1] : null
           return {
-            title: "Teacher Routing Stats",
+            title: "School Routing Stats",
             output: JSON.stringify(
               {
                 last_activity: last ? last.ts : null,
@@ -410,18 +410,18 @@ Inside the `tool: {` object, after `teacher_diagnose`, add:
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_teacher_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
 Expected: PASS.
 
 - [ ] **Step 6: Run the full plugin test set + hooks tests for regressions**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_teacher_plugin_hooks.py tests/unit/test_teacher_plugin_bridge.py tests/unit/test_teacher_identity_compat.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_plugin_hooks.py tests/unit/test_school_plugin_bridge.py tests/unit/test_school_identity_compat.py -q`
 Expected: PASS. (If the identity test's exact-tool-count assertions exist, update the expected tool list there to include the two new tools — additive only.)
 
 - [ ] **Step 7: Commit**
 
 ```powershell
-git add teacher/plugin_source.py tests/unit/test_teacher_routing.py; if ($?) { git commit -m "feat(plugin): teacher_route (micro-model assess + lesson report) and teacher_route_stats tools" }
+git add school/plugin_source.py tests/unit/test_school_routing.py; if ($?) { git commit -m "feat(plugin): school_route (micro-model assess + lesson report) and school_route_stats tools" }
 ```
 
 ---

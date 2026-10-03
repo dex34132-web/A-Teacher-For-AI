@@ -1,12 +1,12 @@
-"""Teacher V2.5 — Universal Agent Routing & Intelligence Layer.
+"""School V2.5 — Universal Agent Routing & Intelligence Layer.
 
 This module provides the agent-agnostic routing infrastructure that
-connects any AI system to Teacher's learning, experience, memory, and
+connects any AI system to School's learning, experience, memory, and
 knowledge subsystems.
 
 The core principle:
     Let the agent do the semantic thinking.
-    Let Teacher make the routing structured, efficient, safe, explainable,
+    Let School make the routing structured, efficient, safe, explainable,
     and cheap.
 
 V2.5 is agent-agnostic at its core. It does not depend on any specific
@@ -37,7 +37,7 @@ from core.routing.information import (
     SourceType,
 )
 from core.routing.integration import (
-    TeacherIntegrationBridge,
+    SchoolIntegrationBridge,
     make_collector_handler,
     make_noop_handler,
 )
@@ -98,7 +98,7 @@ __all__ = [
     "AgentRoutingContract",
     "DestinationHandler",
     # Integration bridge (V2.4.2)
-    "TeacherIntegrationBridge",
+    "SchoolIntegrationBridge",
     "make_noop_handler",
     "make_collector_handler",
     # Main router

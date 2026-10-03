@@ -2,21 +2,21 @@
 2c54e06 feat(plugin): routing core - knobs, evidence tracking, engage mapping, routing marker
 
 ## Stat
- teacher/plugin_source.py                | 123 ++++++++++++++++++++++++++++++--
- tests/unit/test_teacher_plugin_hooks.py |  11 ++-
- tests/unit/test_teacher_routing.py      |  75 +++++++++++++++++++
+ school/plugin_source.py                | 123 ++++++++++++++++++++++++++++++--
+ tests/unit/test_school_plugin_hooks.py |  11 ++-
+ tests/unit/test_school_routing.py      |  75 +++++++++++++++++++
  3 files changed, 200 insertions(+), 9 deletions(-)
 
 ## Diff (-U10)
-diff --git a/teacher/plugin_source.py b/teacher/plugin_source.py
+diff --git a/school/plugin_source.py b/school/plugin_source.py
 index 9aa6c7d..77d760a 100644
---- a/teacher/plugin_source.py
-+++ b/teacher/plugin_source.py
+--- a/school/plugin_source.py
++++ b/school/plugin_source.py
 @@ -2,21 +2,22 @@
  
  from __future__ import annotations
  
- from teacher import __version__ as _TEACHER_VERSION
+ from school import __version__ as _SCHOOL_VERSION
  
  _TS_PLUGIN_TEMPLATE = r'''import { tool } from "@opencode-ai/plugin/tool"
  import type { Plugin } from "@opencode-ai/plugin"
@@ -30,8 +30,8 @@ index 9aa6c7d..77d760a 100644
  
  const execFileAsync = promisify(execFile)
  
- /** Teacher version this plugin was generated from ΓÇö canonical source: teacher.__version__. */
- const TEACHER_VERSION = "__TEACHER_VERSION__"
+ /** School version this plugin was generated from ΓÇö canonical source: school.__version__. */
+ const SCHOOL_VERSION = "__SCHOOL_VERSION__"
  
  /**
   * Find a usable Python interpreter.
@@ -51,7 +51,7 @@ index 9aa6c7d..77d760a 100644
 +const executionStart = new Map<string, number>()
 +
  function hooksEnabled(): boolean {
-   return process.env.TEACHER_HOOKS !== "0"
+   return process.env.SCHOOL_HOOKS !== "0"
  }
  
 +const ROUTE_TIMEOUT_MS = 10000
@@ -85,11 +85,11 @@ index 9aa6c7d..77d760a 100644
 +}
 +
 +function memoryRoot(worktree: string): string {
-+  for (const dir of [".teacher", ".lerev", ".evo"]) {
++  for (const dir of [".school", ".lerev", ".evo"]) {
 +    const root = resolve(worktree, dir)
 +    if (fileExists(resolve(root, "memory"))) return root
 +  }
-+  return resolve(worktree, ".teacher")
++  return resolve(worktree, ".school")
 +}
 +
 +function clampNum(v: unknown, fallback: number, lo: number, hi: number): number {
@@ -143,7 +143,7 @@ index 9aa6c7d..77d760a 100644
 +}
 +
  function hasMemoryRoot(worktree: string): boolean {
-   for (const dir of [".teacher", ".lerev", ".evo"]) {
+   for (const dir of [".school", ".lerev", ".evo"]) {
      if (fileExists(resolve(worktree, dir, "memory"))) return true
    }
    return false
@@ -152,10 +152,10 @@ index 9aa6c7d..77d760a 100644
  function capMap(map: Map<string, unknown>): void {
    if (map.size > 300) map.clear()
  }
-@@ -316,39 +408,40 @@ const Teacher: Plugin = async (ctx) => {
+@@ -316,39 +408,40 @@ const School: Plugin = async (ctx) => {
    /**
     * Budgeted recall for one execution or prompt through the existing bridge.
-    * Returns null whenever Teacher is unavailable, the worktree has no memory,
+    * Returns null whenever School is unavailable, the worktree has no memory,
     * or the bridge fails/times out ΓÇö callers degrade to a bare marker.
     */
    const recallForExecution = async (
@@ -197,7 +197,7 @@ index 9aa6c7d..77d760a 100644
    }
  
    return {
-@@ -961,38 +1054,56 @@ const Teacher: Plugin = async (ctx) => {
+@@ -961,38 +1054,56 @@ const School: Plugin = async (ctx) => {
              output: `System Health:\n${lines.join("\n")}`,
              metadata: result,
            }
@@ -230,7 +230,7 @@ index 9aa6c7d..77d760a 100644
          const rec = executionRecalls.get(input.callID) ?? null
          executionRecalls.delete(input.callID)
          // Visible marker on EVERY execution ΓÇö hits, zero hits, and degraded.
-         const marker = rec ? ` ┬╖ teacher: ${rec.hits}` : " ┬╖ teacher: ΓÇô"
+         const marker = rec ? ` ┬╖ school: ${rec.hits}` : " ┬╖ school: ΓÇô"
 -        output.title = `${output.title || input.tool}${marker}`
 +        const started = executionStart.get(input.callID) ?? Date.now()
 +        executionStart.delete(input.callID)
@@ -246,19 +246,19 @@ index 9aa6c7d..77d760a 100644
 +          hits: rec ? rec.hits : null,
 +        })
          if (rec && rec.hits > 0 && typeof output.output === "string") {
-           const block = `[teacher context]\n${rec.lines.join("\n")}\n[/teacher]`
+           const block = `[school context]\n${rec.lines.join("\n")}\n[/school]`
            output.output = `${output.output}\n\n${block}`
          }
        } catch {
-         // Teacher visibility must never break tool execution.
+         // School visibility must never break tool execution.
        }
      },
  
      "chat.message": async (input, output) => {
-diff --git a/tests/unit/test_teacher_plugin_hooks.py b/tests/unit/test_teacher_plugin_hooks.py
+diff --git a/tests/unit/test_school_plugin_hooks.py b/tests/unit/test_school_plugin_hooks.py
 index 615d7de..eb97c90 100644
---- a/tests/unit/test_teacher_plugin_hooks.py
-+++ b/tests/unit/test_teacher_plugin_hooks.py
+--- a/tests/unit/test_school_plugin_hooks.py
++++ b/tests/unit/test_school_plugin_hooks.py
 @@ -138,23 +138,28 @@ class TestPromptHooks:
  class TestRecallBudgetAndCostGuards:
      """Hook recalls are bounded: budgeted, thresholded, timeboxed, skippable."""
@@ -290,18 +290,18 @@ index 615d7de..eb97c90 100644
  
      def test_fast_skip_when_no_memory(self) -> None:
          assert "hasMemoryRoot" in TS_PLUGIN_SOURCE
-         for legacy in ('".teacher"', '".lerev"', '".evo"'):
-diff --git a/tests/unit/test_teacher_routing.py b/tests/unit/test_teacher_routing.py
+         for legacy in ('".school"', '".lerev"', '".evo"'):
+diff --git a/tests/unit/test_school_routing.py b/tests/unit/test_school_routing.py
 new file mode 100644
 index 0000000..dabeef1
 --- /dev/null
-+++ b/tests/unit/test_teacher_routing.py
++++ b/tests/unit/test_school_routing.py
 @@ -0,0 +1,75 @@
 +"""TS-source contract tests for the adaptive routing loop (Phase 1)."""
 +
 +import re
 +
-+from teacher.plugin_source import TS_PLUGIN_SOURCE
++from school.plugin_source import TS_PLUGIN_SOURCE
 +
 +
 +class TestRoutingCoreHelpers:
