@@ -7,8 +7,6 @@ import re
 from io import StringIO
 from unittest.mock import patch
 
-import pytest
-
 from teacher.plugin_source import TS_PLUGIN_SOURCE
 
 #: The approved agent-facing OpenCode tool surface (order matters).
@@ -24,6 +22,8 @@ EXPECTED_OPENCODE_TOOLS = [
     "teacher_knowledge",
     "teacher_lifecycle",
     "teacher_diagnose",
+    "teacher_route",
+    "teacher_route_stats",
 ]
 
 
@@ -100,7 +100,8 @@ class TestBridgeProtocol:
 
     def test_bridge_module_importable(self) -> None:
         """teacher.bridge module is importable."""
-        from teacher.bridge import main, _COMMANDS
+        from teacher.bridge import _COMMANDS
+
         assert "status" in _COMMANDS
         assert "remember" in _COMMANDS
         assert "recall" in _COMMANDS
@@ -171,11 +172,11 @@ class TestBridgeProtocol:
 
 
 class TestPluginToolSurface:
-    """The plugin must expose exactly the approved 11-tool surface."""
+    """The plugin must expose exactly the approved 13-tool surface."""
 
-    def test_exposes_exactly_11_tools(self) -> None:
+    def test_exposes_exactly_13_tools(self) -> None:
         names = _tool_names()
-        assert len(names) == 11, f"expected 11 tools, got {len(names)}: {names}"
+        assert len(names) == 13, f"expected 13 tools, got {len(names)}: {names}"
         assert set(names) == set(EXPECTED_OPENCODE_TOOLS)
 
     def test_tool_order_matches_approved_surface(self) -> None:

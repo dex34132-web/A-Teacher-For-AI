@@ -40,7 +40,7 @@ class TestExecutionHooksRegistered:
     def test_tool_surface_unchanged(self) -> None:
         """Hooks add visibility, not new tools."""
         names = re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
-        assert len(names) == 11, f"tool surface changed: {names}"
+        assert len(names) == 13, f"tool surface changed: {names}"
 
 
 class TestBeforeHook:

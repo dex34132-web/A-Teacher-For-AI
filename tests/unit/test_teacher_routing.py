@@ -93,3 +93,68 @@ class TestRoutingCoreHelpers:
         names = {n.strip() for n in match.group(1).split(",")}
         assert {"existsSync", "appendFileSync", "readFileSync", "writeFileSync",
                 "mkdirSync", "statSync"} <= names
+
+
+class TestRouteTools:
+    def test_tools_registered(self):
+        names = re.findall(r"^\s+(teacher_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+        assert "teacher_route" in names
+        assert "teacher_route_stats" in names
+
+    def test_descriptions_are_routing_guided(self):
+        for name in ("teacher_route", "teacher_route_stats"):
+            match = re.search(
+                rf"{name}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
+                TS_PLUGIN_SOURCE,
+                re.S,
+            )
+            assert match, name
+            text = " ".join(re.findall(r'"([^"]*)"', match.group(1)))
+            assert "Use" in text
+            assert "coding" in text  # domain-general framing present
+
+    def test_micro_assess_contract(self):
+        assert "function microAssess(" in TS_PLUGIN_SOURCE
+        assert "session.create" in TS_PLUGIN_SOURCE
+        assert "session.prompt" in TS_PLUGIN_SOURCE
+        assert "session.delete" in TS_PLUGIN_SOURCE
+        assert "small_model" in TS_PLUGIN_SOURCE  # config.get → small model
+        assert "Promise.race" in TS_PLUGIN_SOURCE
+        assert "ROUTE_TIMEOUT_MS" in TS_PLUGIN_SOURCE
+
+    def test_prompt_is_json_only(self):
+        assert "Respond ONLY with JSON" in TS_PLUGIN_SOURCE
+        assert (
+            "never choose engage none" in TS_PLUGIN_SOURCE.lower()
+            or "Never choose engage none" in TS_PLUGIN_SOURCE
+        )
+
+    def test_parse_route_decision(self):
+        assert "function parseRouteDecision(" in TS_PLUGIN_SOURCE
+        assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE
+
+    def test_kill_switch(self):
+        assert 'process.env.TEACHER_ROUTE === "0"' in TS_PLUGIN_SOURCE
+
+    def test_report_stores_tagged_lesson(self):
+        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
+        assert '"routing"' in block
+        assert '"helpful"' in block and '"useless"' in block and '"neutral"' in block
+        assert '"SUCCESS"' in block and '"FAILURE"' in block and '"NEUTRAL"' in block
+        assert 'command: "remember"' in block
+
+    def test_assess_appends_evidence_and_metadata(self):
+        idx = TS_PLUGIN_SOURCE.index("teacher_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")]
+        assert 'kind: "assess"' in block
+        assert "engagement:" in block
+
+    def test_stats_aggregates(self):
+        idx = TS_PLUGIN_SOURCE.index("teacher_route_stats: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index('"tool.execute.before"')]
+        assert "aggregates" in block
+        assert "avg_ms" in block
+        assert "last_activity" in block
+        assert 'kind: "report"' in TS_PLUGIN_SOURCE
+        assert "routing lesson" in TS_PLUGIN_SOURCE  # recall query for lessons
