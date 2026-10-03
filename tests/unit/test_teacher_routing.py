@@ -129,6 +129,24 @@ class TestRouteTools:
             or "Never choose engage none" in TS_PLUGIN_SOURCE
         )
 
+    def test_route_prompt_truncates_situation_within_budget(self):
+        # Micro-call contract: prompt <= 150 tokens. routePrompt must slice
+        # the situation itself — the tool's 500-char cap alone still busts
+        # the token budget once the fixed template is added.
+        match = re.search(
+            r"function routePrompt\(situation: string\): string \{\n(.*?)\n  \}",
+            TS_PLUGIN_SOURCE,
+            re.S,
+        )
+        assert match, "routePrompt missing"
+        body = match.group(1)
+        assert " + situation.slice(0, 200)" in body
+        assert not re.search(r"\+ situation(?!\.slice)", body)
+        # Worst-case bound: fixed template literals + 200-char situation.
+        literals = re.findall(r"'([^']*)'|\"([^\"]*)\"", body)
+        template = sum(len(a or b) for a, b in literals)
+        assert template + 200 <= 700
+
     def test_parse_route_decision(self):
         assert "function parseRouteDecision(" in TS_PLUGIN_SOURCE
         assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE

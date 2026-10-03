@@ -449,7 +449,7 @@ const Teacher: Plugin = async (ctx) => {
 
   function routePrompt(situation: string): string {
     return [
-      "You are a routing classifier for teacher tools. Situation: " + situation,
+      "You are a routing classifier for teacher tools. Situation: " + situation.slice(0, 200),
       "severity: light (trivial) | medium (real task) | high (critical).",
       "engage: skill for light, both for medium/high (tool and skill together).",
       "Never choose engage none unless the situation is unrelated to tool routing.",
