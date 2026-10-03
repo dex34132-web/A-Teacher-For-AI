@@ -288,6 +288,7 @@ function memoryRoot(worktree: string): string {
 }
 
 function clampNum(v: unknown, fallback: number, lo: number, hi: number): number {
+  if (v == null || typeof v === "boolean") return fallback
   const n = Number(v)
   return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fallback
 }

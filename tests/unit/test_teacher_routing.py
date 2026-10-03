@@ -36,6 +36,26 @@ class TestRoutingCoreHelpers:
         assert "force_tools" in TS_PLUGIN_SOURCE
         assert "statSync" in TS_PLUGIN_SOURCE  # mtime cache check
 
+    def test_clamp_num_defaults_on_null_and_boolean(self):
+        # Null/boolean knob values are invalid -> per-key default, never coerced
+        # (Number(null) === 0 would silently override the default).
+        match = re.search(
+            r"function clampNum\([^)]*\): number \{\n(.*?)\n\}",
+            TS_PLUGIN_SOURCE,
+            re.S,
+        )
+        assert match, "clampNum missing"
+        body = match.group(1)
+        assert "v == null" in body
+        assert 'typeof v === "boolean"' in body
+        # Guard must run before Number(v), which would coerce null to 0.
+        assert body.index("v == null") < body.index("Number(v)")
+        # recall_threshold: null -> 0.2, hook_timeout_ms: null -> 1500.
+        assert "recall_threshold: HOOK_THRESHOLD" in TS_PLUGIN_SOURCE
+        assert "hook_timeout_ms: HOOK_TIMEOUT_MS" in TS_PLUGIN_SOURCE
+        assert "HOOK_THRESHOLD = 0.2" in TS_PLUGIN_SOURCE
+        assert "HOOK_TIMEOUT_MS = 1500" in TS_PLUGIN_SOURCE
+
     def test_knobs_used_in_recall_path(self):
         # recallForExecution reads knobs and applies them to the bridge call.
         idx = TS_PLUGIN_SOURCE.index("const recallForExecution")
