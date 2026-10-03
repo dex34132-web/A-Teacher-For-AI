@@ -6,7 +6,7 @@
 ## Goal
 
 Rename the entire product surface from `teacher` to `school`: Python package, CLI,
-bridge, all 13 MCP/plugin tool names, plugin file, skill, env vars, packaging
+bridge, all 13 plugin tool names and 11 MCP tool names, plugin file, skill, env vars, packaging
 installers, docs, and tests. The GitHub repo is already `A-School-For-AI`.
 
 ## Decisions (user-answered)
