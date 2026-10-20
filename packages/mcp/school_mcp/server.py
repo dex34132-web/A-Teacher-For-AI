@@ -1,13 +1,18 @@
 """School MCP server — multi-transport, fail-open.
 
-Wraps the optional ``mcp`` SDK to expose all 48 ``school_*`` tools over stdio
+Wraps the optional ``mcp`` SDK to expose all 52 ``school_*`` tools over stdio
 and streamable-HTTP. Every handler is fail-open: tool errors are returned as
 structured results, never as crashes. If the ``mcp`` SDK is absent, ``available``
 is False and the pure-Python ``tools.call_tool`` still works standalone.
+
+On start the server auto-installs the bundled ``packages/skills/`` into the
+agent's skills directory (``~/.config/opencode/skills``) so a downloaded copy
+of School always shows up as skills with no manual step.
 """
 
 from __future__ import annotations
 
+import contextlib
 import inspect
 from typing import Any
 
@@ -30,8 +35,46 @@ def available() -> bool:
     return SDK
 
 
+def install_bundled_skills() -> dict:
+    """Copy the bundled skills into the agent's skills directory (auto-install).
+
+    Self-contained twin of ``school.skills_menu.install_bundled_skills`` — the
+    packages stay importable without the repo. Writes only when the target is
+    missing or different; never deletes; per-skill fail-open. Returns
+    ``{"synced": [...], "unchanged": [...], "errors": [...]}``.
+    """
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parents[2] / "skills"
+    target = Path.home() / ".config" / "opencode" / "skills"
+    synced: list[str] = []
+    unchanged: list[str] = []
+    errors: list[str] = []
+    try:
+        entries = sorted(p for p in src.iterdir() if p.is_dir())
+    except Exception as exc:  # noqa: BLE001 — never break server start
+        return {"synced": synced, "unchanged": unchanged, "errors": [_safe_str(exc)[:200]]}
+    for skill_dir in entries:
+        try:
+            text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{skill_dir.name}: {_safe_str(exc)[:120]}")
+            continue
+        dest = target / skill_dir.name / "SKILL.md"
+        try:
+            if dest.is_file() and dest.read_text(encoding="utf-8") == text:
+                unchanged.append(skill_dir.name)
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(text, encoding="utf-8")
+            synced.append(skill_dir.name)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"{skill_dir.name}: {_safe_str(exc)[:120]}")
+    return {"synced": synced, "unchanged": unchanged, "errors": errors}
+
+
 def build_server(name: str = "school", **kwargs: Any):
-    """Build a FastMCP server exposing all 48 tools. Fail-open.
+    """Build a FastMCP server exposing all 52 tools. Fail-open.
 
     Returns the FastMCP instance, or an error dict if the SDK is missing.
     """
@@ -107,6 +150,8 @@ def run_http(server: Any, host: str = "127.0.0.1", port: int = 8765, **kw: Any) 
 def main() -> None:
     import sys
 
+    with contextlib.suppress(Exception):  # never block server start
+        install_bundled_skills()
     transport = "stdio"
     if len(sys.argv) > 1 and sys.argv[1] in {"http", "stdio"}:
         transport = sys.argv[1]

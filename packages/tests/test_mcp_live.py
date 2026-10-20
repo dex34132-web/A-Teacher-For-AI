@@ -75,7 +75,7 @@ class TestLiveStdio:
                 return m
         return None
 
-    def test_initialize_and_list_48_tools(self):
+    def test_initialize_and_list_52_tools(self):
         msgs = self._session([{"jsonrpc": "2.0", "id": 2, "method": "tools/list",
                                "params": {}}])
         init = self._by_id(msgs, 1)
@@ -83,7 +83,7 @@ class TestLiveStdio:
         assert init["result"]["serverInfo"]["name"]
         listing = self._by_id(msgs, 2)
         tools = listing["result"]["tools"]
-        assert len(tools) == 48
+        assert len(tools) == 52
         # Flat schema: worktree (or the tool's own params), never a tool_args wrapper.
         for tool in tools:
             props = tool["inputSchema"].get("properties", {})
@@ -163,7 +163,7 @@ class TestLiveHttp:
                     return await sess.list_tools()
 
             result = anyio.run(run)
-            assert len(result.tools) == 48
+            assert len(result.tools) == 52
         finally:
             with contextlib.suppress(Exception):
                 proc.terminate()

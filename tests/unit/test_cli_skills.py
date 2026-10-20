@@ -5,6 +5,7 @@ No network: these paths only touch the local registry under the cwd.
 
 from __future__ import annotations
 
+import io
 import json
 import sys
 from pathlib import Path
@@ -90,10 +91,13 @@ class TestSkillsFailClosed:
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
         monkeypatch.setattr(sys, "argv", ["school", "skills"])
+        monkeypatch.setattr("sys.stdin", io.StringIO(""))
         with pytest.raises(SystemExit) as excinfo:
             main()
         assert excinfo.value.code == 1
-        assert "choose list, search, github-search" in capsys.readouterr().err
+        out = capsys.readouterr()
+        assert "interactive menu" in out.out
+        assert "no interactive input" in out.err
 
     def test_unknown_action_rejected_by_argparse(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
@@ -103,3 +107,136 @@ class TestSkillsFailClosed:
             main()
         assert excinfo.value.code == 2
         assert "invalid choice" in capsys.readouterr().err
+
+
+class TestSkillsMenu:
+    """Bare `school skills` opens an interactive menu over all 12 actions."""
+
+    ACTIONS = (
+        "list",
+        "search",
+        "create",
+        "use",
+        "feedback",
+        "status",
+        "evolve",
+        "github-search",
+        "discover",
+        "analyze",
+        "compare",
+        "import",
+    )
+
+    def _run_menu(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        stdin_text: str,
+        capsys: pytest.CaptureFixture[str],
+    ) -> tuple[int, str]:
+        monkeypatch.setattr(sys, "argv", ["school", "skills"])
+        monkeypatch.setattr("sys.stdin", io.StringIO(stdin_text))
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        return excinfo.value.code, capsys.readouterr().out
+
+    def test_menu_lists_all_twelve_actions_and_quits(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code, out = self._run_menu(monkeypatch, "0\n", capsys)
+        assert code == 0
+        assert "interactive menu" in out
+        for name in self.ACTIONS:
+            assert name in out
+        assert "bye" in out
+
+    def test_menu_runs_list_via_pipe(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        tmp_path: Path,
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        _seed(tmp_path)
+        code, out = self._run_menu(monkeypatch, "1\n0\n", capsys)
+        assert code == 0
+        assert "agent-markdown-skill" in out
+
+    def test_menu_status_action_returns_engine_health(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        tmp_path: Path,
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        code, out = self._run_menu(monkeypatch, "6\n0\n", capsys)
+        assert code == 0
+        assert '"ok"' in out
+
+    def test_menu_quit_by_name(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code, out = self._run_menu(monkeypatch, "quit\n", capsys)
+        assert code == 0
+        assert "bye" in out
+
+    def test_menu_unknown_choice_reprompts(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code, out = self._run_menu(monkeypatch, "99\n0\n", capsys)
+        assert code == 0
+        assert "unknown choice" in out
+
+
+class TestSkillRegistryActions:
+    """Parser-level coverage for create/use/feedback/status/evolve."""
+
+    def test_status_subcommand_runs(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        tmp_path: Path,
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(sys, "argv", ["school", "skills", "status"])
+        main()
+        out = json.loads(capsys.readouterr().out)
+        assert out.get("ok") is True
+
+    def test_feedback_requires_outcome(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setattr(sys, "argv", ["school", "skills", "feedback", "--name", "x"])
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 2
+
+    def test_create_requires_core_fields(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setattr(sys, "argv", ["school", "skills", "create", "my-skill"])
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 2
+
+    def test_evolve_rejects_bad_changes_json(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "school",
+                "skills",
+                "evolve",
+                "--action",
+                "revise",
+                "--name",
+                "x",
+                "--changes",
+                "not-json",
+            ],
+        )
+        with pytest.raises(SystemExit) as excinfo:
+            main()
+        assert excinfo.value.code == 2
+        assert "valid JSON" in capsys.readouterr().err

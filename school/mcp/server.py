@@ -1345,6 +1345,205 @@ _TOOLS: dict[str, dict[str, Any]] = {
             "required": ["action"],
         },
     },
+    "school_quantify": {
+        "description": (
+            "Use school_quantify to run deterministic precision checks on a plan's numbers "
+            "for ANY kind of work — software, writing, research, business, planning, "
+            "creative, life. Decimal money totals, percentages with provenance, "
+            "percentage-point vs relative change, risk formulas, date and schedule "
+            "validation, hard-constraint verdicts; a failed check returns no value. "
+            "For the workflow, load the `precision` skill."
+        ),
+        "annotations": {"read_only_hint": True, "idempotent_hint": True},
+        "schema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "Title for the report."},
+                "currency": {
+                    "type": "string",
+                    "description": "Currency for all money rows (required for money checks).",
+                },
+                "budget": {
+                    "type": "object",
+                    "description": (
+                        "Budget: lines [{name, amount[, currency]}], tax/fees/transport/"
+                        "discounts, declared_total, ceiling_text, source."
+                    ),
+                },
+                "percentages": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": (
+                        "Percentage claims [{numerator, denominator, claimed, unit, scope, "
+                        "period, source}]."
+                    ),
+                },
+                "changes": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "[{before, after}] — percentage-point vs relative change.",
+                },
+                "risks": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": (
+                        "[{probability, conditional_loss, probability_class, loss_unit, ...}] "
+                        "or [{probability_label, severity_label}] for ordinal priority."
+                    ),
+                },
+                "scenarios": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "[{probability, outcome}] for E[X] over the scenario space.",
+                },
+                "schedule": {
+                    "type": "object",
+                    "description": "{start, deadline, duration_days, reference}.",
+                },
+                "availability": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "[{item, as_of, available_from, available_until}].",
+                },
+                "constraints": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": (
+                        "[{id, requirement, kind, actual, expected, evidence_source, "
+                        "evidence_kind, result, explanation}]."
+                    ),
+                },
+            },
+            "required": [],
+        },
+    },
+    "school_elicit": {
+        "description": (
+            "Use school_elicit to find the material questions a plan is missing for ANY "
+            "kind of work — software, writing, research, business, planning, creative, "
+            "life. Prioritized unknowns, adaptive question batches under a budget of "
+            "1-100 user-facing questions, honest completion status. Pass the session "
+            "dict back to keep state. For the workflow, load the `precision` skill."
+        ),
+        "annotations": {"read_only_hint": True, "idempotent_hint": True},
+        "schema": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "description": (
+                        "Goal/knowns document {goal, requirements[], unknowns[], "
+                        "verification_defined}."
+                    ),
+                },
+                "interview": {
+                    "type": "object",
+                    "description": "A clarion interview dict (alternative to data).",
+                },
+                "session": {
+                    "type": "object",
+                    "description": "Questioning session dict from a previous call (resume).",
+                },
+                "answers": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "[{id|question, answer, confidence?}].",
+                },
+                "asked": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Question keys already asked (never re-asked).",
+                },
+                "question_budget": {
+                    "type": "number",
+                    "description": "Max user-facing questions (integer 1-100; controller mode).",
+                },
+                "batch_size": {
+                    "type": "number",
+                    "description": "How many questions to surface at once (default 5).",
+                },
+                "verification_defined": {
+                    "type": "boolean",
+                    "description": "Record that acceptance verification is defined.",
+                },
+                "allow_followups": {
+                    "type": "boolean",
+                    "description": "Adaptive follow-ups share the budget (default true).",
+                },
+                "stop_early": {
+                    "type": "boolean",
+                    "description": "Stop early when the objective is covered (default true).",
+                },
+            },
+            "required": [],
+        },
+    },
+    "school_investigate": {
+        "description": (
+            "Use school_investigate to run an adaptive diagnostic case for ANY kind of "
+            "work — software, writing, research, business, planning, creative, life. "
+            "Actions: report | status | next | probe. Findings, hypotheses, evidence, "
+            "next action. Pass the case dict back to keep state. For the workflow, load "
+            "the `investigate` skill."
+        ),
+        "annotations": {"idempotent_hint": False},
+        "schema": {
+            "type": "object",
+            "properties": {
+                "case": {
+                    "type": "object",
+                    "description": "Investigation case JSON (findings/hypotheses/evidence).",
+                },
+                "action": {
+                    "type": "string",
+                    "description": "report | status | next | probe (default report).",
+                },
+                "probe_cmd": {
+                    "type": "string",
+                    "description": "Shell command to record as evidence (action probe).",
+                },
+                "probe_kind": {
+                    "type": "string",
+                    "description": "Evidence kind recorded for the probe (default command).",
+                },
+                "probe_ref": {
+                    "type": "string",
+                    "description": "Evidence reference recorded for the probe.",
+                },
+                "timeout": {
+                    "type": "number",
+                    "description": "Probe timeout in seconds (default 60).",
+                },
+            },
+            "required": ["case"],
+        },
+    },
+    "school_skills_menu": {
+        "description": (
+            "Use school_skills_menu to open and drive the whole skill-engine menu \u2014 "
+            "list, search, create, use, feedback, status, evolve, github-search, "
+            "discover, analyze, compare, import \u2014 for ANY kind of work, software, "
+            "writing, research, business, planning, creative, life. Call with no "
+            "arguments to see the menu; pass choice (1-12 or the action name) and "
+            "fields to run one action. The menu returns after every action. For how "
+            "to choose a skill, load the `teacher` skill."
+        ),
+        "annotations": {"idempotent_hint": False},
+        "schema": {
+            "type": "object",
+            "properties": {
+                "choice": {
+                    "type": "string",
+                    "description": "Menu choice: 1-12 or the action name (omit to see the menu).",
+                },
+                "fields": {
+                    "type": "object",
+                    "description": "Field values for the chosen action (strings, lists, flags).",
+                },
+            },
+            "required": [],
+        },
+    },
 }
 
 # --- School tool-choice dominance -------------------------------------------
@@ -2146,8 +2345,24 @@ def build_server(worktree: str | None = None) -> Server:
     )
 
 
+def _auto_install_skills() -> None:
+    """Auto-install the bundled skills when the server starts (fail-open).
+
+    A downloaded copy of School always shows up as skills with no manual
+    step: the repo ``skills/`` directory is synced into the agent's skills
+    directory (missing-or-different files only; nothing is ever deleted).
+    """
+    try:
+        from school.skills_menu import install_bundled_skills
+
+        install_bundled_skills()
+    except Exception:  # noqa: BLE001 — never block server start
+        pass
+
+
 def serve() -> None:
     """Run the MCP server over stdio until the client disconnects."""
+    _auto_install_skills()
     server = build_server()
 
     async def run() -> None:

@@ -61,6 +61,10 @@ EXPECTED_TOOL_ORDER = [
     "school_weave",
     "school_compass",
     "school_brainstorm",
+    "school_quantify",
+    "school_elicit",
+    "school_investigate",
+    "school_skills_menu",
 ]
 
 
@@ -498,6 +502,8 @@ class TestRoutingGuidance:
             "school_navigate",
             "school_docs",
             "school_visualize",
+            "school_quantify",
+            "school_elicit",
         }
         for name in read_only:
             assert tools[name].annotations.idempotent_hint is True, name
@@ -507,10 +513,7 @@ class TestRoutingGuidance:
 
         from school.plugin_source import TS_PLUGIN_SOURCE
 
-        MCP_ONLY_TOOLS = frozenset({"school_read", "school_grep"})
         for name, spec in mcp_server._TOOLS.items():
-            if name in MCP_ONLY_TOOLS:
-                continue
             match = re.search(
                 rf"{re.escape(name)}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
                 TS_PLUGIN_SOURCE,
@@ -526,10 +529,7 @@ class TestRoutingGuidance:
         plugin_tools = set(
             re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.M)
         )
-        assert set(mcp_server._TOOLS) - plugin_tools == {
-            "school_read",
-            "school_grep",
-        }
+        assert set(mcp_server._TOOLS) - plugin_tools == set()
         assert plugin_tools - set(mcp_server._TOOLS) == set()
 
 

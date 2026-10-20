@@ -85,8 +85,8 @@ def _wt():
 
 class TestMcpToolsFailProof:
     def test_registry_has_48(self):
-        assert len(TOOL_NAMES) == 48
-        assert len(TOOLS) == 48
+        assert len(TOOL_NAMES) == 52
+        assert len(TOOLS) == 52
 
     def test_every_tool_never_raises_bulk(self):
         wt = _wt()
@@ -191,7 +191,7 @@ class TestCrossCuttingFailProof:
         assert True
 
     def test_tool_count_matches_documented(self):
-        assert len(TOOL_NAMES) == 48
+        assert len(TOOL_NAMES) == 52
 
 
 class _Throws:
@@ -285,10 +285,10 @@ class TestConcurrencyFailProof:
         def worker(idx: int) -> None:
             try:
                 for i in range(15):
-                    call_tool(TOOL_NAMES[i % 48], {"worktree": "."}, ".")
+                    call_tool(TOOL_NAMES[i % 52], {"worktree": "."}, ".")
                     mcp_compat.generate("cursor", f"http://h{i}.local/mcp")
                     pg_adapters.emit_plugin("codex")
-                    describe(TOOL_NAMES[i % 48])
+                    describe(TOOL_NAMES[i % 52])
             except Exception as exc:  # noqa: BLE001
                 errors.append(exc)
 

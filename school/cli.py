@@ -12,6 +12,7 @@ from school import __version__
 from school.config import SchoolConfig
 from school.discovery import discover_bridge
 from school.plugin_source import TS_PLUGIN_SOURCE
+from school.skills_menu import MENU_ITEMS as _SKILLS_MENU_ITEMS
 
 
 def _safe_err(exc: BaseException) -> str:
@@ -357,6 +358,92 @@ def _cmd_mcp(args: argparse.Namespace) -> None:
     mcp_main()
 
 
+def _skills_menu() -> None:
+    """Interactive menu over the whole skill engine (12 actions, loop until quit)."""
+
+    def _ask(label: str, default: str = "") -> str:
+        suffix = f" [{default}]" if default else ""
+        value = input(f"  {label}{suffix}: ").strip()
+        return value if value else default
+
+    def _yes(value: object) -> bool:
+        return str(value or "").strip().lower() in {"y", "yes", "true", "1"}
+
+    def _list_field(value: object, split: str) -> list[str]:
+        return [s.strip() for s in str(value or "").split(split) if s.strip()]
+
+    print("school skills \u2014 interactive menu")
+    first = True
+    while True:
+        print("")
+        for i, (name, blurb, _fields) in enumerate(_SKILLS_MENU_ITEMS, start=1):
+            print(f"  {i:2}) {name:<13} {blurb}")
+        print("   0) quit")
+        try:
+            pick = input("skills> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("")
+            if first:
+                sys.stderr.write(
+                    "school skills: no interactive input \u2014 pipe your choices "
+                    "or run `school skills <action>` (list, search, create, use, "
+                    "feedback, status, evolve, github-search, discover, "
+                    "analyze, compare, import)\n"
+                )
+                sys.exit(1)
+            print("bye")
+            sys.exit(0)
+        first = False
+        if pick.lower() in {"0", "q", "quit", "exit"}:
+            print("bye")
+            sys.exit(0)
+        entry = None
+        if pick.isdigit() and 1 <= int(pick) <= len(_SKILLS_MENU_ITEMS):
+            entry = _SKILLS_MENU_ITEMS[int(pick) - 1]
+        else:
+            for item in _SKILLS_MENU_ITEMS:
+                if pick == item[0]:
+                    entry = item
+                    break
+        if entry is None:
+            print(f"unknown choice: {pick!r}")
+            continue
+        name, _blurb, fields = entry
+        values: dict[str, str] = {}
+        for field, label, default in fields:
+            values[field] = _ask(label, default)
+        ns = argparse.Namespace(
+            skills_command=name,
+            keywords=_list_field(values.get("keywords"), " "),
+            query=values.get("query", ""),
+            task=values.get("task", ""),
+            gap=values.get("gap", ""),
+            skill_name=values.get("skill_name", ""),
+            max_files=int(values.get("max_files", "") or 5),
+            owner=values.get("owner", ""),
+            repo=values.get("repo", ""),
+            file_path=values.get("file_path", ""),
+            approve=_yes(values.get("approve")),
+            acknowledge_license=_yes(values.get("acknowledge_license")),
+            scope=values.get("scope", "") or "AGENT",
+            name=values.get("name", ""),
+            description=values.get("description", ""),
+            purpose=values.get("purpose", ""),
+            procedure=_list_field(values.get("procedure"), ";"),
+            triggers=_list_field(values.get("triggers"), ";"),
+            success=_yes(values.get("success")),
+            note=values.get("note", ""),
+            action=values.get("action", ""),
+            changes="",
+            agent_id="",
+            project="",
+            session="",
+        )
+        with contextlib.suppress(SystemExit):
+            # a failed action is reported as JSON — the menu keeps running
+            _cmd_skills(ns)
+
+
 def _cmd_skills(args: argparse.Namespace) -> None:
     """1A-2Z skill commands (Phase 2: GitHub discovery is opt-in)."""
     import json
@@ -366,11 +453,8 @@ def _cmd_skills(args: argparse.Namespace) -> None:
 
     action = getattr(args, "skills_command", None)
     if action is None:
-        sys.stderr.write(
-            "school skills: choose list, search, github-search, discover, "
-            "analyze, compare, or import\n"
-        )
-        sys.exit(1)
+        _skills_menu()
+        return
 
     keywords = [str(k) for k in (getattr(args, "keywords", None) or [])]
     if action == "list":
@@ -451,6 +535,57 @@ def _cmd_skills(args: argparse.Namespace) -> None:
             project_id=str(args.project or ""),
             session_id=str(args.session or ""),
         )
+    elif action in {"create", "use", "feedback", "status", "evolve"}:
+        from school.mcp.server import _call_tool
+
+        tool_args: dict = {}
+        if action == "create":
+            tool_args = {
+                "name": str(getattr(args, "name", "") or ""),
+                "description": str(getattr(args, "description", "") or ""),
+                "purpose": str(getattr(args, "purpose", "") or ""),
+                "procedure": [str(s) for s in (getattr(args, "procedure", None) or [])],
+            }
+            for key in ("triggers", "inputs", "constraints", "examples", "tags"):
+                val = getattr(args, key, None)
+                if val:
+                    tool_args[key] = [str(s) for s in val]
+            for key in ("scope", "agent_id", "project", "session"):
+                val = str(getattr(args, key, "") or "")
+                if val:
+                    tool_args[key] = val
+        elif action == "use":
+            for key in ("name", "query", "agent_id", "project", "session"):
+                val = str(getattr(args, key, "") or "")
+                if val:
+                    tool_args[key] = val
+        elif action == "feedback":
+            tool_args = {
+                "name": str(getattr(args, "name", "") or ""),
+                "success": bool(getattr(args, "success", False)),
+            }
+            for key in ("note", "agent_id"):
+                val = str(getattr(args, key, "") or "")
+                if val:
+                    tool_args[key] = val
+        elif action == "evolve":
+            tool_args = {"action": str(getattr(args, "action", "") or "")}
+            name = str(getattr(args, "name", "") or "")
+            if name:
+                tool_args["name"] = name
+            changes = str(getattr(args, "changes", "") or "")
+            if changes:
+                import json as _json
+
+                try:
+                    tool_args["changes"] = _json.loads(changes)
+                except ValueError:
+                    sys.stderr.write("school skills: --changes must be valid JSON\n")
+                    sys.exit(2)
+        res = _call_tool(".", f"school_skill_{action}", tool_args)
+        report = getattr(res, "structured_content", None)
+        if not isinstance(report, dict):
+            report = {"ok": False, "error": "skill engine returned no structured result"}
     else:  # pragma: no cover - argparse restricts choices
         sys.stderr.write(f"school skills: unknown action {action!r}\n")
         sys.exit(1)
@@ -1895,7 +2030,11 @@ def main() -> None:
 
     skills_parser = subparsers.add_parser(
         "skills",
-        help="1A-2Z skill management (Phase 2: GitHub discovery is opt-in)",
+        help=(
+            "1A-2Z skill management: bare `skills` opens an interactive menu; "
+            "or run list | search | create | use | feedback | status | evolve | "
+            "github-search | discover | analyze | compare | import"
+        ),
     )
     skills_subparsers = skills_parser.add_subparsers(dest="skills_command")
 
@@ -1905,6 +2044,68 @@ def main() -> None:
         "search", help="Search local 1A-2Z skills (offline)"
     )
     skills_search_parser.add_argument("query", help="Capability query")
+
+    create_parser = skills_subparsers.add_parser(
+        "create", help="Create, validate, and register a skill (1A-2Z)"
+    )
+    create_parser.add_argument("name", help="kebab-case skill name")
+    create_parser.add_argument(
+        "--description", required=True, help="One-line capability summary"
+    )
+    create_parser.add_argument("--purpose", required=True, help="Why it exists")
+    create_parser.add_argument(
+        "--procedure", nargs="+", required=True, help="Ordered steps"
+    )
+    create_parser.add_argument("--triggers", nargs="*", default=[], help="When to use")
+    create_parser.add_argument("--inputs", nargs="*", default=[], help="Expected inputs")
+    create_parser.add_argument(
+        "--constraints", nargs="*", default=[], help="Safety/scope limits"
+    )
+    create_parser.add_argument("--examples", nargs="*", default=[], help="Usage examples")
+    create_parser.add_argument("--tags", nargs="*", default=[], help="Searchable tags")
+    create_parser.add_argument(
+        "--scope", default="AGENT", help="GLOBAL|AGENT|PROJECT|SESSION"
+    )
+    create_parser.add_argument("--agent-id", default="", help="Scope isolation")
+    create_parser.add_argument("--project", default="", help="Scope isolation")
+    create_parser.add_argument("--session", default="", help="Scope isolation")
+
+    use_parser = skills_subparsers.add_parser(
+        "use", help="Retrieve one skill by name/query and record the reuse"
+    )
+    use_parser.add_argument("--name", default="", help="Exact skill name")
+    use_parser.add_argument("--query", default="", help="Task query when name is unknown")
+    use_parser.add_argument("--agent-id", default="", help="Scope isolation")
+    use_parser.add_argument("--project", default="", help="Scope isolation")
+    use_parser.add_argument("--session", default="", help="Scope isolation")
+
+    feedback_parser = skills_subparsers.add_parser(
+        "feedback", help="Report whether reusing a skill succeeded or failed"
+    )
+    feedback_parser.add_argument("--name", required=True, help="Skill name")
+    feedback_outcome = feedback_parser.add_mutually_exclusive_group(required=True)
+    feedback_outcome.add_argument("--success", action="store_true", help="Reuse worked")
+    feedback_outcome.add_argument("--failure", action="store_true", help="Reuse failed")
+    feedback_parser.add_argument("--note", default="", help="Optional context")
+    feedback_parser.add_argument("--agent-id", default="", help="Scope isolation")
+
+    skills_subparsers.add_parser(
+        "status", help="1A-2Z counters: states, budget, events, registry health"
+    )
+
+    evolve_parser = skills_subparsers.add_parser(
+        "evolve", help="Consolidate duplicates, revise a skill, or recompute states"
+    )
+    evolve_parser.add_argument(
+        "--action",
+        required=True,
+        choices=["consolidate", "revise", "recompute"],
+        help="Maintenance action",
+    )
+    evolve_parser.add_argument("--name", default="", help="Skill to revise")
+    evolve_parser.add_argument(
+        "--changes", default="", help="JSON object of field updates (revise)"
+    )
 
     def _add_gap_args(p: argparse.ArgumentParser) -> None:
         p.add_argument("--task", default="", help="Current task driving the gap")
@@ -2249,6 +2450,130 @@ def main() -> None:
     else:
         parser.print_help()
         sys.exit(0)
+
+
+
+# --- school skills-menu non-interactive subcommand (auto-added) ---
+def _skills_menu_noninteractive(argv):
+    """skills-menu [--print] [--choice N|action] [--fields k=v ...] -- non-interactive menu."""
+    import json as _json
+    try:
+        from school import skills_menu as _sm
+    except Exception:
+        _sm = None
+    toks = list(argv[1:])
+    choice = None
+    fields = {}
+    show = False
+    i = 0
+    while i < len(toks):
+        t = toks[i]
+        if t == "--print":
+            show = True
+            i += 1
+        elif t == "--choice" and i + 1 < len(toks):
+            choice = toks[i + 1]
+            i += 2
+        elif t.startswith("--choice="):
+            choice = t.split("=", 1)[1]
+            i += 1
+        elif t == "--fields" and i + 1 < len(toks):
+            kv = toks[i + 1]
+            i += 2
+            if "=" in kv:
+                k, v = kv.split("=", 1)
+                fields[k] = v
+        elif t.startswith("--fields="):
+            kv = t.split("=", 1)[1]
+            i += 1
+            if "=" in kv:
+                k, v = kv.split("=", 1)
+                fields[k] = v
+        else:
+            i += 1
+    if choice is None:
+        show = True
+    if show:
+        text = None
+        for rn in ("render_menu", "menu_text", "format_menu", "print_menu"):
+            fn = getattr(_sm, rn, None)
+            if callable(fn):
+                try:
+                    text = fn()
+                    break
+                except Exception:
+                    text = None
+        if text:
+            print(text if isinstance(text, str) else str(text))
+        else:
+            items = getattr(_sm, "MENU_ITEMS", []) or []
+            out = []
+            for n, it in enumerate(items, 1):
+                act = lbl = ""
+                if isinstance(it, dict):
+                    act = it.get("action") or it.get("name") or it.get("id") or ""
+                    lbl = it.get("label") or it.get("title") or it.get("description") or act
+                elif isinstance(it, (list, tuple)) and it:
+                    act = str(it[0])
+                    lbl = str(it[1]) if len(it) > 1 else act
+                else:
+                    act = getattr(it, "action", None) or getattr(it, "name", None) or str(it)
+                    lbl = getattr(it, "label", None) or getattr(it, "description", None) or act
+                out.append(f"{n}. {lbl} ({act})")
+            if out:
+                print("School skills menu:")
+                print("\n".join(out))
+            else:
+                print("School skills menu: (no items)")
+        if choice is None:
+            return 0
+    payload = {"choice": choice, "fields": fields}
+    res = None
+    try:
+        from school import bridge as _bridge
+        fn = getattr(_bridge, "_handle_skills_menu", None)
+        if callable(fn):
+            res = fn(payload)
+    except Exception as e:
+        res = f"ERROR: bridge dispatch: {e}"
+    if res is None:
+        call = globals().get("_call_tool")
+        if callable(call):
+            for shape in (("school_skills_menu", payload), (payload,)):
+                try:
+                    res = call(*shape)
+                    break
+                except Exception:
+                    res = None
+    if res is None:
+        ba = getattr(_sm, "build_tool_args", None)
+        if callable(ba):
+            try:
+                res = ba(choice, fields)
+            except Exception as e:
+                res = f"ERROR: build_tool_args: {e}"
+    if res is None:
+        res = f"ERROR: no dispatcher for {choice!r}"
+    print(res if isinstance(res, str) else _json.dumps(res, ensure_ascii=False, default=str))
+    return 0
+
+
+def _skills_menu_entry():
+    import sys as _sys
+    a = _sys.argv[1:]
+    if not (a and a[0] == "skills-menu"):
+        return
+    try:
+        code = _skills_menu_noninteractive(["skills-menu"] + a[1:])
+    except SystemExit:
+        raise
+    except Exception as e:
+        print(f"skills-menu error: {e}", file=_sys.stderr)
+        code = 1
+    _sys.exit(code)
+
+
+_skills_menu_entry()
 
 
 if __name__ == "__main__":

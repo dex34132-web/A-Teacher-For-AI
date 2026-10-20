@@ -72,6 +72,10 @@ EXPECTED_TOOLS = [
     "school_weave",
     "school_compass",
     "school_brainstorm",
+    "school_quantify",
+    "school_elicit",
+    "school_investigate",
+    "school_skills_menu",
 ]
 
 

@@ -1,10 +1,10 @@
 """School MCP distribution — fail-open tool registry.
 
-Self-contained: exposes all 48 ``school_*`` tools. Each tool is dispatched
+Self-contained: exposes all 52 ``school_*`` tools. Each tool is dispatched
 FAIL-OPEN — ``call_tool`` *never* raises and always returns a valid dict.
 
 Tools route to the hardened ``school.bridge`` where a wire command exists
-(43 of 48); the 5 surface-native tools (read/grep/dashboard/route/route_stats)
+(47 of 52); the 5 surface-native tools (read/grep/dashboard/route/route_stats)
 are handled here directly, also fail-open.
 
 No ``mcp`` SDK dependency at import time — the registry + dispatch are pure
@@ -212,6 +212,15 @@ CATALOG: list[tuple] = [
         {"candidate": _str("Candidate JSON."),
          "approve": _bool("Must be true to import.")},
         ["candidate", "approve"]),
+    _mk("school_skills_menu", "skills",
+        "Open and drive the whole skill-engine menu \u2014 list, search, create, "
+        "use, feedback, status, evolve, github-search, discover, analyze, "
+        "compare, import. Call with no arguments to see the menu; pass choice "
+        "(1-12 or the action name) and fields to run one action. The menu "
+        "returns after every action.",
+        "skills_menu",
+        {"choice": _str("Menu choice: 1-12 or action name."),
+         "fields": _str("Field values (JSON object or JSON string).")}),
     # Agent Suite S7
     _mk("school_observe", "agent",
         "Record an agent-behaviour observation and extract a pattern. "
@@ -321,6 +330,33 @@ CATALOG: list[tuple] = [
          "domain": _str("Domain."),
          "count": _num("Target idea count.", True)},
         ["topic"]),
+    _mk("school_quantify", "forge",
+        "Deterministic precision checks with provenance: Decimal money totals, "
+        "percentages, pp vs relative change, risk formulas, date/schedule "
+        "validation, hard-constraint verdicts. A failed check returns no value.",
+        "quantify",
+        {"title": _str("Title."),
+         "currency": _str("Currency for money rows."),
+         "budget": _str("Budget JSON."),
+         "constraints": _str("Constraints JSON.")}),
+    _mk("school_elicit", "forge",
+        "Material unknowns, prioritized questions, and a budgeted adaptive "
+        "question controller (1-100 user-facing questions). Pass the session "
+        "dict back to keep state.",
+        "elicit",
+        {"data": _str("Goal/knowns JSON."),
+         "session": _str("Session JSON (resume)."),
+         "question_budget": _num("Max user-facing questions.", True),
+         "answers": _str("Answers JSON.")}),
+    _mk("school_investigate", "forge",
+        "Adaptive diagnostic case: findings, hypotheses, evidence, next "
+        "action; probe records evidence. Pass the case dict back to keep "
+        "state. Never claims exhaustive discovery.",
+        "investigate",
+        {"case": _str("Investigation case JSON."),
+         "action": _str("report | status | next | probe."),
+         "probe_cmd": _str("Probe command (action probe).")},
+        ["case"]),
     # Context Engine
     _mk("school_context_status", "context",
         "Report the context engine: blocks stored, restores, tokens saved, "
@@ -514,7 +550,7 @@ def _call_self(name: str, args: dict, worktree: str | None) -> dict:
 
 
 def call_tool(name: str, args: Any = None, worktree: str | None = None) -> dict:
-    """Dispatch any of the 48 tools. FAIL-OPEN: never raises, always a dict."""
+    """Dispatch any of the 52 tools. FAIL-OPEN: never raises, always a dict."""
     try:
         meta = TOOLS.get(_safe_str(name))
         if meta is None:

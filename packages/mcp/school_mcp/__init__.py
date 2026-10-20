@@ -1,6 +1,6 @@
-"""School MCP distribution package.
+﻿"""School MCP distribution package.
 
-A self-contained, fail-open MCP server exposing all 48 ``school_*`` tools.
+A self-contained, fail-open MCP server exposing all 52 ``school_*`` tools.
 Works with any MCP client (Claude Desktop, Claude/ChatGPT via MCP, Cursor,
 VS Code, Zed, Windsurf, ...) over stdio or streamable-HTTP.
 """

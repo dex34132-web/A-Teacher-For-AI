@@ -1076,6 +1076,291 @@ def _handle_prism(req: dict[str, Any]) -> dict[str, Any]:
         return {"ok": False, "error": _err_text(exc)}
 
 
+#: Keys the wire protocol adds around tool payloads — never part of a payload.
+_WIRE_KEYS = frozenset({"command", "worktree", "agent", "agent_id", "project"})
+
+
+def _decode_field(val: Any, kind: type, name: str) -> tuple[Any, str]:
+    """Accept native JSON shapes or JSON-encoded strings (packages surface).
+
+    Returns ``(value, error)``; a wrong-typed or unparseable field is a
+    visible error, never a silent drop.
+    """
+    import json as _json
+
+    if val is None or isinstance(val, kind):
+        return val, ""
+    if isinstance(val, str):
+        try:
+            parsed = _json.loads(val)
+        except Exception:  # noqa: BLE001 — unparseable text is an input error
+            return None, f"{name} must be a JSON {kind.__name__} (or a JSON string)"
+        if isinstance(parsed, kind):
+            return parsed, ""
+        return None, f"{name} must be a JSON {kind.__name__}, got {type(parsed).__name__}"
+    return None, f"{name} must be a JSON {kind.__name__}, got {type(val).__name__}"
+
+
+def _cli_report_call(
+    fn: Any,
+    payloads: dict[str, Any],
+    *,
+    paths: list[str] | None = None,
+    readback: str | None = None,
+    **fields: Any,
+) -> dict[str, Any]:
+    """Run a school.cli report handler in-process with file-shaped inputs.
+
+    The quantify/elicit/investigate report builders live in one place
+    (``school.cli``); this adapter feeds them the same file inputs the CLI
+    uses and captures stdout/stderr, so tool output is byte-identical to CLI
+    output — no duplicated report logic to drift. Inline JSON documents in
+    ``payloads`` are written to a throwaway temp dir and removed afterwards;
+    ``names``/``paths`` in ``paths`` get a temp path with no file created
+    (the handler creates and persists into it). ``readback`` names a payload
+    whose file is re-read after the call (the CLI persists session/case
+    state there) and returned under its key. FAIL-OPEN: never raises; input
+    errors become ``{"ok": False, ...}``.
+    """
+    import contextlib
+    import io
+    import json
+    import shutil
+    import tempfile
+    from pathlib import Path
+    from types import SimpleNamespace
+
+    tmp = tempfile.mkdtemp(prefix="school-cli-")
+    try:
+        for flag, doc in payloads.items():
+            p = Path(tmp) / f"{flag}.json"
+            p.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+            fields[flag] = str(p)
+        for flag in paths or []:
+            fields.setdefault(flag, str(Path(tmp) / f"{flag}.json"))
+        out, err = io.StringIO(), io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                report = fn(SimpleNamespace(**fields))
+        except SystemExit:
+            msg = err.getvalue().strip() or out.getvalue().strip() or "invalid input"
+            return {"ok": False, "error": msg}
+        except Exception as exc:  # noqa: BLE001 — fail-open
+            return {"ok": False, "error": _err_text(exc)}
+        text = report if isinstance(report, str) else out.getvalue()
+        result: dict[str, Any] = {"ok": True, "report": text, "markdown": text}
+        if readback:
+            p = Path(tmp) / f"{readback}.json"
+            if p.exists():
+                with contextlib.suppress(Exception):  # unreadable state is simply absent
+                    result[_READBACK_KEYS.get(readback, readback)] = json.loads(
+                        p.read_text(encoding="utf-8")
+                    )
+        return result
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+_READBACK_KEYS = {"file": "case", "session": "session"}
+
+
+def _handle_quantify(req: dict[str, Any]) -> dict[str, Any]:
+    """quantify — deterministic money/percent/risk/date checks with provenance."""
+    from school.cli import _cmd_quantify
+
+    payload = {k: v for k, v in req.items() if k not in _WIRE_KEYS}
+    # Fail-closed shape gate: a supplied-but-wrong-typed section must be a
+    # visible error, never a silent "not supplied".
+    for key, kind in (
+        ("budget", dict),
+        ("schedule", dict),
+        ("percentages", list),
+        ("changes", list),
+        ("risks", list),
+        ("scenarios", list),
+        ("availability", list),
+        ("constraints", list),
+    ):
+        decoded, err = _decode_field(payload.get(key), kind, key)
+        if err:
+            return {"ok": False, "error": err}
+        if decoded is not None:
+            payload[key] = decoded
+    return _cli_report_call(_cmd_quantify, {"file": payload}, file="", save="")
+
+
+def _handle_elicit(req: dict[str, Any]) -> dict[str, Any]:
+    """elicit — material unknowns, prioritized questions, budgeted adaptive asking."""
+    from school.cli import _cmd_elicit
+
+    def _bad(msg: str) -> dict[str, Any]:
+        return {"ok": False, "error": msg}
+
+    budget = req.get("question_budget")
+    for key, kind in (("session", dict), ("answers", list), ("data", dict), ("interview", dict)):
+        decoded, err = _decode_field(req.get(key), kind, key)
+        if err:
+            return _bad(err)
+        if decoded is not None:
+            req = {**req, key: decoded}
+    session = req.get("session")
+    answers = req.get("answers")
+    data = req.get("data")
+    interview = req.get("interview")
+    if budget is not None and (isinstance(budget, bool) or not isinstance(budget, (int, float))):
+        return _bad("question_budget must be an integer 1-100")
+
+    no_followups = not bool(req.get("allow_followups", True))
+    no_early_stop = not bool(req.get("stop_early", True))
+    controller = any(
+        [
+            budget is not None,
+            isinstance(session, dict),
+            isinstance(answers, list),
+            no_followups,
+            no_early_stop,
+        ]
+    )
+    if not controller and not isinstance(data, dict) and not isinstance(interview, dict):
+        return _bad("provide data, interview, session, answers, or a question budget")
+
+    payloads: dict[str, Any] = {}
+    paths: list[str] = []
+    fields: dict[str, Any] = {
+        "file": "",
+        "interview": "",
+        "asked": "",
+        "batch_size": int(req.get("batch_size") or 5),
+        "verification_defined": bool(req.get("verification_defined", False)),
+        "question_budget": None if budget is None else int(budget),
+        "no_followups": no_followups,
+        "no_early_stop": no_early_stop,
+        "save": "",
+    }
+    asked = req.get("asked")
+    if isinstance(asked, list):
+        fields["asked"] = ",".join(str(a) for a in asked)
+    if isinstance(data, dict):
+        payloads["file"] = data
+    if isinstance(interview, dict):
+        payloads["interview"] = interview
+    if isinstance(answers, list):
+        payloads["answers"] = answers
+    if controller:
+        # The session path always exists in controller mode so state
+        # round-trips in the response; it is pre-written only on resume.
+        paths.append("session")
+        if isinstance(session, dict):
+            payloads["session"] = session
+    return _cli_report_call(
+        _cmd_elicit,
+        payloads,
+        paths=paths,
+        readback="session" if controller else None,
+        **fields,
+    )
+
+
+def _mcp_native_call(fn_name: str, req: dict[str, Any], keys: frozenset[str]) -> dict[str, Any]:
+    """Route a bridge request to a server-native tool impl (read/grep).
+
+    The same code path as the MCP surface — no duplicated file logic. Returns
+    the tool's own ``{ok: ...}`` payload.
+    """
+    import json as _json
+
+    try:
+        from school.mcp import server as _mcp
+    except Exception as exc:  # noqa: BLE001 — native layer unavailable is an error
+        return {"ok": False, "error": _err_text(exc)}
+    args = {k: v for k, v in req.items() if k in keys}
+    worktree = str(req.get("worktree") or "") or "."
+    try:
+        res = getattr(_mcp, fn_name)(worktree, args)
+    except Exception as exc:  # noqa: BLE001 — fail-open at the wire
+        return {"ok": False, "error": _err_text(exc)}
+    sc = getattr(res, "structured_content", None)
+    if isinstance(sc, dict):
+        return sc
+    try:
+        payload = _json.loads(res.content[0].text)
+        return payload if isinstance(payload, dict) else {"ok": False, "error": "unreadable result"}
+    except Exception:  # noqa: BLE001
+        return {"ok": False, "error": "unreadable native tool result"}
+
+
+def _handle_read(req: dict[str, Any]) -> dict[str, Any]:
+    """read — Context-Optimizer file read (same impl as school_read)."""
+    return _mcp_native_call("_call_read", req, frozenset({"path", "offset", "limit"}))
+
+
+def _handle_grep(req: dict[str, Any]) -> dict[str, Any]:
+    """grep — bounded regex search (same impl as school_grep)."""
+    return _mcp_native_call(
+        "_call_grep", req, frozenset({"pattern", "path", "ignore_case", "limit"})
+    )
+
+
+def _handle_skills_menu(req: dict[str, Any]) -> dict[str, Any]:
+    """skills_menu — the interactive skill-engine menu, turn-based on the wire.
+
+    No ``choice`` returns the menu; ``choice`` (number or action name) plus
+    ``fields`` runs one action through the same orchestrator tools the CLI
+    menu uses, then the menu comes back.
+    """
+    from school.skills_menu import build_tool_args, render_menu, resolve_choice, tool_name
+
+    menu = render_menu()
+    raw_fields = req.get("fields")
+    fields: dict[str, Any] = {}
+    if raw_fields is not None:
+        decoded, err = _decode_field(raw_fields, dict, "fields")
+        if err:
+            return {"ok": False, "error": err, "menu": menu}
+        fields = decoded or {}
+    raw_choice = req.get("choice")
+    if raw_choice is None or not str(raw_choice).strip():
+        return {"ok": True, "menu": menu, "prompt": "skills> "}
+    action, bad = resolve_choice(raw_choice)
+    if bad:
+        return {"ok": False, "error": bad, "menu": menu}
+    if action is None:
+        return {"ok": True, "quit": True, "menu": menu}
+    payload = build_tool_args(action, fields)
+    for key in _WIRE_KEYS:
+        if key in req:
+            payload[key] = req[key]
+    try:
+        result = _dispatch_to_orchestrator(tool_name(action), payload)
+    except Exception as exc:  # noqa: BLE001 — fail-open at the wire
+        return {"ok": False, "error": _err_text(exc), "menu": menu}
+    return {"ok": True, "action": action, "menu": menu, "result": result}
+
+
+def _handle_investigate(req: dict[str, Any]) -> dict[str, Any]:
+    """investigate — adaptive diagnostic case: probe, prioritize, report."""
+    from school.cli import _cmd_investigate
+
+    case, err = _decode_field(req.get("case"), dict, "case")
+    if err or case is None:
+        return {
+            "ok": False,
+            "error": err or "case must be an object (the investigation case JSON)",
+        }
+    return _cli_report_call(
+        _cmd_investigate,
+        {"file": case},
+        readback="file",
+        file="",
+        action=str(req.get("action") or "report"),
+        probe_cmd=str(req.get("probe_cmd") or ""),
+        probe_kind=str(req.get("probe_kind") or "command"),
+        probe_ref=str(req.get("probe_ref") or ""),
+        timeout=float(req.get("timeout") or 60.0),
+        save="",
+    )
+
+
 _COMMANDS = {
     "status": _handle_status,
     "remember": _handle_remember,
@@ -1123,6 +1408,12 @@ _COMMANDS = {
     "weave": _handle_weave,
     "compass": _handle_compass,
     "prism": _handle_prism,
+    "quantify": _handle_quantify,
+    "elicit": _handle_elicit,
+    "investigate": _handle_investigate,
+    "read": _handle_read,
+    "grep": _handle_grep,
+    "skills_menu": _handle_skills_menu,
 }
 
 

@@ -1,4 +1,4 @@
-"""Per-CLI plugin adapters — emit the School plugin for any agent CLI.
+﻿"""Per-CLI plugin adapters â€” emit the School plugin for any agent CLI.
 
 FAIL-OPEN: every emitter returns a string/dict, never raises. The canonical
 OpenCode plugin source is pulled from ``school.plugin_source`` when available
@@ -25,7 +25,7 @@ def _safe_str(v: Any, default: str = "") -> str:
 
 
 def emit_opencode() -> str:
-    """The canonical OpenCode TypeScript plugin (46 tools). Fail-open."""
+    """The canonical OpenCode TypeScript plugin (52 tools). Fail-open."""
     try:
         from school.plugin_source import TS_PLUGIN_SOURCE
 
@@ -39,7 +39,7 @@ def emit_claude_code() -> str:
     try:
         body = {
             "name": "school",
-            "description": "School agent tools (48) via MCP/CLI bridge.",
+            "description": "School agent tools (52) via MCP/CLI bridge.",
             "mcpServers": {"school": {"command": "python", "args": ["-m", "school_mcp.server"]}},
             "tools": ["school_*"],
         }
@@ -84,7 +84,7 @@ def emit_generic() -> str:
             "Call School tools through either interface:\n"
             "- MCP: `python -m school_mcp.server` (stdio or HTTP)\n"
             "- CLI: `school-bridge '<json>'` or `python -m school.cli <cmd>`\n"
-            "All 48 tools are fail-open and never crash the host agent.\n"
+            "All 52 tools are fail-open and never crash the host agent.\n"
         )
     except Exception:  # noqa: BLE001
         return ""

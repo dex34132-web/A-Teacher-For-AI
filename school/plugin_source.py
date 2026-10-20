@@ -3812,6 +3812,286 @@ const School: Plugin = async (ctx) => {
           }
         },
       }),
+
+      school_quantify: tool({
+        description:
+          "Use school_quantify to run deterministic precision checks on a plan's numbers " +
+          "for ANY kind of work — software, writing, research, business, planning, " +
+          "creative, life. Decimal money totals, percentages with provenance, " +
+          "percentage-point vs relative change, risk formulas, date and schedule " +
+          "validation, hard-constraint verdicts; a failed check returns no value. " +
+          "For the workflow, load the `precision` skill.",
+        args: {
+          title: tool.schema.string().optional().describe("Title for the report."),
+          currency: tool.schema
+            .string()
+            .optional()
+            .describe("Currency for all money rows (required for money checks)."),
+          budget: tool.schema.any().optional().describe("Budget document."),
+          percentages: tool.schema.any().optional().describe("Percentage claims."),
+          changes: tool.schema.any().optional().describe("Before/after change pairs."),
+          risks: tool.schema.any().optional().describe("Risk rows or ordinal labels."),
+          scenarios: tool.schema.any().optional().describe("Scenario (p, x) pairs."),
+          schedule: tool.schema.any().optional().describe("start/deadline/duration/reference."),
+          availability: tool.schema.any().optional().describe("Availability windows."),
+          constraints: tool.schema.any().optional().describe("Constraint records."),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "School Quantify", output: withVis("School: unavailable.", null) }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "quantify",
+            worktree: context.worktree,
+            title: args.title,
+            currency: args.currency,
+            budget: args.budget,
+            percentages: args.percentages,
+            changes: args.changes,
+            risks: args.risks,
+            scenarios: args.scenarios,
+            schedule: args.schedule,
+            availability: args.availability,
+            constraints: args.constraints,
+          })
+          if (!resp.ok) {
+            const msg =
+              typeof resp.error === "string" ? resp.error : JSON.stringify(resp.error ?? resp)
+            return { title: "School Quantify", output: withVis(`Error: ${msg}`, resp) }
+          }
+          return {
+            title: "School Quantify",
+            output: withVis(resp.markdown || JSON.stringify(resp, null, 2), resp),
+            metadata: resp,
+          }
+        },
+      }),
+
+      school_elicit: tool({
+        description:
+          "Use school_elicit to find the material questions a plan is missing for ANY " +
+          "kind of work — software, writing, research, business, planning, creative, " +
+          "life. Prioritized unknowns, adaptive question batches under a budget of " +
+          "1-100 user-facing questions, honest completion status. Pass the session " +
+          "dict back to keep state. For the workflow, load the `precision` skill.",
+        args: {
+          data: tool.schema.any().optional().describe("Goal/knowns document."),
+          interview: tool.schema.any().optional().describe("A clarion interview dict."),
+          session: tool.schema.any().optional().describe("Session dict (resume)."),
+          answers: tool.schema.any().optional().describe("Answer rows."),
+          asked: tool.schema.any().optional().describe("Question keys already asked."),
+          question_budget: tool.schema
+            .number()
+            .optional()
+            .describe("Max user-facing questions (1-100)."),
+          batch_size: tool.schema.number().optional().describe("Questions per batch."),
+          verification_defined: tool.schema
+            .boolean()
+            .optional()
+            .describe("Acceptance verification is defined."),
+          allow_followups: tool.schema.boolean().optional().describe("Follow-ups allowed."),
+          stop_early: tool.schema.boolean().optional().describe("Stop early when covered."),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "School Elicit", output: withVis("School: unavailable.", null) }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "elicit",
+            worktree: context.worktree,
+            data: args.data,
+            interview: args.interview,
+            session: args.session,
+            answers: args.answers,
+            asked: args.asked,
+            question_budget: args.question_budget,
+            batch_size: args.batch_size,
+            verification_defined: args.verification_defined,
+            allow_followups: args.allow_followups,
+            stop_early: args.stop_early,
+          })
+          if (!resp.ok) {
+            const msg =
+              typeof resp.error === "string" ? resp.error : JSON.stringify(resp.error ?? resp)
+            return { title: "School Elicit", output: withVis(`Error: ${msg}`, resp) }
+          }
+          return {
+            title: "School Elicit",
+            output: withVis(resp.markdown || JSON.stringify(resp, null, 2), resp),
+            metadata: resp,
+          }
+        },
+      }),
+
+      school_investigate: tool({
+        description:
+          "Use school_investigate to run an adaptive diagnostic case for ANY kind of " +
+          "work — software, writing, research, business, planning, creative, life. " +
+          "Actions: report | status | next | probe. Findings, hypotheses, evidence, " +
+          "next action. Pass the case dict back to keep state. For the workflow, load " +
+          "the `investigate` skill.",
+        args: {
+          case: tool.schema.any().describe("Investigation case JSON."),
+          action: tool.schema.string().optional().describe("report | status | next | probe."),
+          probe_cmd: tool.schema.string().optional().describe("Probe command (action probe)."),
+          probe_kind: tool.schema.string().optional().describe("Evidence kind (default command)."),
+          probe_ref: tool.schema.string().optional().describe("Evidence reference."),
+          timeout: tool.schema.number().optional().describe("Probe timeout seconds."),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "School Investigate", output: withVis("School: unavailable.", null) }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "investigate",
+            worktree: context.worktree,
+            case: args.case,
+            action: args.action,
+            probe_cmd: args.probe_cmd,
+            probe_kind: args.probe_kind,
+            probe_ref: args.probe_ref,
+            timeout: args.timeout,
+          })
+          if (!resp.ok) {
+            const msg =
+              typeof resp.error === "string" ? resp.error : JSON.stringify(resp.error ?? resp)
+            return { title: "School Investigate", output: withVis(`Error: ${msg}`, resp) }
+          }
+          return {
+            title: "School Investigate",
+            output: withVis(resp.markdown || JSON.stringify(resp, null, 2), resp),
+            metadata: resp,
+          }
+        },
+      }),
+      school_read: tool({
+        description:
+          "Read a text file with the Context Optimizer: small files come back raw, " +
+          "oversized results are skeletonized (structure and key lines kept; " +
+          "bodies elided) with a single [school ctx: in->out tokens] footer. " +
+          "Use for file contents; pass offset/limit to re-read a region raw after an elision.",
+        args: {
+          path: tool.schema
+            .string()
+            .describe("File to read (absolute, or relative to the worktree)."),
+          offset: tool.schema
+            .number()
+            .optional()
+            .describe("1-based first line to return (defaults to 1)."),
+          limit: tool.schema
+            .number()
+            .optional()
+            .describe("Maximum number of lines to return from offset."),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "School Read", output: withVis("School: unavailable.", null) }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "read",
+            worktree: context.worktree,
+            path: args.path,
+            offset: args.offset,
+            limit: args.limit,
+          })
+          if (!resp.ok) {
+            const msg =
+              typeof resp.error === "string" ? resp.error : JSON.stringify(resp.error ?? resp)
+            return { title: "School Read", output: withVis(`Error: ${msg}`, resp) }
+          }
+          return {
+            title: "School Read",
+            output: withVis(resp.content || JSON.stringify(resp, null, 2), resp),
+            metadata: resp,
+          }
+        },
+      }),
+      school_grep: tool({
+        description:
+          "Search files under a path for a regular expression and return " +
+          "path:line:content matches (Context Optimizer footer when oversized). " +
+          "Use to locate text across any project or workspace without reading " +
+          "whole files.",
+        args: {
+          pattern: tool.schema.string().describe("Regular expression to search for."),
+          path: tool.schema
+            .string()
+            .optional()
+            .describe("File or directory to search (defaults to the worktree)."),
+          ignore_case: tool.schema.boolean().optional().describe("Case-insensitive search."),
+          limit: tool.schema
+            .number()
+            .optional()
+            .describe("Maximum matches to return (default 200)."),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "School Grep", output: withVis("School: unavailable.", null) }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "grep",
+            worktree: context.worktree,
+            pattern: args.pattern,
+            path: args.path,
+            ignore_case: args.ignore_case,
+            limit: args.limit,
+          })
+          if (!resp.ok) {
+            const msg =
+              typeof resp.error === "string" ? resp.error : JSON.stringify(resp.error ?? resp)
+            return { title: "School Grep", output: withVis(`Error: ${msg}`, resp) }
+          }
+          return {
+            title: "School Grep",
+            output: withVis(resp.content || JSON.stringify(resp, null, 2), resp),
+            metadata: resp,
+          }
+        },
+      }),
+      school_skills_menu: tool({
+        description:
+          "Use school_skills_menu to open and drive the whole skill-engine menu — " +
+          "list, search, create, use, feedback, status, evolve, github-search, " +
+          "discover, analyze, compare, import — for ANY kind of work, software, " +
+          "writing, research, business, planning, creative, life. Call with no " +
+          "arguments to see the menu; pass choice (1-12 or the action name) and " +
+          "fields to run one action. The menu returns after every action. For how " +
+          "to choose a skill, load the `teacher` skill.",
+        args: {
+          choice: tool.schema
+            .string()
+            .optional()
+            .describe("Menu choice: 1-12 or the action name (omit to see the menu)."),
+          fields: tool.schema
+            .any()
+            .optional()
+            .describe("Field values for the chosen action (strings, lists, flags)."),
+        },
+        async execute(args, context) {
+          if (!bridge) {
+            return { title: "School Skills Menu", output: withVis("School: unavailable.", null) }
+          }
+          const resp = await invokeBridge(python, bridgePath, {
+            command: "skills_menu",
+            worktree: context.worktree,
+            choice: args.choice,
+            fields: args.fields,
+          })
+          if (!resp.ok) {
+            const msg =
+              typeof resp.error === "string" ? resp.error : JSON.stringify(resp.error ?? resp)
+            return {
+              title: "School Skills Menu",
+              output: withVis(`Error: ${msg}\n\n${resp.menu ?? ""}`, resp),
+            }
+          }
+          return {
+            title: "School Skills Menu",
+            output: withVis(resp.content || resp.menu || JSON.stringify(resp, null, 2), resp),
+            metadata: resp,
+          }
+        },
+      }),
     },
 
     "tool.execute.before": async (input, output) => {
@@ -3991,7 +4271,262 @@ const School: Plugin = async (ctx) => {
   }
 }
 
-export default School
+// ---- V2 export adapter ------------------------------------------------------
+// The plugin loader requires the default export to be `{ id, setup }` (or
+// `{ id, effect }`) — a v1 function export is rejected. Everything above is
+// written against the v1 handler shape (tool() specs + hook handlers), so this
+// adapter re-registers those handlers through the v2 domains. Tool bodies are
+// untouched.
+//
+// v2 facts verified by runtime probe (OpenCode 1.18.35):
+//   ctx.tool.transform(editor => editor.add({name, description, input, execute}))
+//   editor: {list, get, namespace, add, update, remove}
+//   ctx.tool.hook("execute.before" | "execute.after", cb) -> {dispose}
+//   ctx.session.hook("prompt", cb)
+//   execute result: {content, title?, metadata?} (content is what the model sees)
+
+/** zod (v3 `_def.typeName` / v4 `_zod.def.type`) kind + definition. */
+function zodKind(schema: unknown): { kind: string; def: any } {
+  const s = schema as any
+  const d4 = s?._zod?.def
+  if (d4 && typeof d4.type === "string") return { kind: String(d4.type), def: d4 }
+  const d3 = s?._def
+  if (d3 && typeof d3.typeName === "string") {
+    return { kind: String(d3.typeName).replace(/^Zod/, "").toLowerCase(), def: d3 }
+  }
+  return { kind: "", def: d4 ?? d3 ?? {} }
+}
+
+/** One zod schema -> JSON schema. `opt.optional` reports optional/default. */
+function zodToJson(schema: unknown, opt: { optional: boolean }): Record<string, unknown> {
+  const { kind, def } = zodKind(schema)
+  const rawDesc = (schema as any)?.description
+  const desc = typeof rawDesc === "string" && rawDesc ? rawDesc : undefined
+  const withDesc = (js: Record<string, unknown>): Record<string, unknown> =>
+    desc ? { ...js, description: desc } : js
+  switch (kind) {
+    case "optional":
+    case "default":
+      opt.optional = true
+      return zodToJson(def.innerType, opt)
+    case "nullable": {
+      const inner = zodToJson(def.innerType, { optional: false })
+      return withDesc({ anyOf: [inner, { type: "null" }] })
+    }
+    case "string":
+      return withDesc({ type: "string" })
+    case "number":
+      return withDesc({ type: "number" })
+    case "boolean":
+      return withDesc({ type: "boolean" })
+    case "array": {
+      const el = zodToJson(def.element ?? def.innerType ?? def.type, { optional: false })
+      return withDesc({ type: "array", items: el })
+    }
+    case "object": {
+      const shape = typeof def.shape === "function" ? def.shape() : def.shape
+      return withDesc(zodShapeToJson(shape))
+    }
+    case "enum": {
+      const values = Array.isArray(def.values)
+        ? def.values
+        : Array.isArray(def.options)
+          ? def.options
+          : def.entries && typeof def.entries === "object"
+            ? Object.values(def.entries)
+            : []
+      return withDesc({ type: "string", enum: values })
+    }
+    case "literal":
+      return withDesc({ const: def.value })
+    case "union":
+      return withDesc({
+        anyOf: (def.options ?? []).map((o: unknown) => zodToJson(o, { optional: false })),
+      })
+    case "record":
+      return withDesc({
+        type: "object",
+        additionalProperties: zodToJson(def.valueType ?? def.value ?? def.innerType, {
+          optional: false,
+        }),
+      })
+    case "effects":
+      return zodToJson(def.schema, opt)
+    case "any":
+    case "unknown":
+      return withDesc({})
+    default:
+      return withDesc({})
+  }
+}
+
+/** A tool() args record -> JSON-schema object input. */
+function zodShapeToJson(shape: Record<string, unknown>): Record<string, unknown> {
+  const properties: Record<string, unknown> = {}
+  const required: string[] = []
+  for (const [key, value] of Object.entries(shape ?? {})) {
+    const opt = { optional: false }
+    properties[key] = zodToJson(value, opt)
+    if (!opt.optional) required.push(key)
+  }
+  return {
+    type: "object",
+    properties,
+    ...(required.length ? { required } : {}),
+    additionalProperties: true,
+  }
+}
+
+/** v1 ToolResult (`string | {title, output, metadata}`) -> v2 result. */
+function toV2Result(raw: unknown): Record<string, unknown> {
+  if (raw == null) return { content: "" }
+  if (typeof raw === "string") return { content: raw }
+  const r = raw as any
+  const out: Record<string, unknown> = { content: String(r.output ?? r.content ?? "") }
+  if (r.title != null) out.title = String(r.title)
+  if (r.metadata && typeof r.metadata === "object") out.metadata = r.metadata
+  return out
+}
+
+async function schoolV2Setup(v2ctx: any): Promise<void> {
+  const directory = String(v2ctx?.location?.directory ?? v2ctx?.directory ?? process.cwd())
+  const worktree = String(v2ctx?.worktree ?? directory)
+  // v1 PluginContext shim: this plugin only reads worktree/client/directory.
+  const v1ctx: any = {
+    ...v2ctx,
+    worktree,
+    directory,
+    client: v2ctx?.client ?? v2ctx?.rpc ?? v2ctx,
+  }
+  let handlers: any
+  try {
+    handlers = await School(v1ctx)
+  } catch {
+    return
+  }
+  const specs: Record<string, any> = handlers?.tool ?? {}
+
+  // 1. Tools — 26 v1 specs re-registered as v2 tools.
+  try {
+    await v2ctx.tool.transform((editor: any) => {
+      for (const [name, spec] of Object.entries(specs)) {
+        try {
+          editor.add({
+            name,
+            description: spec?.description ?? "",
+            input: zodShapeToJson(spec?.args ?? {}),
+            execute: async (args: any, execCtx: any) => {
+              const liveMeta: Record<string, unknown> = {}
+              const callCtx: any = {
+                worktree: execCtx?.worktree ?? execCtx?.directory ?? worktree,
+                directory: execCtx?.directory ?? directory,
+                sessionID: execCtx?.sessionID ?? "",
+                messageID: execCtx?.messageID ?? "",
+                agent: execCtx?.agent ?? "",
+                abort: execCtx?.abort ?? execCtx?.signal,
+                metadata: () => liveMeta,
+                ask: async (question: unknown) => {
+                  if (typeof execCtx?.ask === "function") return execCtx.ask(question)
+                  throw new Error("ask is not available in this context")
+                },
+                client: execCtx?.client ?? v1ctx.client,
+              }
+              const raw = await spec.execute(args ?? {}, callCtx)
+              const res: any = toV2Result(raw)
+              if (Object.keys(liveMeta).length) {
+                res.metadata = { ...(res.metadata ?? {}), ...liveMeta }
+              }
+              return res
+            },
+          })
+        } catch {
+          // One bad spec must not block the remaining tools.
+        }
+      }
+    })
+  } catch {
+    // tool domain unavailable — hooks below still register.
+  }
+
+  // 2. execute.before/after facades: recall capture, ctx-trim, `· school: N`.
+  try {
+    await v2ctx.tool.hook("execute.before", async (event: any) => {
+      try {
+        await handlers["tool.execute.before"]?.(
+          {
+            tool: event?.tool ?? event?.name,
+            callID: event?.callID ?? event?.id,
+            sessionID: event?.sessionID,
+          },
+          { args: event?.input ?? event?.args ?? event?.params ?? {} },
+        )
+      } catch {
+        // Recall capture is best-effort.
+      }
+    })
+  } catch {
+    /* hook API unavailable */
+  }
+  try {
+    await v2ctx.tool.hook("execute.after", async (event: any) => {
+      try {
+        const result = event?.result
+        const facadeOut: any = {
+          title: result?.title,
+          output: String(result?.content ?? result?.output ?? ""),
+          metadata: result?.metadata,
+          args: event?.input ?? event?.args ?? event?.params ?? {},
+        }
+        await handlers["tool.execute.after"]?.(
+          {
+            tool: event?.tool ?? event?.name,
+            callID: event?.callID ?? event?.id,
+            sessionID: event?.sessionID,
+          },
+          facadeOut,
+        )
+        if (result && typeof result === "object") {
+          result.content = facadeOut.output
+          if (facadeOut.title != null) result.title = facadeOut.title
+          if (facadeOut.metadata != null) result.metadata = facadeOut.metadata
+        }
+      } catch {
+        // Output shaping is best-effort.
+      }
+    })
+  } catch {
+    /* hook API unavailable */
+  }
+
+  // 3. prompt hook: v1 chat.message recall stash + messages.transform injection.
+  try {
+    await v2ctx.session.hook("prompt", async (event: any) => {
+      try {
+        const sessionID = String(event?.sessionID ?? event?.info?.sessionID ?? "")
+        const text = String(event?.prompt?.text ?? event?.text ?? "")
+        if (!sessionID || !text.trim()) return
+        await handlers["chat.message"]?.({ sessionID }, { parts: [{ type: "text", text }] })
+        const rec = promptRecalls.get(sessionID)
+        if (!rec) return
+        promptRecalls.delete(sessionID)
+        const block = `[school context]\n${rec.lines.join("\n")}\n[/school]`
+        if (event?.prompt && typeof event.prompt.text === "string") {
+          event.prompt.text += `\n\n${block}`
+        } else if (typeof event?.text === "string") {
+          event.text += `\n\n${block}`
+        }
+      } catch {
+        // Context injection is best-effort.
+      }
+    })
+  } catch {
+    /* session domain unavailable */
+  }
+  // `experimental.text.complete` (status footer) has no v2 equivalent here;
+  // school-ux.ts carries the visibility layer.
+}
+
+export default { id: "school", setup: schoolV2Setup }
 '''
 
 TS_PLUGIN_TEMPLATE = _TS_PLUGIN_TEMPLATE
