@@ -43,7 +43,7 @@ class TestCumulativeStats:
     def test_atomic_write(self, tmp_path: Path) -> None:
         cs = CumulativeStats(worktree=str(tmp_path), compressions=3)
         cs.refresh()
-        path = tmp_path / ".school" / "context" / "cumulative.json"
+        path = tmp_path / ".toolio" / "context" / "cumulative.json"
         assert path.exists()
         data = json.loads(path.read_text(encoding="utf-8"))
         assert data["compressions"] >= 0

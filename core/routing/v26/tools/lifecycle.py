@@ -1,4 +1,4 @@
-"""Lifecycle management tool for School V2.6."""
+"""Lifecycle management tool for Toolio V2.6."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class LifecycleTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_lifecycle"
+        return "toolio_lifecycle"
 
     @property
     def description(self) -> str:
@@ -157,13 +157,30 @@ class LifecycleTool(Tool):
                 errors=[f"Memory not found: {memory_id}"],
                 metadata={"tool": self.name},
             )
+        data = {
+            "memory_id": memory_id,
+            "action": "promote",
+            "content": entry.content,
+        }
+        # LLM-in-the-loop advisory (non-breaking: annotates only).
+        try:
+            from core.llm import llm_complete
+
+            reply = llm_complete(
+                "Memory: {!r}\nShould this memory be promoted to a higher "
+                "confidence tier? Reply YES or NO only.".format(entry.content[:200]),
+                system="You are a memory-lifecycle judge. Reply YES or NO only.",
+                temperature=0.0,
+                max_tokens=4,
+            )
+            if reply is not None:
+                low = reply.strip().lower()
+                data["llm_advice"] = "promote" if low.startswith("y") else "hold"
+        except Exception:  # noqa: BLE001
+            pass
         return ToolResult(
             success=True,
-            data={
-                "memory_id": memory_id,
-                "action": "promote",
-                "content": entry.content,
-            },
+            data=data,
             errors=[],
             metadata={"tool": self.name},
         )
@@ -177,14 +194,34 @@ class LifecycleTool(Tool):
                 errors=[f"Memory not found: {memory_id}"],
                 metadata={"tool": self.name},
             )
+        # LLM-in-the-loop advisory (non-breaking: annotates only, never blocks).
+        llm_advice = None
+        try:
+            from core.llm import llm_complete
+
+            reply = llm_complete(
+                "Memory: {!r}\nShould this memory be archived (removed from "
+                "active recall)? Reply YES or NO only.".format(entry.content[:200]),
+                system="You are a memory-lifecycle judge. Reply YES or NO only.",
+                temperature=0.0,
+                max_tokens=4,
+            )
+            if reply is not None:
+                low = reply.strip().lower()
+                llm_advice = "archive" if low.startswith("y") else "keep"
+        except Exception:  # noqa: BLE001
+            pass
         removed = self._manager.remove_memory(memory_id)
+        data = {
+            "memory_id": memory_id,
+            "action": "archive",
+            "removed": removed,
+        }
+        if llm_advice is not None:
+            data["llm_advice"] = llm_advice
         return ToolResult(
             success=removed,
-            data={
-                "memory_id": memory_id,
-                "action": "archive",
-                "removed": removed,
-            },
+            data=data,
             errors=[] if removed else [f"Failed to archive memory: {memory_id}"],
             metadata={"tool": self.name},
         )

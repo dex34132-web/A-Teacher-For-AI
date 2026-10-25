@@ -1,4 +1,4 @@
-"""Tests for School bridge discovery."""
+"""Tests for Toolio bridge discovery."""
 
 from __future__ import annotations
 
@@ -6,15 +6,15 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
-from school.discovery import BridgeDiscovery, discover_bridge
+from toolio.discovery import BridgeDiscovery, discover_bridge
 
 
 class TestBridgeDiscovery:
     """Test the 4-tier bridge discovery cascade."""
 
-    def test_tier1_school_home(self, tmp_path: Path) -> None:
+    def test_tier1_toolio_home(self, tmp_path: Path) -> None:
         """Tier 1: SCHOOL_HOME env var."""
-        bridge_dir = tmp_path / "school"
+        bridge_dir = tmp_path / "toolio"
         bridge_dir.mkdir()
         bridge_file = bridge_dir / "bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
@@ -29,8 +29,8 @@ class TestBridgeDiscovery:
     def test_tier1_legacy_home_envs_not_honoured(self, tmp_path: Path) -> None:
         """LEREV_HOME / EVO_HOME are no longer honoured (no compat fallbacks)."""
         home = tmp_path / "legacy_home"
-        (home / "school").mkdir(parents=True)
-        (home / "school" / "bridge.py").write_text("", encoding="utf-8")
+        (home / "toolio").mkdir(parents=True)
+        (home / "toolio" / "bridge.py").write_text("", encoding="utf-8")
 
         with patch.dict(os.environ, {"LEREV_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
             result = discover_bridge(str(tmp_path))
@@ -41,7 +41,7 @@ class TestBridgeDiscovery:
         """Tier 4: Development fallback."""
         scripts_dir = tmp_path / "scripts"
         scripts_dir.mkdir()
-        bridge_file = scripts_dir / "school_bridge.py"
+        bridge_file = scripts_dir / "toolio_bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
         with patch.dict(os.environ, {}, clear=True):
@@ -55,7 +55,7 @@ class TestBridgeDiscovery:
         """Returns None when no bridge is found."""
         with patch.dict(os.environ, {}, clear=True):
             discover_bridge(str(tmp_path))
-        # May still find dev fallback if scripts/school_bridge.py exists in worktree
+        # May still find dev fallback if scripts/toolio_bridge.py exists in worktree
         # This test verifies the cascade works, not that it always fails
 
     def test_bridge_discovery_dataclass(self) -> None:

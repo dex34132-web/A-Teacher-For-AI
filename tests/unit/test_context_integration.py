@@ -35,11 +35,11 @@ def test_full_ladder_end_to_end(tmp_path, monkeypatch) -> None:
     view = engine.view(msgs)
     assert view.mutated is False
     assert len(view.messages) <= len(msgs)
-    markers = [m for m in view.messages if m.get("school_block")]
+    markers = [m for m in view.messages if m.get("toolio_block")]
     assert markers
 
     chip = chip_fn(blocks_added=report.blocks_added)
-    assert chip.startswith("[school] compacted")
+    assert chip.startswith("[toolio] compacted")
 
 
 def test_fail_open_matrix(tmp_path, monkeypatch) -> None:

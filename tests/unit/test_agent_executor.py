@@ -1,4 +1,4 @@
-"""S7 tests: school_execute."""
+"""S7 tests: toolio_execute."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from core.agent.executor import ExecuteResult, execute
 @pytest.fixture
 def worktree() -> Iterator[str]:
     """Isolated worktree via tempfile.mkdtemp (not tmp_path: OneDrive-safe)."""
-    wt = tempfile.mkdtemp(prefix="school_exec_")
+    wt = tempfile.mkdtemp(prefix="toolio_exec_")
     try:
         yield wt
     finally:
@@ -25,7 +25,7 @@ def worktree() -> Iterator[str]:
 
 
 def _obs_file(wt: str) -> Path:
-    return Path(wt) / ".school" / "agent" / "observations.jsonl"
+    return Path(wt) / ".toolio" / "agent" / "observations.jsonl"
 
 
 class TestExecute:

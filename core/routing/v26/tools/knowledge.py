@@ -1,4 +1,4 @@
-"""Knowledge extraction tool for School V2.6."""
+"""Knowledge extraction tool for Toolio V2.6."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ class KnowledgeExtractionTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_knowledge"
+        return "toolio_knowledge"
 
     @property
     def description(self) -> str:

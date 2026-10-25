@@ -98,7 +98,7 @@ Re-verify: <what must be re-checked after this change>
 Where it lives: ship each command log in `reports/forge-<deliverable>.md`
 (create `reports/` on first write; follow an existing repo report location if
 one exists). A lesson that should outlive the report — one that changes how
-future work is done — goes to memory via `school_remember`. Reports are
+future work is done — goes to memory via `toolio_remember`. Reports are
 working artifacts; memories are durable lessons.
 
 ## Adaptation table
@@ -151,9 +151,9 @@ read past paragraph two."
 - Never let "tests" mean "code" in your head. If it can be checked, it can
   be forged.
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-`clarion` (interview) → `school_clarion` · `blueprint` (spec) → `school_blueprint` · `edict` (commands) → `school_edict`
-`weave` (formation) → `school_weave` · `compass` (acceptance) → `school_compass` · `brainstorm` (ideas) → `school_brainstorm`
-CLI: `school <artifact>` — e.g. `school edict`, `school brainstorm` (legacy alias: `school prism`).
+`clarion` (interview) → `toolio_clarion` · `blueprint` (spec) → `toolio_blueprint` · `edict` (commands) → `toolio_edict`
+`weave` (formation) → `toolio_weave` · `compass` (acceptance) → `toolio_compass` · `brainstorm` (ideas) → `toolio_brainstorm`
+CLI: `toolio <artifact>` — e.g. `toolio edict`, `toolio brainstorm` (legacy alias: `toolio prism`).
 Bridge wire names: `clarion`, `blueprint`, `edict`, `weave`, `compass`, `prism` (`prism` = brainstorm, legacy wire name kept for compatibility).

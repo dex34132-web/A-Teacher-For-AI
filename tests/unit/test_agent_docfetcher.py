@@ -1,4 +1,4 @@
-"""S7 tests: school_fetch_docs."""
+"""S7 tests: toolio_fetch_docs."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from core.agent.docfetcher import fetch_docs
 @pytest.fixture
 def worktree() -> Iterator[str]:
     """Isolated worktree via tempfile.mkdtemp (not tmp_path: OneDrive-safe)."""
-    wt = tempfile.mkdtemp(prefix="school_docs_")
+    wt = tempfile.mkdtemp(prefix="toolio_docs_")
     try:
         yield wt
     finally:
@@ -38,7 +38,7 @@ def _patch_boom(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _cache(wt: str) -> dict[str, object]:
-    path = Path(wt) / ".school" / "agent" / "docs_cache.json"
+    path = Path(wt) / ".toolio" / "agent" / "docs_cache.json"
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -136,7 +136,7 @@ class TestFetchDocs:
     ) -> None:
         _patch_fetch(monkeypatch, "content")
         r = fetch_docs(worktree, "observed query")
-        obs = Path(worktree) / ".school" / "agent" / "observations.jsonl"
+        obs = Path(worktree) / ".toolio" / "agent" / "observations.jsonl"
         lines = obs.read_text(encoding="utf-8").splitlines()
         assert any("docs fetched: observed query" in ln for ln in lines)
         assert any('"research"' in ln for ln in lines)
@@ -147,7 +147,7 @@ class TestFetchDocs:
     ) -> None:
         _patch_boom(monkeypatch)
         fetch_docs(worktree, "doomed query")
-        obs = Path(worktree) / ".school" / "agent" / "observations.jsonl"
+        obs = Path(worktree) / ".toolio" / "agent" / "observations.jsonl"
         lines = obs.read_text(encoding="utf-8").splitlines()
         assert any("docs fetched: doomed query" in ln for ln in lines)
 

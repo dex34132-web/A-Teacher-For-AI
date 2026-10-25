@@ -27,7 +27,7 @@ class MockTool(Tool):
 class TestBackgroundWorker:
     def test_on_memory_stored_below_threshold(self):
         registry = ToolRegistry()
-        registry.register(MockTool("school_knowledge"))
+        registry.register(MockTool("toolio_knowledge"))
         orch = Orchestrator(registry)
         worker = BackgroundWorker(orch, {"consolidation_threshold": 5})
         for _ in range(4):
@@ -36,7 +36,7 @@ class TestBackgroundWorker:
 
     def test_on_memory_stored_triggers_at_threshold(self):
         registry = ToolRegistry()
-        registry.register(MockTool("school_knowledge"))
+        registry.register(MockTool("toolio_knowledge"))
         orch = Orchestrator(registry)
         worker = BackgroundWorker(orch, {"consolidation_threshold": 3})
         for _ in range(3):
@@ -46,9 +46,9 @@ class TestBackgroundWorker:
 
     def test_run_cycle_processes_tasks(self):
         registry = ToolRegistry()
-        registry.register(MockTool("school_knowledge"))
+        registry.register(MockTool("toolio_knowledge"))
         orch = Orchestrator(registry)
-        orch.trigger_background("school_knowledge")
+        orch.trigger_background("toolio_knowledge")
         worker = BackgroundWorker(orch)
         results = worker.run_cycle()
         assert len(results) == 1

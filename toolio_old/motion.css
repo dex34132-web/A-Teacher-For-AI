@@ -1,0 +1,580 @@
+
+
+/* --- HERO TITLE: PER-CHARACTER REVEAL (keeps the <em> intact) --------------
+   The scramble effect rewrites text nodes, which would destroy the markup
+   inside the title. This walks the tree instead: element nodes are kept and
+   only text nodes are split into per-character spans.                        */
+.hero__title .ch {
+  display: inline-block;
+  font-style: inherit;
+  opacity: 0;
+  transform: translateY(0.42em) rotate(2.5deg);
+  filter: blur(7px);
+}
+/* the per-character spans are inline blocks: as inline-level content they
+   double the line box (strut + inline box), which would blow the title
+   apart. Flex items stack on one baseline instead. */
+.hero__title .line__in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+.hero__title.go .ch {
+  animation: chIn 1.05s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+@keyframes chIn {
+  from { opacity: 0; transform: translateY(0.42em) rotate(2.5deg); filter: blur(7px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero__title .ch { opacity: 1; transform: none; filter: none; animation: none; }
+}
+
+/* --- 2. BOOT: CORE EXTRACTION ------------------------------------------- */
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  transition: opacity 0.5s ease 0.05s, visibility 0s linear 0.55s;
+}
+.boot.is-done { opacity: 0; visibility: hidden; }
+.boot__box { width: min(420px, 76vw); }
+.boot__label {
+  font: 500 11px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.boot__label b { color: var(--signal); font-weight: 500; }
+.boot__bar { height: 1px; background: var(--line); position: relative; overflow: hidden; }
+.boot__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--signal);
+  transition: width 0.18s linear;
+}
+.boot__ticks { display: flex; justify-content: space-between; margin-top: 8px; }
+.boot__ticks i {
+  width: 1px;
+  height: 7px;
+  background: var(--line-strong);
+  animation: tickPulse 1.1s ease-in-out infinite;
+}
+.boot__ticks i:nth-child(2) { animation-delay: 0.08s; }
+.boot__ticks i:nth-child(3) { animation-delay: 0.16s; }
+.boot__ticks i:nth-child(4) { animation-delay: 0.24s; }
+.boot__ticks i:nth-child(5) { animation-delay: 0.32s; }
+.boot__ticks i:nth-child(6) { animation-delay: 0.4s; }
+.boot__ticks i:nth-child(7) { animation-delay: 0.48s; }
+.boot__ticks i:nth-child(8) { animation-delay: 0.56s; }
+.boot__ticks i:nth-child(9) { animation-delay: 0.64s; }
+.boot__ticks i:nth-child(10) { animation-delay: 0.72s; }
+@keyframes tickPulse {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+  50% { transform: scaleY(1.6); opacity: 1; }
+}
+
+/* --- 3. STATUS STRIP: THE INSTRUMENT READOUT ---------------------------- */
+.strip {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 7px 20px;
+  font: 400 10px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--ink) 88%, transparent);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.strip.is-on { opacity: 1; transform: none; }
+.strip b { color: var(--ink); font-weight: 500; }
+.strip__sp { flex: 1; }
+.strip__vel {
+  width: 120px;
+  height: 3px;
+  background: var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.strip__vel i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: var(--signal);
+  transition: width 0.12s linear;
+}
+.strip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 10px var(--signal);
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+body { padding-bottom: 30px; }
+
+/* --- 4. REGISTRATION MARKS (figure corners) ----------------------------- */
+.figmark {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 0 solid var(--line-strong);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.figmark--tl { top: 14px; left: 14px; border-top-width: 1px; border-left-width: 1px; }
+.figmark--tr { top: 14px; right: 14px; border-top-width: 1px; border-right-width: 1px; }
+.figmark--bl { bottom: 14px; left: 14px; border-bottom-width: 1px; border-left-width: 1px; }
+.figmark--br { bottom: 14px; right: 14px; border-bottom-width: 1px; border-right-width: 1px; }
+
+/* --- 5. WIPE REVEAL (one-shot, not a fade-up) --------------------------- */
+.rv { position: relative; overflow: hidden; }
+.rv > .rv__i {
+  display: block;
+  transform: translateY(102%);
+  transition: transform 0.62s cubic-bezier(0.19, 1, 0.22, 1);
+  transition-delay: var(--rd, 0s);
+}
+.rv.is-in > .rv__i { transform: none; }
+.rv::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.42s cubic-bezier(0.65, 0, 0.35, 1);
+  transition-delay: var(--rd, 0s);
+  pointer-events: none;
+  z-index: 2;
+}
+.rv.is-in::after { transform: scaleX(0); animation: wipe 0.95s cubic-bezier(0.19, 1, 0.22, 1) both; }
+@keyframes wipe {
+  0% { transform: scaleX(1); transform-origin: right; }
+  49% { transform: scaleX(1); transform-origin: right; }
+  50% { transform: scaleX(1); transform-origin: left; }
+  100% { transform: scaleX(0); transform-origin: left; }
+}
+
+/* --- 6. TEXT SCRAMBLE ---------------------------------------------------- */
+.scr { display: inline-block; white-space: nowrap; }
+.chapter__title.done .scr i { color: inherit; }
+.scr i {
+  display: inline-block;
+  font-style: inherit;
+  opacity: 0.25;
+  transition: opacity 0.12s linear, color 0.12s linear;
+}
+.scr i.on { opacity: 1; color: var(--signal); }
+
+/* --- 7. PIPELINE: SELF-RUNNING SIGNAL ----------------------------------- */
+.pipe__pulse {
+  stroke: var(--signal);
+  stroke-width: 2.4;
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 26 460;
+  filter: drop-shadow(0 0 6px var(--signal));
+  animation: pulseRun 4.6s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  opacity: 0.95;
+}
+@keyframes pulseRun {
+  0% { stroke-dashoffset: 486; }
+  60% { stroke-dashoffset: -26; }
+  100% { stroke-dashoffset: -26; opacity: 0; }
+}
+.pipe__nodes circle { animation: nodeBeat 4.6s ease-in-out infinite; }
+.pipe__nodes circle:nth-child(1) { animation-delay: 0s; }
+.pipe__nodes circle:nth-child(2) { animation-delay: 0.9s; }
+.pipe__nodes circle:nth-child(3) { animation-delay: 1.8s; }
+.pipe__nodes circle:nth-child(4) { animation-delay: 2.7s; }
+.pipe__nodes circle:nth-child(5) { animation-delay: 3.6s; }
+@keyframes nodeBeat {
+  0%, 78%, 100% { fill: var(--ink); r: 5; opacity: 0.55; }
+  86% { fill: var(--signal); r: 8; opacity: 1; }
+}
+.station { position: relative; }
+.station::before {
+  content: "";
+  position: absolute;
+  left: -22px;
+  top: 12px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  opacity: 0;
+  animation: ping 4.6s ease-out infinite;
+}
+.station:nth-child(1)::before { animation-delay: 0.05s; }
+.station:nth-child(2)::before { animation-delay: 0.95s; }
+.station:nth-child(3)::before { animation-delay: 1.85s; }
+.station:nth-child(4)::before { animation-delay: 2.75s; }
+.station:nth-child(5)::before { animation-delay: 3.65s; }
+@keyframes ping {
+  0%, 80% { opacity: 0; transform: scale(0.3); }
+  84% { opacity: 0.9; transform: scale(1); }
+  96% { opacity: 0; transform: scale(2.4); }
+  100% { opacity: 0; }
+}
+.station.is-live .station__idx { color: var(--signal); }
+.station.is-live h3 { color: var(--ink); }
+.station { transition: color 0.25s ease, border-color 0.25s ease; }
+
+/* --- 8. FORGETTING REPLAY (self-playing) -------------------------------- */
+.forgetting__replay {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  justify-content: space-between;
+  font: 400 10px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 10px;
+}
+.forgetting__replay i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  transition: background 0.2s linear, box-shadow 0.2s linear;
+}
+.forgetting__replay i.on { background: var(--signal); box-shadow: 0 0 8px var(--signal); }
+.win__lines li { opacity: 0; }
+.win__lines li.typed { opacity: 1; }
+.win__cut { transition: width 0.55s cubic-bezier(0.4, 0, 0.2, 1); }
+.stamp { opacity: 0; transform: scale(1.25) rotate(-9deg); }
+.stamp.land { animation: stampLand 0.72s cubic-bezier(0.2, 1.5, 0.4, 1) forwards; }
+@keyframes stampLand {
+  0% { opacity: 0.4; transform: scale(1.35) rotate(-12deg); }
+  60% { opacity: 1; transform: scale(0.94) rotate(-7deg); }
+  100% { opacity: 0.92; transform: scale(1) rotate(-8deg); }
+}
+.beat { transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.19, 1, 0.22, 1); }
+.beat:not(.is-on) { opacity: 0.28; transform: translateX(-10px); }
+.beat.is-on { opacity: 1; transform: none; }
+.beats__progress i { transition: width 0.4s cubic-bezier(0.19, 1, 0.22, 1); }
+
+/* --- 9. ANATOMY: WAVE + AUTO-SCAN --------------------------------------- */
+.anatomy__grid { position: relative; }
+.anatomy__grid i {
+  display: block;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  opacity: 0.35;
+  transform: scale(0.82);
+  transition: opacity 0.2s linear, transform 0.2s cubic-bezier(0.19, 1, 0.22, 1), background 0.2s linear;
+}
+.anatomy__grid i.lit { background: var(--ice); opacity: 1; transform: none; }
+.anatomy__grid i.scan { background: var(--signal); opacity: 1; transform: scale(1.06); box-shadow: 0 0 18px var(--signal); }
+.anatomy__grid i:hover { opacity: 1; transform: scale(1.08); outline: 1px solid var(--signal); }
+.anatomy__scan {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--signal), transparent);
+  box-shadow: 0 0 12px var(--signal);
+  opacity: 0;
+  pointer-events: none;
+}
+.anatomy__scan.run { animation: scanSweep 5.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+@keyframes scanSweep {
+  0% { opacity: 0; left: 0; }
+  8% { opacity: 1; }
+  50% { left: 100%; opacity: 1; }
+  58% { opacity: 0; left: 100%; }
+  100% { opacity: 0; left: 0; }
+}
+
+/* --- 10. TOOL CARDS: SPOTLIGHT + TILT + SHIMMER LOAD -------------------- */
+.tools__track { display: flex; gap: 0; }
+.tool {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.tool.is-in { opacity: 1; transform: none; }
+.tool::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 61, 0, 0.16), transparent 62%);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.tool::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 61, 0, 0.1) 50%, transparent 62%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.tool.is-in::after { animation: shimmer 1.1s ease-out both; }
+@keyframes shimmer {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+.tool:hover::before { opacity: 1; }
+.tool:hover { border-color: var(--line-strong); }
+.tool__bar i { transition: transform 0.28s cubic-bezier(0.19, 1, 0.22, 1), background 0.2s linear; }
+.tool:hover .tool__bar i { background: var(--signal); }
+.chip {
+  position: relative;
+  overflow: hidden;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 61, 0, 0.28), transparent);
+  transform: translateX(-120%);
+}
+.chip:hover::after { animation: chipSweep 0.7s ease-out; }
+@keyframes chipSweep {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+.chip.is-on { box-shadow: 0 0 0 1px var(--signal) inset; }
+
+/* --- 11. MAGNETIC + CONIC BORDER ----------------------------------------- */
+.magnet { will-change: transform; transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1); }
+.conic {
+  position: relative;
+  isolation: isolate;
+}
+.conic::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, transparent 0deg, var(--signal) 60deg, transparent 140deg, transparent 360deg);
+  animation: spin 4.5s linear infinite;
+}
+@keyframes spin { to { transform: rotate(1turn); } }
+.cmd { position: relative; overflow: hidden; }
+.cmd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(169, 216, 209, 0.14) 50%, transparent 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.cmd:hover::after { animation: shimmer 0.9s ease-out; }
+
+/* --- 12. ODOMETER FIGURES ----------------------------------------------- */
+.figures { display: grid; }
+.figure { position: relative; overflow: hidden; }
+.figure__n {
+  --num: var(--bone);
+  display: inline-block;
+  position: relative;
+  font-variant-numeric: tabular-nums;
+  color: var(--num);
+}
+.figure__n::after {
+  content: attr(data-final, "0");
+  position: absolute;
+  left: 0;
+  top: 100%;
+  color: var(--num);
+  opacity: 1;
+  text-shadow: 0 0 20px color-mix(in srgb, var(--signal) 55%, transparent);
+  transition: transform 0.42s cubic-bezier(0.19, 1, 0.22, 1), text-shadow 0.42s linear;
+}
+.figure.is-set .figure__n { color: transparent; }
+.figure.is-set .figure__n::after { transform: translateY(-100%); text-shadow: none; }
+.figure:hover { background: color-mix(in srgb, var(--signal) 5%, transparent); }
+
+/* --- 13. TERMINAL TYPING ------------------------------------------------- */
+.terminal__body code { white-space: pre-wrap; }
+.terminal__caret {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  background: var(--signal);
+  vertical-align: -0.18em;
+  margin-left: 2px;
+  animation: caret 1s steps(2, start) infinite;
+}
+@keyframes caret { 50% { opacity: 0; } }
+.terminal.is-typing { box-shadow: 0 0 0 1px var(--signal) inset, 0 0 34px rgba(255, 61, 0, 0.16); }
+.terminal.is-ok .terminal__dots i { background: var(--ice); }
+
+/* --- 14. CURSOR: CORE SAMPLER, SECOND PASS ------------------------------ */
+.cursor { z-index: 999; display: none; opacity: 1; }
+.cursor.on { display: block; }
+/* The native pointer is hidden the moment the custom one is armed, so the
+   custom one must never depend on a transition to become visible — a
+   throttled or backgrounded tab would otherwise leave the user with no
+   pointer at all. */
+html.has-cursor .cursor { display: block !important; opacity: 1 !important; }
+.cursor__trail {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--signal);
+  opacity: 0;
+  transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.42s linear;
+}
+.cursor__aperture { transition: transform 0.14s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.cursor__cross--x, .cursor__cross--y { transition: transform 0.09s linear; }
+.cursor__read {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 3px 7px 4px;
+  font: 500 9px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  color: #ff8a4c;
+  background: rgba(6, 7, 9, 0.78);
+  border: 1px solid rgba(255, 61, 0, 0.34);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.25s ease;
+  will-change: transform;
+}
+.cursor__read b { font-weight: 600; color: #ff3d00; }
+.cursor__read .cursor__depth { color: #8d877a; }
+.cursor__tag {
+  position: absolute;
+  transform: translate(14px, -50%);
+  padding: 3px 7px;
+  font: 500 9px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--signal);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.cursor__tag.on { opacity: 1; }
+.cursor.is-press .cursor__aperture { transform: scale(0.72) translate(-50%, -50%); }
+
+/* --- 14b. BLUEPRINT TOGGLE (the switch that changes the whole skin) ----- */
+.mode {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+.mode::after { z-index: 0; }
+.mode > * { position: relative; z-index: 1; }
+.mode:hover { color: var(--ink); border-color: var(--line-strong); }
+.mode.is-on { color: var(--ink); border-color: var(--signal); }
+.mode__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* --- 15. FIGURE CAPTIONS ON CHAPTER NUMBERS ---------------------------- */
+.chapter__num { position: relative; }
+.chapter__num::after {
+  content: attr(data-fig);
+  position: absolute;
+  left: 0;
+  top: 140%;
+  font: 400 9px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.chapter:hover .chapter__num::after { opacity: 1; transform: none; }
+
+/* --- 16. FIGURE NUMBER STRIP ON THE RAIL -------------------------------- */
+.rail__list li a { transition: color 0.2s ease, opacity 0.2s ease; }
+.rail__list li a::after {
+  content: attr(data-count);
+  display: block;
+  font: 400 9px/1 "IBM Plex Mono", monospace;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  opacity: 0;
+  margin-top: 3px;
+  transition: opacity 0.2s ease;
+}
+.rail__list li a:hover::after { opacity: 0.8; }
+
+/* --- 17. REDUCED MOTION -------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .pipe__pulse,
+  .station::before,
+  .pipe__nodes circle,
+  .anatomy__scan.run,
+  .conic::before,
+  .boot__ticks i,
+  .strip__dot,
+  .tool.is-in::after,
+  .chip:hover::after,
+  .cmd:hover::after { animation: none !important; }
+  .rv > .rv__i { transform: none !important; }
+  .boot { display: none; }
+}
+
+html.has-cursor,html.has-cursor *{cursor:none}
+
+/* ---------------------------------------------------------------------------
+   TEMPO — the site is an instrument panel, not a UI kit.
+   Entrances take their time and land deliberately. Nothing snaps.
+   --------------------------------------------------------------------------- */
+[data-reveal] { transition-duration: 1s; }
+.rv { transition-duration: 1.1s; }
+.rv__i { transition-duration: 0.9s; }
+.beat { transition-duration: 0.45s; }
+.station { transition-duration: 0.45s; }
+.step { transition-duration: 0.4s; }
+.tool__bar i { transition-duration: 0.45s; }
+.anatomy__grid i { transition-duration: 0.45s; }
+.win__lines li { transition-duration: 0.35s; }
+.win__cut { transition-duration: 0.3s; }
+.figure__n::after { transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), text-shadow 0.8s linear; }
+.cursor__aperture { transition-duration: 0.22s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.cursor__cross--x, .cursor__cross--y { transition-duration: 0.14s linear; }
+.cursor__read { transition-duration: 0.2s cubic-bezier(0.22, 0.61, 0.36, 1); }

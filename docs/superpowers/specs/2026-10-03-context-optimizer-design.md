@@ -16,7 +16,7 @@ boilerplate: a 50K-token read arrives as ~2K tokens with the logic map intact.
    - **OpenCode plugin:** `tool.execute.after` post-processes the results of
      *native* tools (read, grep, glob, bash, and every other tool) before the
      model sees them — zero workflow change, no duplicate tools.
-   - **MCP mirror:** new `school_read` / `school_grep` tools on the MCP server
+   - **MCP mirror:** new `toolio_read` / `toolio_grep` tools on the MCP server
      for non-OpenCode clients (Claude, Cursor, …), producing already-skeletonized
      output server-side.
 2. **Scope: everything the model sees** — all tool results on the plugin
@@ -49,9 +49,9 @@ model sees result
    │     ≥1000 ── bridge AST (big-6) ── fail/timeout ── TS heuristic skeleton
    │                │ success                                   │
    │                └─── both produce the same skeleton contract ┘
-   │     append footer `[school ctx: <in>→<out> tokens]` when compressed
+   │     append footer `[toolio ctx: <in>→<out> tokens]` when compressed
    │
-   └─ MCP (other clients): school_read / school_grep
+   └─ MCP (other clients): toolio_read / toolio_grep
          same threshold; in-process tree-sitter big-6, heuristic fallback
          output already skeletonized + same footer
 ```
@@ -92,7 +92,7 @@ model sees result
 - Contract tests per language corpus (big-6 + 2 heuristic-only samples):
   signatures retained, bodies elided, footer format, threshold boundary
   (999/1001 tokens), fail-open paths, `SCHOOL_CTX=0`.
-- MCP: stdio integration for `school_read`/`school_grep` (skeletonized output,
+- MCP: stdio integration for `toolio_read`/`toolio_grep` (skeletonized output,
   threshold, raw small reads, unknown-path errors).
 - Plugin: source-contract tests (hooks wiring, constants, footer) in the
   existing style; live check = a real oversized read observed compressed.
@@ -110,4 +110,4 @@ model sees result
 ## Build order
 
 After Phase 1 adaptive-routing T3–T6 complete (same package, same test
-conventions). Name everything `school_*` from day one.
+conventions). Name everything `toolio_*` from day one.

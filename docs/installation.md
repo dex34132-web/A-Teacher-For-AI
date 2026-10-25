@@ -1,17 +1,17 @@
-# School Installation
+# Toolio Installation
 
 ## Development (local)
 
 ```powershell
-git clone https://github.com/dex34132-web/lerev.git
-cd school
+git clone https://github.com/dex34132-web/toolio.git
+cd toolio
 pip install -e .
-school install
+toolio install
 ```
 
 ## Windows — GUI Installer
 
-Download `School-Setup.exe` and run it.
+Download `Toolio-Setup.exe` and run it.
 
 Requirements:
 - Windows 10/11
@@ -19,59 +19,59 @@ Requirements:
 
 The installer will:
 1. Detect Python
-2. Install School via pip
+2. Install Toolio via pip
 3. Register the OpenCode plugin
 4. Verify the installation
 
 ## Windows — pip
 
 ```powershell
-pip install school
-school install
+pip install toolio
+toolio install
 ```
 
 ## Windows — Chocolatey
 
 ```powershell
-choco install school
+choco install toolio
 ```
 
 ## macOS — Homebrew
 
 ```bash
-brew install school
+brew install toolio
 ```
 
 ## macOS — pip
 
 ```bash
-pip3 install school
-school install
+pip3 install toolio
+toolio install
 ```
 
 ## Linux — Shell Installer
 
 ```bash
-curl -fsSL https://school.dev/install.sh | sh
+curl -fsSL https://toolio.dev/install.sh | sh
 ```
 
 Or:
 
 ```bash
-wget -qO- https://school.dev/install.sh | sh
+wget -qO- https://toolio.dev/install.sh | sh
 ```
 
 ## Linux — pip
 
 ```bash
-pip3 install --user school
-school install
+pip3 install --user toolio
+toolio install
 ```
 
 ## Verifying Installation
 
 ```bash
-school doctor
+toolio doctor
 ```
 
 Expected output:
@@ -86,7 +86,7 @@ SCHOOL DOCTOR
   [PASS] V2.5 routing: available
   [PASS] Bridge: tier=installed_module
   [PASS] OpenCode config: /home/user/.config/opencode/opencode.jsonc
-  [PASS] Plugin file: /home/user/.config/opencode/plugins/school.ts
+  [PASS] Plugin file: /home/user/.config/opencode/plugins/toolio.ts
   [PASS] Project memory: no data yet (will be created)
 
 RESULT: SCHOOL IS READY
@@ -94,17 +94,17 @@ RESULT: SCHOOL IS READY
 
 ## Migration from LEREV
 
-This project was formerly named **LEREV**; **School** is the canonical
+This project was formerly named **LEREV**; **Toolio** is the canonical
 identity. Legacy aliases are deliberately retained and clearly marked:
 
 | Legacy (pre-rename) | Current equivalent |
 |---------------------|--------------------|
-| `lerev` CLI command | `school` (`lerev` kept as legacy alias) |
-| `import lerev`, `python -m lerev.bridge` | `import school`, `python -m school.bridge` (shim kept) |
+| `toolio` CLI command | `toolio` (`toolio` kept as legacy alias) |
+| `import toolio`, `python -m toolio.bridge` | `import toolio`, `python -m toolio.bridge` (shim kept) |
 | `LEREV_HOME`, `EVO_HOME` env vars | `SCHOOL_HOME` (legacy names honoured as fallback) |
-| `lerev-bridge` on PATH | `school-bridge` (legacy name honoured as fallback) |
-| `plugins/lerev.ts` OpenCode plugin | `plugins/school.ts` (stale legacy file removed on install) |
-| `.lerev/memory/`, `.evo/memory/` | `.school/memory/` (copied non-destructively on first use; sources never deleted) |
+| `toolio-bridge` on PATH | `toolio-bridge` (legacy name honoured as fallback) |
+| `plugins/toolio.ts` OpenCode plugin | `plugins/toolio.ts` (stale legacy file removed on install) |
+| `.toolio/memory/`, `.evo/memory/` | `.toolio/memory/` (copied non-destructively on first use; sources never deleted) |
 
 ## Status
 

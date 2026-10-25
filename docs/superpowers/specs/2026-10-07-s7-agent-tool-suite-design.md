@@ -2,36 +2,36 @@
 
 Date: 2026-10-07
 Status: design — inspired by the OpenCode built-in tool inventory
-Master spec: `docs/superpowers/specs/2026-10-06-school-context-engine-design.md`
+Master spec: `docs/superpowers/specs/2026-10-06-toolio-context-engine-design.md`
 
 ## 1. Goal
 
-School gains a suite of **agent-native tools** inspired by the OpenCode
+Toolio gains a suite of **agent-native tools** inspired by the OpenCode
 built-in tool inventory (browser, memory, goals, web, subagents, session,
-files, shell, context, skills). These tools let School **observe, research,
-explore, track, and delegate** — turning School from a passive memory store
+files, shell, context, skills). These tools let Toolio **observe, research,
+explore, track, and delegate** — turning Toolio from a passive memory store
 into an active learning agent.
 
 ## 2. Inspiration map
 
-| OpenCode tool family | What it does | School S7 tool | What School does differently |
+| OpenCode tool family | What it does | Toolio S7 tool | What Toolio does differently |
 |---------------------|-------------|----------------|---------------------------|
-| `browser.*` (observe, snapshot, evaluate) | See and inspect web pages | **`school_observe`** | Observe agent behavior, tool calls, conversation patterns → learn from them |
-| `goal_set/status/complete/block/pause/resume/clear/history/update` | Track goals | **`school_goal`** | Track learning objectives and milestones → auto-advance on evidence |
-| `websearch/webfetch` | Research the web | **`school_research`** | Research topics and distill learnings → store as structured memories |
-| `subagent` (explore, general) | Delegate tasks | **`school_explore`** | Explore codebases/patterns → extract structural knowledge |
-| `todowrite/todoread` | Track tasks | **`school_progress`** | Track learning progress with visual bars → surface in dashboard |
-| `opencode.session_move/rename/models` | Manage sessions | **`school_session`** | Manage learning sessions → cross-session knowledge continuity |
-| `shell` | Execute commands | **`school_execute`** | Execute and learn from command outcomes → build command knowledge |
-| `read/write/edit/glob/grep` | File operations | **`school_navigate`** | Navigate and learn from file structures → build project maps |
+| `browser.*` (observe, snapshot, evaluate) | See and inspect web pages | **`toolio_observe`** | Observe agent behavior, tool calls, conversation patterns → learn from them |
+| `goal_set/status/complete/block/pause/resume/clear/history/update` | Track goals | **`toolio_goal`** | Track learning objectives and milestones → auto-advance on evidence |
+| `websearch/webfetch` | Research the web | **`toolio_research`** | Research topics and distill learnings → store as structured memories |
+| `subagent` (explore, general) | Delegate tasks | **`toolio_explore`** | Explore codebases/patterns → extract structural knowledge |
+| `todowrite/todoread` | Track tasks | **`toolio_progress`** | Track learning progress with visual bars → surface in dashboard |
+| `opencode.session_move/rename/models` | Manage sessions | **`toolio_session`** | Manage learning sessions → cross-session knowledge continuity |
+| `shell` | Execute commands | **`toolio_execute`** | Execute and learn from command outcomes → build command knowledge |
+| `read/write/edit/glob/grep` | File operations | **`toolio_navigate`** | Navigate and learn from file structures → build project maps |
 | `compress` | Context compression | (exists: S1/S2) | Already built |
 | `memory` | Persistent memory | (exists: Phase 1) | Already built |
 | `skill` | Load skills | (exists: Phase 1) | Already built |
-| `browser.console/network` | Observe events | **`school_monitor`** | Monitor tool call streams → detect patterns and anomalies |
+| `browser.console/network` | Observe events | **`toolio_monitor`** | Monitor tool call streams → detect patterns and anomalies |
 
 ## 3. New tools (8)
 
-### 3.1 `school_observe`
+### 3.1 `toolio_observe`
 
 **Purpose**: Observe agent behavior and learn from it.
 **Input**: `observation` (string), `category` (tool_call|conversation|error|pattern), `evidence` (optional JSON).
@@ -39,13 +39,13 @@ into an active learning agent.
 
 **What it does**:
 - Records observations about agent behavior (what tools were called, what worked, what failed).
-- Extracts patterns: "you always use `school_remember` before `school_recall`", "errors cluster around file operations".
+- Extracts patterns: "you always use `toolio_remember` before `toolio_recall`", "errors cluster around file operations".
 - Stores structured learnings as memories with `tags: ["observation", category]`.
-- Updates the agent profile (`school_profile`) with behavioral insights.
+- Updates the agent profile (`toolio_profile`) with behavioral insights.
 
 **Inspired by**: `browser.observe` / `browser.snapshot` / `browser.console` — but observing *agent behavior* instead of web pages.
 
-### 3.2 `school_goal`
+### 3.2 `toolio_goal`
 
 **Purpose**: Track learning objectives and milestones.
 **Input**: `action` (set|status|complete|block|pause|resume|clear|history), `goal_id`, `objective`, `success_criteria`, `max_turns`, `constraints`.
@@ -60,7 +60,7 @@ into an active learning agent.
 
 **Inspired by**: `goal_set` / `goal_status` / `goal_complete` / `goal_block` / `goal_pause` / `goal_resume` / `goal_clear` / `get_goal_history` / `update_goal`.
 
-### 3.3 `school_research`
+### 3.3 `toolio_research`
 
 **Purpose**: Research topics and distill learnings.
 **Input**: `query` (string), `depth` (shallow|deep), `format` (summary|structured|raw).
@@ -74,7 +74,7 @@ into an active learning agent.
 
 **Inspired by**: `websearch` / `webfetch` — but focused on *learning extraction* instead of raw content.
 
-### 3.4 `school_explore`
+### 3.4 `toolio_explore`
 
 **Purpose**: Explore codebases and extract structural knowledge.
 **Input**: `target` (path or pattern), `depth` (file|module|project), `focus` (structure|patterns|conventions).
@@ -87,7 +87,7 @@ into an active learning agent.
 
 **Inspired by**: `subagent` (explore) / `glob` / `grep` — but focused on *structural learning*.
 
-### 3.5 `school_progress`
+### 3.5 `toolio_progress`
 
 **Purpose**: Track learning progress with visual indicators.
 **Input**: `action` (write|read), `items` (list of progress items), `context` (string).
@@ -96,11 +96,11 @@ into an active learning agent.
 **What it does**:
 - Tracks progress on learning tasks with status (pending|in_progress|completed).
 - Renders Apple-grade progress bars.
-- Integrates with `school_goal` and `school_session`.
+- Integrates with `toolio_goal` and `toolio_session`.
 
 **Inspired by**: `todowrite` / `todoread` — but focused on *learning progress*.
 
-### 3.6 `school_session`
+### 3.6 `toolio_session`
 
 **Purpose**: Manage learning sessions and cross-session continuity.
 **Input**: `action` (create|resume|list|summarize|export), `session_id`, `focus`.
@@ -114,7 +114,7 @@ into an active learning agent.
 
 **Inspired by**: `opencode.session_move` / `opencode.session_rename` / `opencode.models` — but focused on *learning continuity*.
 
-### 3.7 `school_execute`
+### 3.7 `toolio_execute`
 
 **Purpose**: Execute and learn from command outcomes.
 **Input**: `command` (string), `learn` (boolean), `context` (string).
@@ -127,7 +127,7 @@ into an active learning agent.
 
 **Inspired by**: `shell` — but focused on *learning from execution*.
 
-### 3.8 `school_navigate`
+### 3.8 `toolio_navigate`
 
 **Purpose**: Navigate and learn from file structures.
 **Input**: `action` (read|list|search|map), `path`, `pattern`, `depth`.
@@ -154,15 +154,15 @@ Total: 22 TS / 24 MCP / 13 CLI subcommands.
 ## 5. Architecture
 
 ```
-school/tools/agent/          # S7 core (new)
-    observe.py               # school_observe
-    goal.py                  # school_goal
-    research.py              # school_research
-    explore.py               # school_explore
-    progress.py              # school_progress
-    session.py               # school_session
-    execute.py               # school_execute
-    navigate.py              # school_navigate
+toolio/tools/agent/          # S7 core (new)
+    observe.py               # toolio_observe
+    goal.py                  # toolio_goal
+    research.py              # toolio_research
+    explore.py               # toolio_explore
+    progress.py              # toolio_progress
+    session.py               # toolio_session
+    execute.py               # toolio_execute
+    navigate.py              # toolio_navigate
     __init__.py
 
 core/agent/                  # S7 core logic (new)
@@ -180,10 +180,10 @@ core/agent/                  # S7 core logic (new)
 ## 6. Integration points
 
 - **Memory**: All learnings stored via existing `MemoryManager`.
-- **Routing**: `school_route` gains `goal` and `progress` inputs.
-- **Dashboard**: `school_dashboard` shows goal progress and learning stats.
-- **Footer**: `school_progress` bars appear in footer chip.
-- **Skills**: `school-routing` skill learns from observations.
+- **Routing**: `toolio_route` gains `goal` and `progress` inputs.
+- **Dashboard**: `toolio_dashboard` shows goal progress and learning stats.
+- **Footer**: `toolio_progress` bars appear in footer chip.
+- **Skills**: `toolio-routing` skill learns from observations.
 
 ## 7. Kill switches
 

@@ -14,7 +14,7 @@ import pytest
 
 from core.skillgen.registry import registry_for
 from core.skillgen.types import Skill, SkillScope, SkillState
-from school.cli import main
+from toolio.cli import main
 
 
 def _seed(worktree: Path) -> Skill:
@@ -40,7 +40,7 @@ class TestSkillsList:
     ) -> None:
         _seed(tmp_path)
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "list"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "list"])
         main()
         report = json.loads(capsys.readouterr().out)
         assert report["ok"] is True
@@ -53,7 +53,7 @@ class TestSkillsList:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "list"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "list"])
         main()
         report = json.loads(capsys.readouterr().out)
         assert report["ok"] is True
@@ -67,7 +67,7 @@ class TestSkillsSearch:
     ) -> None:
         _seed(tmp_path)
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "search", "markdown tables"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "search", "markdown tables"])
         main()
         report = json.loads(capsys.readouterr().out)
         assert report["ok"] is True
@@ -79,7 +79,7 @@ class TestSkillsSearch:
     ) -> None:
         _seed(tmp_path)
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "search", "quantum rocketry"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "search", "quantum rocketry"])
         main()
         report = json.loads(capsys.readouterr().out)
         assert report["ok"] is True
@@ -90,7 +90,7 @@ class TestSkillsFailClosed:
     def test_missing_action_exits_nonzero(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        monkeypatch.setattr(sys, "argv", ["school", "skills"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills"])
         monkeypatch.setattr("sys.stdin", io.StringIO(""))
         with pytest.raises(SystemExit) as excinfo:
             main()
@@ -102,7 +102,7 @@ class TestSkillsFailClosed:
     def test_unknown_action_rejected_by_argparse(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "frobnicate"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "frobnicate"])
         with pytest.raises(SystemExit) as excinfo:
             main()
         assert excinfo.value.code == 2
@@ -110,7 +110,7 @@ class TestSkillsFailClosed:
 
 
 class TestSkillsMenu:
-    """Bare `school skills` opens an interactive menu over all 12 actions."""
+    """Bare `toolio skills` opens an interactive menu over all 12 actions."""
 
     ACTIONS = (
         "list",
@@ -133,7 +133,7 @@ class TestSkillsMenu:
         stdin_text: str,
         capsys: pytest.CaptureFixture[str],
     ) -> tuple[int, str]:
-        monkeypatch.setattr(sys, "argv", ["school", "skills"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills"])
         monkeypatch.setattr("sys.stdin", io.StringIO(stdin_text))
         with pytest.raises(SystemExit) as excinfo:
             main()
@@ -197,7 +197,7 @@ class TestSkillRegistryActions:
         tmp_path: Path,
     ) -> None:
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "status"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "status"])
         main()
         out = json.loads(capsys.readouterr().out)
         assert out.get("ok") is True
@@ -205,7 +205,7 @@ class TestSkillRegistryActions:
     def test_feedback_requires_outcome(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "feedback", "--name", "x"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "feedback", "--name", "x"])
         with pytest.raises(SystemExit) as excinfo:
             main()
         assert excinfo.value.code == 2
@@ -213,7 +213,7 @@ class TestSkillRegistryActions:
     def test_create_requires_core_fields(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        monkeypatch.setattr(sys, "argv", ["school", "skills", "create", "my-skill"])
+        monkeypatch.setattr(sys, "argv", ["toolio", "skills", "create", "my-skill"])
         with pytest.raises(SystemExit) as excinfo:
             main()
         assert excinfo.value.code == 2
@@ -225,7 +225,7 @@ class TestSkillRegistryActions:
             sys,
             "argv",
             [
-                "school",
+                "toolio",
                 "skills",
                 "evolve",
                 "--action",

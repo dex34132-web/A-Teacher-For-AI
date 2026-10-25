@@ -13,7 +13,7 @@ def _block(i: int) -> Block:
 def test_context_dir_is_sibling_of_memory(tmp_path) -> None:
     d = context_dir(str(tmp_path))
     assert d.name == "context"
-    assert d.parent.name == ".school"
+    assert d.parent.name == ".toolio"
 
 
 def test_session_file_sanitizes_id(tmp_path) -> None:

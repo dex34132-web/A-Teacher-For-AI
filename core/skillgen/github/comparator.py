@@ -75,7 +75,7 @@ def improvement_report(existing: Skill, candidate: Skill) -> dict[str, Any]:
         "similarity": round(similarity(existing, candidate), 4),
         "requires_approval": True,
         "note": (
-            "Comparison only. Use school_skill_evolve (Phase 1) with explicit "
+            "Comparison only. Use toolio_skill_evolve (Phase 1) with explicit "
             "user approval to revise the local skill - never a silent replace."
         ),
     }

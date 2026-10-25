@@ -10,7 +10,7 @@ import pytest
 
 from core.context import ContextEngine, build_chip, build_view
 from core.context.view import apply_segments, view_segments
-from school import bridge
+from toolio import bridge
 
 
 def big_msgs(n: int = 8) -> list[dict]:
@@ -86,12 +86,12 @@ class TestContextView:
             {"worktree": worktree, "session": "s1", "messages": messages},
         )
         assert resp["ok"] is True
-        assert resp["mode"] == "school"
+        assert resp["mode"] == "toolio"
         assert resp["segments"], "compressed session must yield segments"
         assert resp["segments"][0]["content"].startswith(
-            "[school] compacted b"
+            "[toolio] compacted b"
         )
-        assert resp["chip"].startswith("[school] ctx")
+        assert resp["chip"].startswith("[toolio] ctx")
         assert "tok" in resp["chip"]
 
     def test_kill_switch_returns_no_segments(self, compressed, monkeypatch) -> None:
@@ -103,7 +103,7 @@ class TestContextView:
         )
         assert resp == {"ok": True, "mode": "off", "segments": [], "chip": ""}
 
-    def test_disabled_by_school_ctx(self, compressed, monkeypatch) -> None:
+    def test_disabled_by_toolio_ctx(self, compressed, monkeypatch) -> None:
         worktree, messages, _ = compressed
         monkeypatch.setenv("SCHOOL_CTX", "0")
         resp = call(
@@ -143,10 +143,10 @@ class TestContextStatusCompressRestore:
             "context_status", {"worktree": worktree, "session": "s1"}
         )
         assert resp["ok"] is True
-        assert resp["mode"] == "school"
+        assert resp["mode"] == "toolio"
         assert resp["dcp"] is False
         assert resp["blocks"] >= 1
-        assert resp["chip"].startswith("[school] compacted")
+        assert resp["chip"].startswith("[toolio] compacted")
         assert resp["tokens_saved"] > 0
 
     def test_status_empty_session(self, tmp_path) -> None:
@@ -179,7 +179,7 @@ class TestContextStatusCompressRestore:
         assert resp["triggered"] is True
         assert resp["blocks_added"] >= 1
         assert resp["tokens_saved"] > 0
-        assert resp["chip"].startswith("[school] compacted")
+        assert resp["chip"].startswith("[toolio] compacted")
 
     def test_compress_empty_messages_skips(self, tmp_path) -> None:
         resp = call(
@@ -198,7 +198,7 @@ class TestContextStatusCompressRestore:
         )
         assert first["ok"] is True
         assert first["messages"]
-        assert first["chip"].startswith("[school] compacted")
+        assert first["chip"].startswith("[toolio] compacted")
         assert first["restores"] >= 1
         second = call(
             "context_restore", {"worktree": worktree, "session": "s1"}
@@ -237,8 +237,8 @@ class TestContextCoexist:
         assert resp["ok"] is True
         assert resp["dcp"] is False
         assert resp["decision"] == ""
-        assert resp["mode"] == "school"
-        assert resp["offer"].startswith("School can now handle compression")
+        assert resp["mode"] == "toolio"
+        assert resp["offer"].startswith("Toolio can now handle compression")
 
     def test_set_offer_and_decision(self, tmp_path) -> None:
         wt = str(tmp_path)
@@ -252,9 +252,9 @@ class TestContextCoexist:
             {"worktree": wt, "action": "set_decision", "decision": "switch"},
         )
         assert switch["ok"] is True
-        assert switch["mode"] == "school"
+        assert switch["mode"] == "toolio"
         state = json.loads(
-            Path(wt, ".school", "context", "coexistence.json").read_text(
+            Path(wt, ".toolio", "context", "coexistence.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -283,7 +283,7 @@ class TestContextCoexist:
         assert resp["dcp"] is True
         assert resp["mode"] == "dcp"
         state = json.loads(
-            Path(wt, ".school", "context", "coexistence.json").read_text(
+            Path(wt, ".toolio", "context", "coexistence.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -308,6 +308,6 @@ class TestWiring:
             {"worktree": worktree, "session": "s1", "messages": messages},
         )
         assert build_chip(used_ratio=0.62, saved_tokens=18400) == (
-            "[school] ctx 62% · −18.4k tok"
+            "[toolio] ctx 62% · −18.4k tok"
         )
-        assert view["chip"].startswith("[school] ctx")
+        assert view["chip"].startswith("[toolio] ctx")

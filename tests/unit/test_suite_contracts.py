@@ -2,7 +2,7 @@
 
 Every test pins an ORIGINAL audit defect and must fail on the pre-repair tree:
 
-1.  suite-map blackout        - skills named school_* tools never (artifact blackout)
+1.  suite-map blackout        - skills named toolio_* tools never (artifact blackout)
 2.  phantom `prism` refs      - `prism` presented as a current skill/tool name
 3.  chart needs<->weave       - `needs: S1` never mapped to Command.depends_on
 4.  missing Constraints slot  - chart template dropped user constraints (planted
@@ -14,12 +14,12 @@ Every test pins an ORIGINAL audit defect and must fail on the pre-repair tree:
 8.  gate<->scrutinize handoff- gate never consumed the review report
 9.  relay mechanism          - "coordinator answers in minutes" is unagentable
 10. storage conventions      - "ship the report where the work lives" (no path)
-11. school-routing truth     - phantom "medium-light" tier; dead `calibration`
+11. toolio-routing truth     - phantom "medium-light" tier; dead `calibration`
 12. knob range parity        - TS clamps routing.json knobs, Python accepted any number
 13. tool->skill discovery    - no product tool description ever named a skill
 
 Structural checks parse the real templates; behavioral checks execute the real
-code (core/forge/evidence.py, school.mcp.server._read_knobs, school.cli).
+code (core/forge/evidence.py, toolio.mcp.server._read_knobs, toolio.cli).
 """
 
 from __future__ import annotations
@@ -38,12 +38,12 @@ SKILLS = REPO / "skills"
 CRAFT = ("forge", "triage", "chart", "gate", "relay", "scrutinize")
 
 ARTIFACT_TOOLS = {
-    "clarion": "school_clarion",
-    "blueprint": "school_blueprint",
-    "edict": "school_edict",
-    "weave": "school_weave",
-    "compass": "school_compass",
-    "brainstorm": "school_brainstorm",
+    "clarion": "toolio_clarion",
+    "blueprint": "toolio_blueprint",
+    "edict": "toolio_edict",
+    "weave": "toolio_weave",
+    "compass": "toolio_compass",
+    "brainstorm": "toolio_brainstorm",
 }
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.S)
@@ -85,8 +85,8 @@ def test_suite_map_present_in_every_skill():
 
 
 def test_suite_map_tools_resolve_to_real_surfaces():
-    from school import bridge
-    from school.mcp import server
+    from toolio import bridge
+    from toolio.mcp import server
 
     for tool in ARTIFACT_TOOLS.values():
         assert tool in server._TOOLS, f"{tool} missing from MCP surface"
@@ -96,9 +96,9 @@ def test_suite_map_tools_resolve_to_real_surfaces():
 
 
 def test_no_phantom_prism_or_stale_names_in_skills():
-    for name in CRAFT + ("school-routing",):
-        body = _skill_body(name) if name != "school-routing" else (
-            (SKILLS / "school-routing" / "SKILL.md").read_text(encoding="utf-8")
+    for name in CRAFT + ("toolio-routing",):
+        body = _skill_body(name) if name != "toolio-routing" else (
+            (SKILLS / "toolio-routing" / "SKILL.md").read_text(encoding="utf-8")
         )
         assert "medium-light" not in body, f"{name}: phantom tier 'medium-light'"
         for line in body.splitlines():
@@ -262,7 +262,7 @@ def test_triage_repro_record_template():
     for slot in ("Repro", "Observed", "Expected", "Isolation", "Predicts", "Regression"):
         assert slot.lower() in tpl.lower(), f"triage repro record missing {slot!r}"
     assert "risks" in body, "triage debt must land in blueprint.risks (not a phantom field)"
-    assert "school_remember" in body, "triage lessons must name the real memory tool"
+    assert "toolio_remember" in body, "triage lessons must name the real memory tool"
 
 
 # --- 7. scrutinize report shape ---------------------------------------------
@@ -301,22 +301,22 @@ def test_storage_conventions_explicit():
 
 
 def test_memory_writeback_names_real_integration():
-    from school.mcp import server
+    from toolio.mcp import server
 
-    assert "school_remember" in server._TOOLS, "school_remember vanished"
+    assert "toolio_remember" in server._TOOLS, "toolio_remember vanished"
     for name in ("triage", "relay"):
-        assert "school_remember" in _skill_body(name), f"{name}: lessons have no sink"
+        assert "toolio_remember" in _skill_body(name), f"{name}: lessons have no sink"
 
 
-# --- 11/12. school-routing truth + knob parity --------------------------------
+# --- 11/12. toolio-routing truth + knob parity --------------------------------
 
-def test_school_routing_matches_runtime():
-    from school.skill_source import ROUTING_SKILL_MD
+def test_toolio_routing_matches_runtime():
+    from toolio.skill_source import ROUTING_SKILL_MD
 
-    installed = (SKILLS / "school-routing" / "SKILL.md").read_text(encoding="utf-8")
+    installed = (SKILLS / "toolio-routing" / "SKILL.md").read_text(encoding="utf-8")
     assert installed == ROUTING_SKILL_MD, "repo skill copy drifted from skill_source"
     low = ROUTING_SKILL_MD.lower()
-    assert "medium-light" not in low, "phantom tier in school-routing"
+    assert "medium-light" not in low, "phantom tier in toolio-routing"
     for tier in ("light", "medium", "high"):
         assert tier in low, tier
     assert 'engage: "skill"' in ROUTING_SKILL_MD
@@ -334,7 +334,7 @@ def _routing_description(md: str) -> str:
 
 
 def test_knob_clamps_match_ts(tmp_path, monkeypatch):
-    from school.mcp import server
+    from toolio.mcp import server
 
     monkeypatch.setattr(server, "_memory_root", lambda _wt: tmp_path)
     (tmp_path / "routing.json").write_text(
@@ -353,7 +353,7 @@ def test_knob_clamps_match_ts(tmp_path, monkeypatch):
     assert knobs["hook_limit"] == 1
     assert knobs["hook_budget"] == 64
     assert knobs["hook_timeout_ms"] == 5000
-    src = (REPO / "school" / "plugin_source.py").read_text(encoding="utf-8")
+    src = (REPO / "toolio" / "plugin_source.py").read_text(encoding="utf-8")
     for expr in (
         "clampNum(raw.recall_threshold, DEFAULT_KNOBS.recall_threshold, 0, 1)",
         "clampNum(raw.hook_limit, DEFAULT_KNOBS.hook_limit, 1, 50)",
@@ -366,17 +366,17 @@ def test_knob_clamps_match_ts(tmp_path, monkeypatch):
 # --- 13. tool -> skill discovery ---------------------------------------------
 
 def test_tool_descriptions_point_to_skills():
-    from school.mcp import server
+    from toolio.mcp import server
 
     want = {
-        "school_clarion": "chart",
-        "school_blueprint": "chart",
-        "school_edict": "forge",
-        "school_weave": "relay",
-        "school_compass": "gate",
-        "school_brainstorm": "chart",
+        "toolio_clarion": "chart",
+        "toolio_blueprint": "chart",
+        "toolio_edict": "forge",
+        "toolio_weave": "relay",
+        "toolio_compass": "gate",
+        "toolio_brainstorm": "chart",
     }
-    src = (REPO / "school" / "plugin_source.py").read_text(encoding="utf-8")
+    src = (REPO / "toolio" / "plugin_source.py").read_text(encoding="utf-8")
     for tool, skill in want.items():
         desc = server._TOOLS[tool]["description"]
         assert f"`{skill}`" in desc, f"{tool} never points at the {skill} skill"
@@ -392,7 +392,7 @@ def test_tool_descriptions_point_to_skills():
 
 def test_cli_brainstorm_canonical_prism_alias():
     out = subprocess.run(
-        [sys.executable, str(REPO / "school" / "cli.py"), "--help"],
+        [sys.executable, str(REPO / "toolio" / "cli.py"), "--help"],
         capture_output=True,
         text=True,
         cwd=str(REPO),
@@ -400,7 +400,7 @@ def test_cli_brainstorm_canonical_prism_alias():
     assert out.returncode == 0, out.stderr
     assert "brainstorm" in out.stdout, "CLI has no canonical brainstorm command"
     assert "prism" in out.stdout, "CLI lost the legacy prism alias"
-    from school import cli
+    from toolio import cli
 
     src = inspect.getsource(cli)
     assert re.search(r'"brainstorm"\s*:\s*_cmd_prism', src), (
@@ -410,7 +410,7 @@ def test_cli_brainstorm_canonical_prism_alias():
 
 
 def test_bridge_prism_is_documented_legacy_only():
-    from school import bridge
+    from toolio import bridge
 
     assert "prism" in bridge._COMMANDS, "wire compat broken: bridge must keep prism"
     for name in CRAFT:

@@ -1,4 +1,4 @@
-"""school quantify / school elicit — CLI regression tests.
+"""toolio quantify / toolio elicit — CLI regression tests.
 
 ALL INPUTS BELOW ARE SYNTHETIC TEST DATA (labelled); no real budgets, risks,
 or user requirements appear. These tests exercise the JSON boundary of the
@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from school.cli import main
+from toolio.cli import main
 
 QUANT_INPUT = {
     "title": "Synthetic budget fixture",
@@ -105,7 +105,7 @@ ELICIT_INPUT = {
 
 
 def _run(argv: list[str]) -> str:
-    with patch("sys.argv", ["school", *argv]):
+    with patch("sys.argv", ["toolio", *argv]):
         main()
     return ""
 

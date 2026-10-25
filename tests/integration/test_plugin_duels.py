@@ -1,6 +1,6 @@
-"""Competitive duels: School tools vs the 7 OpenCode plugins they replace.
+"""Competitive duels: Toolio tools vs the 7 OpenCode plugins they replace.
 
-Each class proves School's tool is SIGNIFICANTLY better than the external
+Each class proves Toolio's tool is SIGNIFICANTLY better than the external
 plugin on measurable criteria: richer field surface, action breadth,
 durable persistence, learning/observer output, and fail-open resilience.
 
@@ -67,7 +67,7 @@ def baseline_opencode_mem() -> dict[str, object]:
 @pytest.fixture
 def worktree():
     """Isolated worktree via tempfile.mkdtemp (not tmp_path: OneDrive-safe)."""
-    d = Path(tempfile.mkdtemp(prefix="school_duel_"))
+    d = Path(tempfile.mkdtemp(prefix="toolio_duel_"))
     try:
         yield d
     finally:
@@ -75,7 +75,7 @@ def worktree():
 
 
 def _obs_file(wt: Path) -> Path:
-    return wt / ".school" / "agent" / "observations.jsonl"
+    return wt / ".toolio" / "agent" / "observations.jsonl"
 
 
 def _obs_categories(wt: Path) -> set[str]:
@@ -110,12 +110,12 @@ def _patch_fetch_boom(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Duel 1: school_workflow vs superpowers
+# Duel 1: toolio_workflow vs superpowers
 # ---------------------------------------------------------------------------
 
 
 class TestWorkflowVsSuperpowers:
-    """superpowers gives general guidance; School persists runs, times each
+    """superpowers gives general guidance; Toolio persists runs, times each
     phase, learns from history, and supports custom workflows."""
 
     def test_four_builtin_workflows_vs_general_guidance(self, worktree):
@@ -136,7 +136,7 @@ class TestWorkflowVsSuperpowers:
         from core.agent.workflows import workflow
 
         workflow(worktree, "tdd", action="start")
-        wf_file = worktree / ".school" / "agent" / "workflows.json"
+        wf_file = worktree / ".toolio" / "agent" / "workflows.json"
         assert wf_file.exists()
         state = json.loads(wf_file.read_text(encoding="utf-8"))
         assert any(key.startswith("tdd@") for key in state)
@@ -212,21 +212,21 @@ class TestWorkflowVsSuperpowers:
         from core.agent.workflows import WorkflowResult, workflow
 
         r = workflow(worktree, "tdd", action="status")
-        school_fields = {f.name for f in fields(WorkflowResult)}
+        toolio_fields = {f.name for f in fields(WorkflowResult)}
         baseline_fields = set(baseline_superpowers("x"))
-        assert len(school_fields) > len(baseline_fields)
+        assert len(toolio_fields) > len(baseline_fields)
 
         assert isinstance(r, WorkflowResult)
-        assert len(school_fields) == 7  # ok, workflow, phase, phases, guidance, state, error
+        assert len(toolio_fields) == 7  # ok, workflow, phase, phases, guidance, state, error
 
 
 # ---------------------------------------------------------------------------
-# Duel 2: school_docs vs @upstash/context7-opencode
+# Duel 2: toolio_docs vs @upstash/context7-opencode
 # ---------------------------------------------------------------------------
 
 
 class TestDocsVsContext7:
-    """Context7 fetches live docs every call; School caches locally with
+    """Context7 fetches live docs every call; Toolio caches locally with
     version pinning, skeletonization, observer integration, and LRU eviction
     so the second call works offline."""
 
@@ -237,7 +237,7 @@ class TestDocsVsContext7:
         r1 = fetch_docs(worktree, "pytest fixtures")
         assert r1.ok and r1.cached is False
 
-        cache_file = worktree / ".school" / "agent" / "docs_cache.json"
+        cache_file = worktree / ".toolio" / "agent" / "docs_cache.json"
         assert cache_file.exists()
 
         # Network dies -> second call is served from the local cache.
@@ -255,7 +255,7 @@ class TestDocsVsContext7:
         fetch_docs(worktree, "fastapi routing", library="fastapi", version="0.100.0")
         fetch_docs(worktree, "fastapi routing", library="fastapi", version="0.110.0")
 
-        cache_file = worktree / ".school" / "agent" / "docs_cache.json"
+        cache_file = worktree / ".toolio" / "agent" / "docs_cache.json"
         keys = set(json.loads(cache_file.read_text(encoding="utf-8")))
         assert "fastapi:0.100.0:fastapi routing" in keys
         assert "fastapi:0.110.0:fastapi routing" in keys
@@ -288,7 +288,7 @@ class TestDocsVsContext7:
         for i in range(105):
             fetch_docs(worktree, f"query-{i}")
 
-        cache_file = worktree / ".school" / "agent" / "docs_cache.json"
+        cache_file = worktree / ".toolio" / "agent" / "docs_cache.json"
         keys = set(json.loads(cache_file.read_text(encoding="utf-8")))
         assert len(keys) == 100
         assert "query-104" in keys  # newest kept
@@ -302,28 +302,28 @@ class TestDocsVsContext7:
         assert result["results"] == []
         assert "learnings" not in result
 
-    def test_score_school_cache_vs_baseline_none(self, worktree, monkeypatch):
+    def test_score_toolio_cache_vs_baseline_none(self, worktree, monkeypatch):
         from core.agent.docfetcher import DocResult, fetch_docs
 
         _patch_fetch(monkeypatch, "cached content for the score check")
         fetch_docs(worktree, "score check")
-        cache_file = worktree / ".school" / "agent" / "docs_cache.json"
+        cache_file = worktree / ".toolio" / "agent" / "docs_cache.json"
         assert cache_file.exists()
 
         baseline = baseline_context7("score check")
         assert "cache_file" not in baseline
 
-        school_fields = {f.name for f in fields(DocResult)}
-        assert len(school_fields) > len(baseline)
+        toolio_fields = {f.name for f in fields(DocResult)}
+        assert len(toolio_fields) > len(baseline)
 
 
 # ---------------------------------------------------------------------------
-# Duel 3: school_research vs opencode-websearch-cited
+# Duel 3: toolio_research vs opencode-websearch-cited
 # ---------------------------------------------------------------------------
 
 
 class TestResearchVsWebsearchCited:
-    """websearch-cited returns plain sources; School returns findings with
+    """websearch-cited returns plain sources; Toolio returns findings with
     confidence, citations with relevance, 3 depth levels, 3 formats, and
     synthesis when internal knowledge is thin."""
 
@@ -402,26 +402,26 @@ class TestResearchVsWebsearchCited:
         r = research(worktree, "citation field comparison", cite=True)
         assert r.ok
 
-        # School citation dict has 4 fields; baseline source has 2.
+        # Toolio citation dict has 4 fields; baseline source has 2.
         assert set(r.citations[0].keys()) == {"id", "title", "url", "relevance"}
         assert len(r.citations[0]) == 4
         assert len(baseline_websearch_cited("q")["sources"][0]) == 2
 
-        # School finding dict has 3 fields (claim/confidence/source).
+        # Toolio finding dict has 3 fields (claim/confidence/source).
         assert set(r.findings[0].keys()) == {"claim", "confidence", "source"}
         assert len(r.findings[0]) == 3
 
-        school_fields = {f.name for f in fields(ResearchResult)}
-        assert len(school_fields) > len(baseline_websearch_cited("q"))
+        toolio_fields = {f.name for f in fields(ResearchResult)}
+        assert len(toolio_fields) > len(baseline_websearch_cited("q"))
 
 
 # ---------------------------------------------------------------------------
-# Duel 4: school_execute vs opencode-pty
+# Duel 4: toolio_execute vs opencode-pty
 # ---------------------------------------------------------------------------
 
 
 class TestExecuteVsPty:
-    """opencode-pty is raw terminal access; School records learning from
+    """opencode-pty is raw terminal access; Toolio records learning from
     every run, supports cwd/env injection, bounded output with a truncation
     flag, and kills the process tree on timeout."""
 
@@ -529,22 +529,22 @@ class TestExecuteVsPty:
         assert set(baseline.keys()) == {"command", "exit_code", "stdout", "stderr"}
         assert len(baseline) == 4
 
-        school_fields = {f.name for f in fields(ExecuteResult)}
-        assert len(school_fields) >= 9
+        toolio_fields = {f.name for f in fields(ExecuteResult)}
+        assert len(toolio_fields) >= 9
         for name in ("learned", "cwd", "env_overrides", "pid", "truncated", "duration_ms"):
-            assert name in school_fields
+            assert name in toolio_fields
 
         r = execute(worktree, "echo score", learn=False)
         assert isinstance(r, ExecuteResult)
 
 
 # ---------------------------------------------------------------------------
-# Duel 5: school_context vs @tarquinen/opencode-dcp
+# Duel 5: toolio_context vs @tarquinen/opencode-dcp
 # ---------------------------------------------------------------------------
 
 
 class TestContextVsDcp:
-    """DCP auto-prunes with no restore; School compresses explicitly,
+    """DCP auto-prunes with no restore; Toolio compresses explicitly,
     persists restorable blocks, builds immutable views, guards with a circuit
     breaker and kill switches, and renders chips."""
 
@@ -575,7 +575,7 @@ class TestContextVsDcp:
         assert rep.blocks_added >= 1
         assert rep.tokens_after < rep.tokens_before
 
-        blocks_files = list((worktree / ".school").rglob("*.blocks.json"))
+        blocks_files = list((worktree / ".toolio").rglob("*.blocks.json"))
         assert blocks_files, "compressed blocks must persist to disk"
 
     def test_restore_returns_pruned_messages(self, worktree, monkeypatch):
@@ -636,23 +636,23 @@ class TestContextVsDcp:
         assert isinstance(chip, str) and chip
         assert "chip" not in baseline_opencode_dcp()
 
-    def test_score_school_restore_vs_baseline_none(self, worktree, monkeypatch):
+    def test_score_toolio_restore_vs_baseline_none(self, worktree, monkeypatch):
         engine = self._engine(worktree, monkeypatch)
         assert callable(engine.restore)
         assert "restore" not in baseline_opencode_dcp()
 
-        # Score: School surfaces a restorable view; DCP surfaces only a count.
+        # Score: Toolio surfaces a restorable view; DCP surfaces only a count.
         assert set(baseline_opencode_dcp().keys()) == {"pruned"}
         assert engine.restore() is not None or engine.store.load() is not None
 
 
 # ---------------------------------------------------------------------------
-# Duel 6: school_goal vs opencode-goal-plugin
+# Duel 6: toolio_goal vs opencode-goal-plugin
 # ---------------------------------------------------------------------------
 
 
 class TestGoalVsGoalPlugin:
-    """opencode-goal-plugin has 1 action; School has 8 with persistence,
+    """opencode-goal-plugin has 1 action; Toolio has 8 with persistence,
     progress/constraints/success-criteria tracking and a full lifecycle."""
 
     def test_eight_actions_vs_one(self, worktree):
@@ -672,7 +672,7 @@ class TestGoalVsGoalPlugin:
         from core.agent.goals import goal
 
         goal(worktree, "set", goal_id="g1", objective="persist me")
-        goal_file = worktree / ".school" / "agent" / "goals.json"
+        goal_file = worktree / ".toolio" / "agent" / "goals.json"
         assert goal_file.exists()
         entries = json.loads(goal_file.read_text(encoding="utf-8"))
         assert entries[0]["objective"] == "persist me"
@@ -712,9 +712,9 @@ class TestGoalVsGoalPlugin:
     def test_score_action_count_beats_baseline(self, worktree):
         from core.agent.goals import GoalResult, goal
 
-        assert 8 > 1  # school actions vs goal-plugin's single set
-        school_fields = {f.name for f in fields(GoalResult)}
-        assert len(school_fields) > len(baseline_goal_plugin("obj"))
+        assert 8 > 1  # toolio actions vs goal-plugin's single set
+        toolio_fields = {f.name for f in fields(GoalResult)}
+        assert len(toolio_fields) > len(baseline_goal_plugin("obj"))
         assert goal(worktree, "set", goal_id="g1", objective="s").ok
 
 
@@ -724,12 +724,12 @@ class TestGoalVsGoalPlugin:
 
 
 class TestMemoryVsOpencodeMem:
-    """opencode-mem auto-captures and searches; School has 9 memory tools
+    """opencode-mem auto-captures and searches; Toolio has 9 memory tools
     backed by real conflict detection, confidence scoring, deduplication,
     knowledge supersession, and lifecycle management."""
 
     def test_nine_memory_tools_vs_auto_capture(self):
-        from school.bridge import _COMMANDS
+        from toolio.bridge import _COMMANDS
 
         memory_tools = [
             "remember", "recall", "learn", "search",
@@ -822,9 +822,9 @@ class TestMemoryVsOpencodeMem:
     def test_score_tool_count_beats_baseline(self):
         from core.learner.conflict import Conflict
 
-        assert 9 > 2  # school memory tools vs opencode-mem capture+search
-        school_fields = {f.name for f in fields(Conflict)}
-        assert len(school_fields) >= len(baseline_opencode_mem())
+        assert 9 > 2  # toolio memory tools vs opencode-mem capture+search
+        toolio_fields = {f.name for f in fields(Conflict)}
+        assert len(toolio_fields) >= len(baseline_opencode_mem())
 
 
 # ---------------------------------------------------------------------------
@@ -833,10 +833,10 @@ class TestMemoryVsOpencodeMem:
 
 
 class TestPluginScoreboard:
-    """Aggregate: School wins every duel on field surface and action breadth,
+    """Aggregate: Toolio wins every duel on field surface and action breadth,
     persists in all 7, and learns in at least 5."""
 
-    #: duel -> (school fields, baseline fields)
+    #: duel -> (toolio fields, baseline fields)
     FIELD_SURFACE = {
         "workflow_vs_superpowers": (7, 1),
         "docs_vs_context7": (8, 2),
@@ -847,7 +847,7 @@ class TestPluginScoreboard:
         "memory_vs_opencodemem": (9, 2),
     }
 
-    #: duel -> (school actions/modes, baseline actions)
+    #: duel -> (toolio actions/modes, baseline actions)
     ACTION_BREADTH = {
         "workflow_vs_superpowers": (7, 1),
         "docs_vs_context7": (4, 1),
@@ -878,7 +878,7 @@ class TestPluginScoreboard:
         "memory_vs_opencodemem",
     }
 
-    def test_school_wins_all_7_on_field_surface(self) -> None:
+    def test_toolio_wins_all_7_on_field_surface(self) -> None:
         from core.agent.docfetcher import DocResult
         from core.agent.executor import ExecuteResult
         from core.agent.goals import GoalResult
@@ -901,11 +901,11 @@ class TestPluginScoreboard:
             assert count == expected, f"{duel} field count drifted"
             assert count > baseline, f"{duel} lost the field-surface duel"
 
-    def test_school_wins_all_7_on_action_breadth(self) -> None:
-        for duel, (school_n, base_n) in self.ACTION_BREADTH.items():
-            assert school_n > base_n, f"{duel} lost the action duel"
+    def test_toolio_wins_all_7_on_action_breadth(self) -> None:
+        for duel, (toolio_n, base_n) in self.ACTION_BREADTH.items():
+            assert toolio_n > base_n, f"{duel} lost the action duel"
 
-    def test_school_persists_in_all_7_duels(self, worktree, monkeypatch) -> None:
+    def test_toolio_persists_in_all_7_duels(self, worktree, monkeypatch) -> None:
         from core.agent.docfetcher import fetch_docs
         from core.agent.executor import execute
         from core.agent.goals import goal
@@ -932,14 +932,14 @@ class TestPluginScoreboard:
         # memory lifecycle persistence
         from core.learner.lifecycle_manager import LifecycleManager
 
-        LifecycleManager().save(worktree / ".school" / "agent")
+        LifecycleManager().save(worktree / ".toolio" / "agent")
 
-        all_files = [p.name for p in (worktree / ".school").rglob("*") if p.is_file()]
+        all_files = [p.name for p in (worktree / ".toolio").rglob("*") if p.is_file()]
         joined = ",".join(all_files)
         for duel, artifact in self.PERSISTENCE.items():
             assert artifact in joined, f"{duel} wrote no {artifact}"
 
-    def test_school_learns_in_at_least_5_duels(self, worktree, monkeypatch) -> None:
+    def test_toolio_learns_in_at_least_5_duels(self, worktree, monkeypatch) -> None:
         from core.agent.executor import execute
         from core.agent.researcher import research
         from core.agent.workflows import workflow
@@ -965,14 +965,14 @@ class TestPluginScoreboard:
             sa, ba = self.ACTION_BREADTH[duel]
             persist = self.PERSISTENCE[duel]
             learning = "yes" if duel in self.LEARNING_DUELS else "no"
-            school_wins = sf > bf and sa > ba
-            wins += int(school_wins)
+            toolio_wins = sf > bf and sa > ba
+            wins += int(toolio_wins)
             lines.append(
                 f"{duel:<28} fields {sf:2d}>{bf}  actions {sa:2d}>{ba}  "
                 f"persist:{persist:<20} learn:{learning}"
             )
         lines.append("-" * 62)
-        lines.append(f"School wins: {wins}/7 duels")
+        lines.append(f"Toolio wins: {wins}/7 duels")
         lines.append(
             f"persistence: {len(self.PERSISTENCE)}/7  "
             f"learning: {len(self.LEARNING_DUELS)}/7 (>=5 required)"

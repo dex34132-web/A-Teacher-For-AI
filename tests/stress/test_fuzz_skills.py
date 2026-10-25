@@ -1,4 +1,4 @@
-"""Adversarial fuzz campaign for the 1A-2Z skill tool suite (school_skill_*).
+"""Adversarial fuzz campaign for the 1A-2Z skill tool suite (toolio_skill_*).
 
 Exercises EVERY skill tool and EVERY feature 2000 times with failure-seeking
 inputs (wrong types for every param, NUL, huge, cyclic, traversal, hostile
@@ -334,7 +334,7 @@ def _mk_skill(i: int) -> Skill:
 
 
 # ===========================================================================
-# 1. school_skill_list
+# 1. toolio_skill_list
 # ===========================================================================
 
 
@@ -350,7 +350,7 @@ class TestSkillListFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_list.state_filter",
+                                label="toolio_skill_list.state_filter",
                                 check=_tool_check)
         assert report.ok, report.summary()
 
@@ -365,7 +365,7 @@ class TestSkillListFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_list.scope_filter",
+                                label="toolio_skill_list.scope_filter",
                                 check=_tool_check)
         assert report.ok, report.summary()
 
@@ -385,13 +385,13 @@ class TestSkillListFuzz:
             assert result.data["count"] >= len(result.data["skills"])
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_list.limit_and_empty_registry",
+                                label="toolio_skill_list.limit_and_empty_registry",
                                 check=check)
         assert report.ok, report.summary()
 
 
 # ===========================================================================
-# 2. school_skill_search
+# 2. toolio_skill_search
 # ===========================================================================
 
 
@@ -413,7 +413,7 @@ class TestSkillSearchFuzz:
                 assert 0.0 <= hit["score"] <= 1.0
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_search.query_matching", check=check)
+                                label="toolio_skill_search.query_matching", check=check)
         assert report.ok, report.summary()
 
     def test_empty_huge_unicode_query(self, pool):
@@ -426,7 +426,7 @@ class TestSkillSearchFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_search.empty_huge_unicode_query",
+                                label="toolio_skill_search.empty_huge_unicode_query",
                                 check=_tool_check)
         assert report.ok, report.summary()
 
@@ -445,13 +445,13 @@ class TestSkillSearchFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_search.limit_include_unusable_scope",
+                                label="toolio_skill_search.limit_include_unusable_scope",
                                 check=_tool_check)
         assert report.ok, report.summary()
 
 
 # ===========================================================================
-# 3. school_skill_create
+# 3. toolio_skill_create
 # ===========================================================================
 
 
@@ -483,7 +483,7 @@ class TestSkillCreateFuzz:
                 purpose=_mixed(i, kw["purpose"], 3),
                 procedure=_mixed(i, kw["procedure"], 4),
             )),
-            label="school_skill_create.name_validation", check=_tool_check)
+            label="toolio_skill_create.name_validation", check=_tool_check)
         assert report.ok, report.summary()
 
     def test_content_validation(self, pool):
@@ -500,7 +500,7 @@ class TestSkillCreateFuzz:
                 expected_output=_pick(i, 11),
                 tags=_pick(i, 12),
             )),
-            label="school_skill_create.content_validation", check=_tool_check)
+            label="toolio_skill_create.content_validation", check=_tool_check)
         assert report.ok, report.summary()
 
     def test_duplicate_names(self, pool):
@@ -510,7 +510,7 @@ class TestSkillCreateFuzz:
             make_args=self._make(pool, lambda kw, i: kw.update(
                 name=_mixed(i, _VALID_NAME, 3),
             )),
-            label="school_skill_create.duplicate_names", check=_tool_check)
+            label="toolio_skill_create.duplicate_names", check=_tool_check)
         assert report.ok, report.summary()
 
     def test_hostile_skill_md(self, pool):
@@ -535,13 +535,13 @@ class TestSkillCreateFuzz:
 
         report = fuzz_fail_open(tool.execute, n=N,
                                 make_args=self._make(pool, mutate),
-                                label="school_skill_create.hostile_skill_md",
+                                label="toolio_skill_create.hostile_skill_md",
                                 check=_tool_check)
         assert report.ok, report.summary()
 
 
 # ===========================================================================
-# 4. school_skill_use
+# 4. toolio_skill_use
 # ===========================================================================
 
 
@@ -564,7 +564,7 @@ class TestSkillUseFuzz:
                 assert isinstance(result.data["markdown"], str)
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_use.by_name", check=check)
+                                label="toolio_skill_use.by_name", check=check)
         assert report.ok, report.summary()
 
     def test_by_query_and_missing(self, pool):
@@ -581,13 +581,13 @@ class TestSkillUseFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_use.by_query_and_missing",
+                                label="toolio_skill_use.by_query_and_missing",
                                 check=_tool_check)
         assert report.ok, report.summary()
 
 
 # ===========================================================================
-# 5. school_skill_feedback
+# 5. toolio_skill_feedback
 # ===========================================================================
 
 
@@ -611,7 +611,7 @@ class TestSkillFeedbackFuzz:
                 assert 0.0 <= conf <= 1.0, f"confidence out of range: {conf}"
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_feedback.success_failure",
+                                label="toolio_skill_feedback.success_failure",
                                 check=check)
         assert report.ok, report.summary()
 
@@ -628,12 +628,12 @@ class TestSkillFeedbackFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_feedback.bad_params", check=_tool_check)
+                                label="toolio_skill_feedback.bad_params", check=_tool_check)
         assert report.ok, report.summary()
 
 
 # ===========================================================================
-# 6. school_skill_status
+# 6. toolio_skill_status
 # ===========================================================================
 
 
@@ -650,7 +650,7 @@ class TestSkillStatusFuzz:
             assert isinstance(result.data["by_state"], dict)
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_status.empty_registry", check=check)
+                                label="toolio_skill_status.empty_registry", check=check)
         assert report.ok, report.summary()
 
     def test_huge_registry(self, pool):
@@ -671,7 +671,7 @@ class TestSkillStatusFuzz:
                 assert isinstance(result.data["by_state"], dict)
 
             report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                    label="school_skill_status.huge_registry",
+                                    label="toolio_skill_status.huge_registry",
                                     check=check)
             assert report.ok, report.summary()
         finally:
@@ -679,7 +679,7 @@ class TestSkillStatusFuzz:
 
 
 # ===========================================================================
-# 7. school_skill_evolve
+# 7. toolio_skill_evolve
 # ===========================================================================
 
 
@@ -695,7 +695,7 @@ class TestSkillEvolveFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_evolve.consolidate", check=_tool_check)
+                                label="toolio_skill_evolve.consolidate", check=_tool_check)
         assert report.ok, report.summary()
 
     def test_revise_versioning(self, pool):
@@ -716,7 +716,7 @@ class TestSkillEvolveFuzz:
                 assert isinstance(result.data.get("version"), int)
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_evolve.revise_versioning", check=check)
+                                label="toolio_skill_evolve.revise_versioning", check=check)
         assert report.ok, report.summary()
 
     def test_recompute(self, pool):
@@ -731,7 +731,7 @@ class TestSkillEvolveFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_evolve.recompute", check=_tool_check)
+                                label="toolio_skill_evolve.recompute", check=_tool_check)
         assert report.ok, report.summary()
 
     def test_bad_action_changes(self, pool):
@@ -747,7 +747,7 @@ class TestSkillEvolveFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_evolve.bad_action_changes",
+                                label="toolio_skill_evolve.bad_action_changes",
                                 check=_tool_check)
         assert report.ok, report.summary()
 
@@ -771,7 +771,7 @@ class TestGithubToolsFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_search_github.bounded_query",
+                                label="toolio_skill_search_github.bounded_query",
                                 check=_tool_check_loose)
         assert report.ok, report.summary()
 
@@ -792,7 +792,7 @@ class TestGithubToolsFuzz:
             assert result.data.get("ok") is not True or "repos" in result.data
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_search_github.offline_fail_open",
+                                label="toolio_skill_search_github.offline_fail_open",
                                 check=check)
         assert report.ok, report.summary()
 
@@ -809,7 +809,7 @@ class TestGithubToolsFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_discover.filter_security",
+                                label="toolio_skill_discover.filter_security",
                                 check=_tool_check_loose)
         assert report.ok, report.summary()
 
@@ -826,7 +826,7 @@ class TestGithubToolsFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_discover.hostile_repo_results",
+                                label="toolio_skill_discover.hostile_repo_results",
                                 check=_tool_check_loose)
         assert report.ok, report.summary()
 
@@ -848,7 +848,7 @@ class TestGithubToolsFuzz:
             assert result.data.get("ok") is not False or "reason" in result.data
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_analyze_external.budgeted_analysis",
+                                label="toolio_skill_analyze_external.budgeted_analysis",
                                 check=check)
         assert report.ok, report.summary()
 
@@ -866,7 +866,7 @@ class TestGithubToolsFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_analyze_external.fail_closed",
+                                label="toolio_skill_analyze_external.fail_closed",
                                 check=_tool_check_loose)
         assert report.ok, report.summary()
 
@@ -883,7 +883,7 @@ class TestGithubToolsFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_compare.vs_local", check=_tool_check_loose)
+                                label="toolio_skill_compare.vs_local", check=_tool_check_loose)
         assert report.ok, report.summary()
 
     def test_compare_empty_sets(self, empty_roots, monkeypatch):
@@ -899,7 +899,7 @@ class TestGithubToolsFuzz:
             }
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_compare.empty_sets", check=_tool_check_loose)
+                                label="toolio_skill_compare.empty_sets", check=_tool_check_loose)
         assert report.ok, report.summary()
 
     def test_import_approve_false(self, pool, monkeypatch):
@@ -925,7 +925,7 @@ class TestGithubToolsFuzz:
             assert result.data.get("action") != "imported", "imported without approval"
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_import.approve_false", check=check)
+                                label="toolio_skill_import.approve_false", check=check)
         assert report.ok, report.summary()
 
     def test_import_approve_true_candidate_state(self, pool, monkeypatch):
@@ -954,7 +954,7 @@ class TestGithubToolsFuzz:
                 assert state in ("candidate", "validating", "active")
 
         report = fuzz_fail_open(tool.execute, n=N, make_args=make,
-                                label="school_skill_import.approve_true_candidate_state",
+                                label="toolio_skill_import.approve_true_candidate_state",
                                 check=check)
         assert report.ok, report.summary()
 
@@ -1465,36 +1465,36 @@ def test_zz_ledger_summary(capsys):
             for trace in GUARD_TRACES[:8]:
                 print(f"  {trace}")
     expected = [
-        "school_skill_list.state_filter",
-        "school_skill_list.scope_filter",
-        "school_skill_list.limit_and_empty_registry",
-        "school_skill_search.query_matching",
-        "school_skill_search.empty_huge_unicode_query",
-        "school_skill_search.limit_include_unusable_scope",
-        "school_skill_create.name_validation",
-        "school_skill_create.content_validation",
-        "school_skill_create.duplicate_names",
-        "school_skill_create.hostile_skill_md",
-        "school_skill_use.by_name",
-        "school_skill_use.by_query_and_missing",
-        "school_skill_feedback.success_failure",
-        "school_skill_feedback.bad_params",
-        "school_skill_status.empty_registry",
-        "school_skill_status.huge_registry",
-        "school_skill_evolve.consolidate",
-        "school_skill_evolve.revise_versioning",
-        "school_skill_evolve.recompute",
-        "school_skill_evolve.bad_action_changes",
-        "school_skill_search_github.bounded_query",
-        "school_skill_search_github.offline_fail_open",
-        "school_skill_discover.filter_security",
-        "school_skill_discover.hostile_repo_results",
-        "school_skill_analyze_external.budgeted_analysis",
-        "school_skill_analyze_external.fail_closed",
-        "school_skill_compare.vs_local",
-        "school_skill_compare.empty_sets",
-        "school_skill_import.approve_false",
-        "school_skill_import.approve_true_candidate_state",
+        "toolio_skill_list.state_filter",
+        "toolio_skill_list.scope_filter",
+        "toolio_skill_list.limit_and_empty_registry",
+        "toolio_skill_search.query_matching",
+        "toolio_skill_search.empty_huge_unicode_query",
+        "toolio_skill_search.limit_include_unusable_scope",
+        "toolio_skill_create.name_validation",
+        "toolio_skill_create.content_validation",
+        "toolio_skill_create.duplicate_names",
+        "toolio_skill_create.hostile_skill_md",
+        "toolio_skill_use.by_name",
+        "toolio_skill_use.by_query_and_missing",
+        "toolio_skill_feedback.success_failure",
+        "toolio_skill_feedback.bad_params",
+        "toolio_skill_status.empty_registry",
+        "toolio_skill_status.huge_registry",
+        "toolio_skill_evolve.consolidate",
+        "toolio_skill_evolve.revise_versioning",
+        "toolio_skill_evolve.recompute",
+        "toolio_skill_evolve.bad_action_changes",
+        "toolio_skill_search_github.bounded_query",
+        "toolio_skill_search_github.offline_fail_open",
+        "toolio_skill_discover.filter_security",
+        "toolio_skill_discover.hostile_repo_results",
+        "toolio_skill_analyze_external.budgeted_analysis",
+        "toolio_skill_analyze_external.fail_closed",
+        "toolio_skill_compare.vs_local",
+        "toolio_skill_compare.empty_sets",
+        "toolio_skill_import.approve_false",
+        "toolio_skill_import.approve_true_candidate_state",
         "registry.load_corrupt_json",
         "registry.store_load_roundtrip",
         "registry.similarity_find_merge",

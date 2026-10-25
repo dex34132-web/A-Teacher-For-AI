@@ -206,8 +206,8 @@ def discover(
         "ok": True,
         "result": result.to_dict(include_content=False),
         "next_step": (
-            "Use school_skill_analyze_external on a candidate, then "
-            "school_skill_compare, then school_skill_import after user review."
+            "Use toolio_skill_analyze_external on a candidate, then "
+            "toolio_skill_compare, then toolio_skill_import after user review."
         ),
     }
 
@@ -422,7 +422,7 @@ def compare(
         "review": review_preview(candidate),
         "note": (
             "Improvement reports require explicit approval; use "
-            "school_skill_evolve to change local skills."
+            "toolio_skill_evolve to change local skills."
         ),
     }
 

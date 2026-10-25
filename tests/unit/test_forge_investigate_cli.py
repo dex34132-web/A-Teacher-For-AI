@@ -1,4 +1,4 @@
-"""CLI-layer tests for ``school investigate``.
+"""CLI-layer tests for ``toolio investigate``.
 
 ALL FIXTURES AND PROBE COMMANDS ARE SYNTHETIC. No real-world accuracy or
 human validation is claimed anywhere in this file.
@@ -31,7 +31,7 @@ def _case_file(tmp_path: Path) -> Path:
             entry_point="test_forge_investigate_cli",
             expected="the handler renders the case",
             observed="pending",
-            reproduction="run school investigate --file <case>",
+            reproduction="run toolio investigate --file <case>",
             classification="CONFIRMED DEFECT",
             confidence=0.9,
             confidence_justification="synthetic fixture",
@@ -44,14 +44,14 @@ def _case_file(tmp_path: Path) -> Path:
 
 
 def _run(argv: list[str], capsys: pytest.CaptureFixture[str]) -> tuple[int, str, str]:
-    """Invoke school.cli.main() in-process with argv; returns (exit, out, err)."""
+    """Invoke toolio.cli.main() in-process with argv; returns (exit, out, err)."""
     old = sys.argv
-    sys.argv = ["school", *argv]
+    sys.argv = ["toolio", *argv]
     code = 0
     try:
-        import school.cli
+        import toolio.cli
 
-        school.cli.main()
+        toolio.cli.main()
     except SystemExit as exc:
         code = int(exc.code or 0)
     finally:

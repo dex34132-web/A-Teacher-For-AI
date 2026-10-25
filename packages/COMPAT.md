@@ -1,12 +1,12 @@
-﻿# School â€” Universal Compatibility Guide (Phase D)
+﻿# Toolio â€” Universal Compatibility Guide (Phase D)
 
-School's tools reach **every** AI agent through two universal mechanisms:
+Toolio's tools reach **every** AI agent through two universal mechanisms:
 
-1. **MCP** (`packages/mcp/school_mcp/`) â€” the Model Context Protocol, a
+1. **MCP** (`packages/mcp/toolio_mcp/`) â€” the Model Context Protocol, a
    standard supported by Claude, ChatGPT, VS Code, Cursor, Zed, and more.
    Registers all **52 tools**. Runs over **stdio** (local) or **streamable-HTTP**
    (remote, `http://127.0.0.1:8765/mcp`).
-2. **Plugin / CLI bridge** (`packages/plugin/school_plugin/`) â€” the native
+2. **Plugin / CLI bridge** (`packages/plugin/toolio_plugin/`) â€” the native
    OpenCode TypeScript plugin (52 tools) plus CLI/MCP shims for every other host.
 
 Both are **fail-open**: hostile input never raises and never crashes the host.
@@ -15,12 +15,12 @@ Both are **fail-open**: hostile input never raises and never crashes the host.
 
 | Client | Kind | Transport | Config file | Key shape |
 |---|---|---|---|---|
-| OpenCode | local | stdio | `opencode.jsonc` | `mcp.school` |
+| OpenCode | local | stdio | `opencode.jsonc` | `mcp.toolio` |
 | Claude Code | local | stdio | `.mcp.json` | `mcpServers` |
 | Claude Desktop | local | stdio | `%APPDATA%\Claude\claude_desktop_config.json` | `mcpServers` |
 | Claude.ai (web) | remote | http | Settings â†’ Connectors | connector |
 | ChatGPT (web) | remote | http | Settings â†’ Connectors | connector |
-| OpenAI Codex CLI | local | stdio | `~/.codex/config.toml` | `[mcp_servers.school]` |
+| OpenAI Codex CLI | local | stdio | `~/.codex/config.toml` | `[mcp_servers.toolio]` |
 | Cursor | local | stdio | `~/.cursor/mcp.json` | `mcpServers` |
 | Windsurf | local | stdio | `~/.codeium/windsurf/mcp_config.json` | `mcpServers` |
 | Cline | local | stdio | `cline_mcp_settings.json` | `mcpServers` |
@@ -33,7 +33,7 @@ Both are **fail-open**: hostile input never raises and never crashes the host.
 Generate any row with:
 
 ```python
-from school_mcp.compat import generate, all_configs, as_json
+from toolio_mcp.compat import generate, all_configs, as_json
 print(as_json("cursor"))           # Cursor config
 print(as_json("chatgpt"))          # ChatGPT remote connector
 print(all_configs())               # every client at once
@@ -41,33 +41,33 @@ print(all_configs())               # every client at once
 
 ## Web interfaces (ChatGPT / Claude.ai)
 
-Web assistants connect to School as a **remote MCP connector** over
+Web assistants connect to Toolio as a **remote MCP connector** over
 streamable-HTTP. Start the server in HTTP mode, then register the URL:
 
 ```bash
-python -m school_mcp.server http     # serves http://127.0.0.1:8765/mcp
+python -m toolio_mcp.server http     # serves http://127.0.0.1:8765/mcp
 ```
 
 Then add `http://127.0.0.1:8765/mcp` as a custom connector in ChatGPT
-(developer mode) or Claude.ai (Connectors â†’ Add custom connector). School
+(developer mode) or Claude.ai (Connectors â†’ Add custom connector). Toolio
 exposes all 52 tools to the web assistant through that one URL.
 
 ## MCP in general
 
-MCP is the great equalizer: build once, run in any compliant client. School's
+MCP is the great equalizer: build once, run in any compliant client. Toolio's
 server speaks the standard protocol, so any present-or-future MCP client â€”
 desktop, editor, CLI, or web â€” can discover and call all 52 tools with no
 custom code. Local clients spawn the server over stdio; remote/web clients
 reach it over streamable-HTTP. Both paths route into the same fail-open
-`call_tool` dispatch (`packages/mcp/school_mcp/tools.py`).
+`call_tool` dispatch (`packages/mcp/toolio_mcp/tools.py`).
 
 ## Plugin / CLI bridge
 
 For hosts that load native plugins (OpenCode), `emit_opencode()` ships the full
 TypeScript plugin with 52 tools and the visual/guard layers. For every other
 host, `emit_plugin(cli)` returns the right MCP registration shim so the agent
-gets School's tools through MCP. `school-bridge '<json>'` and
-`python -m school.cli <cmd>` remain available for shell-driven agents.
+gets Toolio's tools through MCP. `toolio-bridge '<json>'` and
+`python -m toolio.cli <cmd>` remain available for shell-driven agents.
 
 ## Fail-proof guarantees
 

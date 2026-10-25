@@ -1,4 +1,4 @@
-"""1A-2Z Phase 2 tools: GitHub skill discovery (school_skill_*).
+"""1A-2Z Phase 2 tools: GitHub skill discovery (toolio_skill_*).
 
 Thin adapters over core.skillgen.github: each tool is opt-in, network-bound
 discovery only (no Phase 1 tool ever performs network I/O). Failures return
@@ -77,12 +77,12 @@ class SkillSearchGithubTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_search_github"
+        return "toolio_skill_search_github"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_search_github to run bounded GitHub repository "
+            "Use toolio_skill_search_github to run bounded GitHub repository "
             "searches for a capability gap and return candidate skill sources. "
             "Read-only; network required. Use only when local skills are "
             "insufficient."
@@ -115,12 +115,12 @@ class SkillDiscoverTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_discover"
+        return "toolio_skill_discover"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_discover to scan GitHub search results for "
+            "Use toolio_skill_discover to scan GitHub search results for "
             "skill-like files with deterministic filtering and security "
             "classification. Returns candidates for analysis; never downloads "
             "repositories or executes code."
@@ -153,12 +153,12 @@ class SkillAnalyzeExternalTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_analyze_external"
+        return "toolio_skill_analyze_external"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_analyze_external to run budgeted model analysis "
+            "Use toolio_skill_analyze_external to run budgeted model analysis "
             "on one GitHub candidate: relevance, quality, security, and local "
             "duplication. Read-only and fail-closed; malformed model output "
             "rejects the candidate."
@@ -199,15 +199,15 @@ class SkillCompareTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_compare"
+        return "toolio_skill_compare"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_compare to compare a GitHub candidate against "
+            "Use toolio_skill_compare to compare a GitHub candidate against "
             "local skills for duplicates or improvement. Read-only; any local "
             "skill change still requires explicit approval via "
-            "school_skill_evolve."
+            "toolio_skill_evolve."
         )
 
     @property
@@ -241,12 +241,12 @@ class SkillImportTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_import"
+        return "toolio_skill_import"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_import to import an approved GitHub candidate "
+            "Use toolio_skill_import to import an approved GitHub candidate "
             "into the local registry after user review. Requires approve=true; "
             "imported skills enter the Phase 1 lifecycle as CANDIDATE, never "
             "auto-PROVEN."

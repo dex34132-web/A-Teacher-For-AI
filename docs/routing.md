@@ -1,6 +1,6 @@
 # Adaptive Routing
 
-School's adaptive routing loop decides **when and how hard School's tools
+Toolio's adaptive routing loop decides **when and how hard Toolio's tools
 should fire** for what you are doing right now — and it does the same for
 non-coding work, because routing is about the situation, not the file type.
 
@@ -10,56 +10,56 @@ non-coding work, because routing is about the situation, not the file type.
 you start work
     │
     ▼
-school_route (assess)  ──►  severity: light | medium | high
+toolio_route (assess)  ──►  severity: light | medium | high
     │                       engage:   skill | both | none
     │                       reason (micro-model, or self-rated via MCP)
     ▼
 escalation table (below) decides:
-    ├── light        → the school-routing skill alone
-    ├── medium/high  → tools + school-routing skill together
+    ├── light        → the toolio-routing skill alone
+    ├── medium/high  → tools + toolio-routing skill together
     └── none         → nothing engages
     │
     ▼
 execution evidence is appended (JSONL, per project)
     │
     ▼
-school_route_stats shows counts, avg_ms, recent assess/report
+toolio_route_stats shows counts, avg_ms, recent assess/report
 entries, and the current knobs
     │
     ▼
-the school-routing skill reviews stats, writes routing lessons,
-and tunes .school/routing.json          ──► back to the top
+the toolio-routing skill reviews stats, writes routing lessons,
+and tunes .toolio/routing.json          ──► back to the top
 ```
 
 Four pieces make the loop:
 
 | Piece | What it does |
 | --- | --- |
-| `school_route` (assess) | Grades the current situation; returns severity, engage, reason, plus the **next tools and skills** the micro-model picked for this situation. |
-| `school_route` (report) | Stores a routing lesson as a memory (`tags: ["routing", outcome]`). |
-| `school_route_stats` | Per-tool call counts, avg_ms, recent assess/report entries, current knobs. |
-| `school_dashboard` | One-glance status: route, next picks, optimizer savings, learner, diagnose. Call once per prompt. |
-| `school-routing` skill | Gathers stats, reviews them visibly, tunes knobs, audits what changed. |
+| `toolio_route` (assess) | Grades the current situation; returns severity, engage, reason, plus the **next tools and skills** the micro-model picked for this situation. |
+| `toolio_route` (report) | Stores a routing lesson as a memory (`tags: ["routing", outcome]`). |
+| `toolio_route_stats` | Per-tool call counts, avg_ms, recent assess/report entries, current knobs. |
+| `toolio_dashboard` | One-glance status: route, next picks, optimizer savings, learner, diagnose. Call once per prompt. |
+| `toolio-routing` skill | Gathers stats, reviews them visibly, tunes knobs, audits what changed. |
 
 ## Always-visible status
 
-Two mechanisms make School show itself on **every** prompt execution:
+Two mechanisms make Toolio show itself on **every** prompt execution:
 
 1. **Footer** — the `experimental.text.complete` hook appends one line under
    every assistant response:
 
    ```
-   [school] route: medium/both · next: school_recall, school_search, school-routing ·
+   [toolio] route: medium/both · next: toolio_recall, toolio_search, toolio-routing ·
    ctx: -1240tok (18%) · recall: 3 · learn: ok · diag: ok
    ```
 
-   - `route` — last `school_route` decision (`severity/engage`).
+   - `route` — last `toolio_route` decision (`severity/engage`).
    - `next` — tools/skills the micro-model picked for the situation (falls back
      to engagement defaults: `skill` → the skill; `both` → recall + search + skill).
    - `ctx` — last context-optimizer savings (`-savedtok (pct%)`).
    - `recall` — last recall hit count; `learn` — last learner result
      (`ready`/`ok`/`fail`/`off`); `diag` — bridge health.
-2. **`school_dashboard` tool** — the same status as a visible tool card; its
+2. **`toolio_dashboard` tool** — the same status as a visible tool card; its
    description tells the model to call it once per user turn. The MCP twin
    reports what the MCP process can see (evidence tail + bridge health).
 
@@ -70,7 +70,7 @@ dashboard tool itself stays available for on-demand checks.
 
 | Severity | Engage | What runs |
 | --- | --- | --- |
-| `light` | `skill` | The `school-routing` skill reviews and tunes; tools stay quiet. |
+| `light` | `skill` | The `toolio-routing` skill reviews and tunes; tools stay quiet. |
 | `medium` | `both` | Tools fire **and** the skill shows its work alongside them. |
 | `high` | `both` | Same as medium — tool + skill together. |
 | `none` | `none` | Nothing engages (only when the micro-model says so verbatim). |
@@ -84,11 +84,11 @@ tell what the loop decided and why.
 | Env | Effect |
 | --- | --- |
 | `SCHOOL_HOOKS=0` | All execution/prompt hooks off — no recall, no markers, no injection. |
-| `SCHOOL_ROUTE=0` | No micro-model assess calls; `school_route` degrades without engaging the skill. |
+| `SCHOOL_ROUTE=0` | No micro-model assess calls; `toolio_route` degrades without engaging the skill. |
 
 (The context optimizer has its own switch, `SCHOOL_CTX=0`, independent of both.)
 
-## Knobs: `.school/routing.json`
+## Knobs: `.toolio/routing.json`
 
 Per-project file. Unknown keys are ignored safely (kept for reference — the
 `calibration` entry uses this). Invalid values fall back to defaults per key.
@@ -107,29 +107,29 @@ Example:
 ```json
 {
   "recall_threshold": 0.3,
-  "skip_tools": ["school_status"],
-  "force_tools": ["school_recall"],
+  "skip_tools": ["toolio_status"],
+  "force_tools": ["toolio_recall"],
   "calibration": "ask only when blocked"
 }
 ```
 
 ## MCP fallback (no model client)
 
-The MCP server has no session with a model, so `school_route` mode=assess
+The MCP server has no session with a model, so `toolio_route` mode=assess
 requires an explicit `severity` (`light | medium | high`) and answers with
 `source: "self-rated"` — same escalation table, no micro-model round trip.
-`mode=report` and `school_route_stats` behave exactly like the plugin path.
+`mode=report` and `toolio_route_stats` behave exactly like the plugin path.
 
 ## Example flows (non-coding)
 
 **Planning a trip** — "assess: planning a 5-day trip with two kids, need
 itineraries and a budget" → medium → tools help gather, the skill audits the
-plan against your preferences; lesson: "check school_route_stats before
+plan against your preferences; lesson: "check toolio_route_stats before
 adding another research tool."
 
 **Studying** — "assess: reviewing organic chemistry notes before an exam" →
 light → the skill alone suggests a study routing (recall threshold raised,
-`force_tools: ["school_recall"]` so past notes resurface).
+`force_tools: ["toolio_recall"]` so past notes resurface).
 
 **Cooking** — "assess: adapting a curry recipe to what's in the fridge" →
 light → skill-only: gather evidence (stats), decide, act, audit — visibly,
@@ -143,6 +143,6 @@ as `calibration` in `routing.json`.
 
 ## Lessons are data, never instructions
 
-Routing lessons are memories. School never executes memory content as
+Routing lessons are memories. Toolio never executes memory content as
 instructions — they inform knobs and tool behavior only, and only when a
 human-visible audit trail says why.

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Teach School where/where not to use its tools via a self-rating/micro-model assess tool, a stats tool, hook-side evidence tracking, adjustable knobs, and a `school-routing` skill — visible at every step.
+**Goal:** Teach Toolio where/where not to use its tools via a self-rating/micro-model assess tool, a stats tool, hook-side evidence tracking, adjustable knobs, and a `toolio-routing` skill — visible at every step.
 
-**Architecture:** Plugin-side (TypeScript inside `school/plugin_source.py`) adds `school_route` (assess/report) and `school_route_stats` tools plus JSONL evidence tracking in `tool.execute.after` and knobs reading in the recall path. MCP-side (`school/mcp/server.py`) mirrors both tools with a self-rated fallback (no model client) and its own evidence/stats readers. A new `school/skill_source.py` holds the `school-routing` SKILL.md, shipped to `~/.config/opencode/skills/` by `school install`.
+**Architecture:** Plugin-side (TypeScript inside `toolio/plugin_source.py`) adds `toolio_route` (assess/report) and `toolio_route_stats` tools plus JSONL evidence tracking in `tool.execute.after` and knobs reading in the recall path. MCP-side (`toolio/mcp/server.py`) mirrors both tools with a self-rated fallback (no model client) and its own evidence/stats readers. A new `toolio/skill_source.py` holds the `toolio-routing` SKILL.md, shipped to `~/.config/opencode/skills/` by `toolio install`.
 
 **Tech Stack:** TypeScript (plugin, embedded in a Python string), Python 3.14 + `mcp>=2.0`, pytest, node `--check`, OpenCode SDK client (session/prompt/config).
 
@@ -22,7 +22,7 @@
 - Engage mapping (parity TS↔Python, tested): `light → "skill"`, `medium|high → "both"`; explicit micro-model `none` allowed only when returned verbatim; never `none` when unsure.
 - Lessons: bridge `remember` with tags `["routing", <helpful|useless|neutral>]`, outcome mapped helpful→SUCCESS, useless→FAILURE, neutral→NEUTRAL.
 - Descriptions must be identical on TS and MCP (existing parity regex covers new tools automatically) and domain-general ("for anything, not only coding").
-- After every TS edit: `node --check` extracted source, then `school install --force` + MATCH check.
+- After every TS edit: `node --check` extracted source, then `toolio install --force` + MATCH check.
 - ruff clean on every changed file; full suite green before final commit.
 - Commit per task, conventional style (`feat(plugin): …`, `feat(mcp): …`, etc.).
 
@@ -30,11 +30,11 @@
 
 | File | Responsibility |
 |---|---|
-| `school/plugin_source.py` (edit) | TS: engage/knobs/evidence helpers, `school_route`, `school_route_stats`, tracking + routing marker in `tool.execute.after`, knobs-aware recall |
-| `school/mcp/server.py` (edit) | MCP parity: two `_TOOLS` entries, `_call_tool` special-cases, engage/evidence/stats helpers |
-| `school/skill_source.py` (create) | `ROUTING_SKILL_MD` string (single source of truth for the skill) |
-| `school/cli.py` (edit) | `school install` writes `~/.config/opencode/skills/school-routing/SKILL.md` |
-| `tests/unit/test_school_routing.py` (create) | TS-source + Python unit tests for all routing behavior |
+| `toolio/plugin_source.py` (edit) | TS: engage/knobs/evidence helpers, `toolio_route`, `toolio_route_stats`, tracking + routing marker in `tool.execute.after`, knobs-aware recall |
+| `toolio/mcp/server.py` (edit) | MCP parity: two `_TOOLS` entries, `_call_tool` special-cases, engage/evidence/stats helpers |
+| `toolio/skill_source.py` (create) | `ROUTING_SKILL_MD` string (single source of truth for the skill) |
+| `toolio/cli.py` (edit) | `toolio install` writes `~/.config/opencode/skills/toolio-routing/SKILL.md` |
+| `tests/unit/test_toolio_routing.py` (create) | TS-source + Python unit tests for all routing behavior |
 | `tests/unit/test_mcp_server.py` (edit) | MCP contract tests (assess severity, engage, report payload, stats) |
 | `tests/integration/test_mcp_stdio.py` (edit) | Live stdio: assess/report/stats round-trip |
 | `docs/routing.md` (create) | User-facing doc (domain-general) |
@@ -45,8 +45,8 @@
 ### Task 1: TS routing core — helpers, knobs, evidence tracking, routing marker
 
 **Files:**
-- Modify: `school/plugin_source.py` (imports line 12; helpers after `hooksEnabled` ~line 246; `recallForExecution` ~line 321; `tool.execute.before/after` ~lines 968-996)
-- Test: `tests/unit/test_school_routing.py` (create)
+- Modify: `toolio/plugin_source.py` (imports line 12; helpers after `hooksEnabled` ~line 246; `recallForExecution` ~line 321; `tool.execute.before/after` ~lines 968-996)
+- Test: `tests/unit/test_toolio_routing.py` (create)
 
 **Interfaces:**
 - Consumes: existing `fileExists`, `resolve`, `hooksEnabled`, `HOOK_*` consts, `executionRecalls` map, `hasMemoryRoot`.
@@ -54,14 +54,14 @@
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `tests/unit/test_school_routing.py`:
+Create `tests/unit/test_toolio_routing.py`:
 
 ```python
 """TS-source contract tests for the adaptive routing loop (Phase 1)."""
 
 import re
 
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 
 class TestRoutingCoreHelpers:
@@ -136,12 +136,12 @@ class TestRoutingCoreHelpers:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_routing.py -q`
 Expected: FAIL (helpers/markers absent).
 
 - [ ] **Step 3: Implement TS core**
 
-In `school/plugin_source.py`:
+In `toolio/plugin_source.py`:
 
 1. Replace the import line:
 ```python
@@ -182,11 +182,11 @@ function normalizeSeverity(value: unknown): string {
 }
 
 function memoryRoot(worktree: string): string {
-  for (const dir of [".school", ".lerev", ".evo"]) {
+  for (const dir of [".toolio", ".toolio", ".evo"]) {
     const root = resolve(worktree, dir)
     if (fileExists(resolve(root, "memory"))) return root
   }
-  return resolve(worktree, ".school")
+  return resolve(worktree, ".toolio")
 }
 
 function clampNum(v: unknown, fallback: number, lo: number, hi: number): number {
@@ -275,47 +275,47 @@ appendEvidence(ctx.worktree, {
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-& ".venv\Scripts\python.exe" -c "import pathlib; from school.plugin_source import TS_PLUGIN_SOURCE; p=pathlib.Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\school_check.ts'); p.parent.mkdir(parents=True, exist_ok=True); p.write_text(TS_PLUGIN_SOURCE, encoding='utf-8'); print(p)"
-node --check "C:\Users\dex34\AppData\Local\Temp\opencode\school_check.ts"
+& ".venv\Scripts\python.exe" -c "import pathlib; from toolio.plugin_source import TS_PLUGIN_SOURCE; p=pathlib.Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\toolio_check.ts'); p.parent.mkdir(parents=True, exist_ok=True); p.write_text(TS_PLUGIN_SOURCE, encoding='utf-8'); print(p)"
+node --check "C:\Users\dex34\AppData\Local\Temp\opencode\toolio_check.ts"
 ```
-Expected: exit 0. Then `& ".venv\Scripts\python.exe" -m school install --force` and the MATCH snippet from prior sessions (read installed file, compare to `TS_PLUGIN_SOURCE`).
+Expected: exit 0. Then `& ".venv\Scripts\python.exe" -m toolio install --force` and the MATCH snippet from prior sessions (read installed file, compare to `TS_PLUGIN_SOURCE`).
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_routing.py -q`
 Expected: PASS (all).
 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add school/plugin_source.py tests/unit/test_school_routing.py; if ($?) { git commit -m "feat(plugin): routing core - knobs, evidence tracking, engage mapping, routing marker" }
+git add toolio/plugin_source.py tests/unit/test_toolio_routing.py; if ($?) { git commit -m "feat(plugin): routing core - knobs, evidence tracking, engage mapping, routing marker" }
 ```
 
 ---
 
-### Task 2: `school_route` + `school_route_stats` plugin tools
+### Task 2: `toolio_route` + `toolio_route_stats` plugin tools
 
 **Files:**
-- Modify: `school/plugin_source.py` (helpers after Task 1 block; new tools inside `tool: {` object, after `school_diagnose`)
-- Test: `tests/unit/test_school_routing.py` (extend)
+- Modify: `toolio/plugin_source.py` (helpers after Task 1 block; new tools inside `tool: {` object, after `toolio_diagnose`)
+- Test: `tests/unit/test_toolio_routing.py` (extend)
 
 **Interfaces:**
 - Consumes: `engageFor`, `normalizeSeverity`, `memoryRoot`, `appendEvidence`, `readKnobs`, `invokeBridge/python/bridgePath`, `ctx.client`.
-- Produces: TS functions `routePrompt(situation: string): string`, `parseRouteDecision(text: string): RouteDecision | null`, `microAssess(client: unknown, directory: string, situation: string): Promise<RouteDecision | null>`; tools `school_route` (args: `mode, situation, severity?, lesson?, outcome?`), `school_route_stats` (arg: `limit?`) returning `{title, output, metadata: {engagement}}`.
+- Produces: TS functions `routePrompt(situation: string): string`, `parseRouteDecision(text: string): RouteDecision | null`, `microAssess(client: unknown, directory: string, situation: string): Promise<RouteDecision | null>`; tools `toolio_route` (args: `mode, situation, severity?, lesson?, outcome?`), `toolio_route_stats` (arg: `limit?`) returning `{title, output, metadata: {engagement}}`.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `tests/unit/test_school_routing.py`:
+Append to `tests/unit/test_toolio_routing.py`:
 
 ```python
 class TestRouteTools:
     def test_tools_registered(self):
-        names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
-        assert "school_route" in names
-        assert "school_route_stats" in names
+        names = re.findall(r"^\s+(toolio_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+        assert "toolio_route" in names
+        assert "toolio_route_stats" in names
 
     def test_descriptions_are_routing_guided(self):
-        for name in ("school_route", "school_route_stats"):
+        for name in ("toolio_route", "toolio_route_stats"):
             match = re.search(
                 rf"{name}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
                 TS_PLUGIN_SOURCE,
@@ -347,21 +347,21 @@ class TestRouteTools:
         assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
 
     def test_report_stores_tagged_lesson(self):
-        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
-        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
+        idx = TS_PLUGIN_SOURCE.index("toolio_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("toolio_route_stats: tool(")]
         assert '"routing"' in block
         assert '"helpful"' in block and '"useless"' in block and '"neutral"' in block
         assert '"SUCCESS"' in block and '"FAILURE"' in block and '"NEUTRAL"' in block
         assert 'command: "remember"' in block
 
     def test_assess_appends_evidence_and_metadata(self):
-        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
-        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
+        idx = TS_PLUGIN_SOURCE.index("toolio_route: tool(")
+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("toolio_route_stats: tool(")]
         assert 'kind: "assess"' in block
         assert "engagement:" in block
 
     def test_stats_aggregates(self):
-        idx = TS_PLUGIN_SOURCE.index("school_route_stats: tool(")
+        idx = TS_PLUGIN_SOURCE.index("toolio_route_stats: tool(")
         block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index('"tool.execute.before"')]
         assert "aggregates" in block
         assert "avg_ms" in block
@@ -372,19 +372,19 @@ class TestRouteTools:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_routing.py -q`
 Expected: FAIL on the new class.
 
 - [ ] **Step 3: Implement the tools**
 
-In `school/plugin_source.py`, inside the `School` function (so `bridge/python/bridgePath/ctx` are in scope), after `recallForExecution` add:
+In `toolio/plugin_source.py`, inside the `Toolio` function (so `bridge/python/bridgePath/ctx` are in scope), after `recallForExecution` add:
 
 ```ts
   interface RouteDecision { severity: string; engage: string; reason: string }
 
   const routePrompt = (situation: string): string =>
     [
-      "You are a routing classifier for school tools. Situation: " + situation,
+      "You are a routing classifier for toolio tools. Situation: " + situation,
       "severity: light (trivial) | medium (real task) | high (critical).",
       "engage: skill for light, both for medium/high (tool and skill together).",
       "Never choose engage none unless the situation is unrelated to tool routing.",
@@ -421,7 +421,7 @@ In `school/plugin_source.py`, inside the `School` function (so `bridge/python/br
       )
       const work = (async (): Promise<RouteDecision | null> => {
         const created = await c.session.create({
-          body: { title: "school-route" },
+          body: { title: "toolio-route" },
           query: { directory },
         })
         const sessionID = created?.data?.id ?? created?.id
@@ -467,12 +467,12 @@ In `school/plugin_source.py`, inside the `School` function (so `bridge/python/br
   }
 ```
 
-Inside the `tool: {` object, after `school_diagnose`, add:
+Inside the `tool: {` object, after `toolio_diagnose`, add:
 
 ```ts
-      school_route: tool({
+      toolio_route: tool({
         description:
-          "Assess how much School routing machinery a situation needs " +
+          "Assess how much Toolio routing machinery a situation needs " +
           "(mode assess: tiny real model call -> engage skill or both) or " +
           "store a routing lesson (mode report: what worked where, tagged " +
           "and retrievable). Use when starting non-trivial work or after a " +
@@ -503,7 +503,7 @@ Inside the `tool: {` object, after `school_diagnose`, add:
           const situation = String(args.situation ?? "").slice(0, 500)
           if (!situation.trim()) {
             return {
-              title: "School Route — Failed",
+              title: "Toolio Route — Failed",
               output: "Error: situation is required (max 500 chars).",
               metadata: { engagement: "failed" },
             }
@@ -512,15 +512,15 @@ Inside the `tool: {` object, after `school_diagnose`, add:
           if (mode === "report") {
             if (!bridge) {
               return {
-                title: "School Route — Failed",
-                output: "School: unavailable — no bridge found. Run `school install`.",
+                title: "Toolio Route — Failed",
+                output: "Toolio: unavailable — no bridge found. Run `toolio install`.",
                 metadata: { engagement: "failed" },
               }
             }
             const lesson = String(args.lesson ?? "").trim().slice(0, 1000)
             if (!lesson) {
               return {
-                title: "School Route — Failed",
+                title: "Toolio Route — Failed",
                 output: "Error: lesson is required for mode=report.",
                 metadata: { engagement: "failed" },
               }
@@ -543,7 +543,7 @@ Inside the `tool: {` object, after `school_diagnose`, add:
             })
             appendEvidence(context.worktree, {
               kind: "report",
-              tool: "school_route",
+              tool: "toolio_route",
               ms: 0,
               ok: Boolean(resp.ok),
               outcome,
@@ -551,13 +551,13 @@ Inside the `tool: {` object, after `school_diagnose`, add:
             if (!resp.ok) {
               const err = (resp as any).error ?? {}
               return {
-                title: "School Route — Failed",
+                title: "Toolio Route — Failed",
                 output: `Error [${err.type}]: ${err.message}`,
                 metadata: { engagement: "failed" },
               }
             }
             return {
-              title: "School Route — Reported",
+              title: "Toolio Route — Reported",
               output: `Stored routing lesson (id ${(resp as any).id ?? "?"}, outcome ${outcome}).`,
               metadata: { engagement: "reported" },
             }
@@ -565,7 +565,7 @@ Inside the `tool: {` object, after `school_diagnose`, add:
 
           if (mode !== "assess") {
             return {
-              title: "School Route — Failed",
+              title: "Toolio Route — Failed",
               output: 'Error: mode must be "assess" or "report".',
               metadata: { engagement: "failed" },
             }
@@ -590,7 +590,7 @@ Inside the `tool: {` object, after `school_diagnose`, add:
           }
           appendEvidence(context.worktree, {
             kind: "assess",
-            tool: "school_route",
+            tool: "toolio_route",
             ms: 0,
             ok: true,
             severity: decision.severity,
@@ -599,9 +599,9 @@ Inside the `tool: {` object, after `school_diagnose`, add:
           const nextStep =
             decision.engage === "none"
               ? "\nNo routing machinery needed for this situation."
-              : "\nNext: load the `school-routing` skill (skill tool) so the tool and skill work together."
+              : "\nNext: load the `toolio-routing` skill (skill tool) so the tool and skill work together."
           return {
-            title: `School Route — ${decision.severity}`,
+            title: `Toolio Route — ${decision.severity}`,
             output:
               JSON.stringify({ source, ...decision }, null, 2) + nextStep,
             metadata: { engagement: decision.engage },
@@ -609,11 +609,11 @@ Inside the `tool: {` object, after `school_diagnose`, add:
         },
       }),
 
-      school_route_stats: tool({
+      toolio_route_stats: tool({
         description:
           "Aggregated routing evidence: per-tool call counts and average " +
           "durations, recent assess/report entries, current knobs, and " +
-          "recent routing lessons. Use before adjusting how School routes, " +
+          "recent routing lessons. Use before adjusting how Toolio routes, " +
           "or when the routing skill asks for current numbers - for " +
           "anything, not only coding.",
         args: {
@@ -680,7 +680,7 @@ Inside the `tool: {` object, after `school_diagnose`, add:
           const knobs = readKnobs(context.worktree)
           const last = entries.length ? entries[entries.length - 1] : null
           return {
-            title: "School Routing Stats",
+            title: "Toolio Routing Stats",
             output: JSON.stringify(
               {
                 last_activity: last ? last.ts : null,
@@ -705,18 +705,18 @@ Inside the `tool: {` object, after `school_diagnose`, add:
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_routing.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_routing.py -q`
 Expected: PASS.
 
 - [ ] **Step 6: Run the full plugin test set + hooks tests for regressions**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_plugin_hooks.py tests/unit/test_school_plugin_bridge.py tests/unit/test_school_identity_compat.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_plugin_hooks.py tests/unit/test_toolio_plugin_bridge.py tests/unit/test_toolio_identity_compat.py -q`
 Expected: PASS. (If the identity test's exact-tool-count assertions exist, update the expected tool list there to include the two new tools — additive only.)
 
 - [ ] **Step 7: Commit**
 
 ```powershell
-git add school/plugin_source.py tests/unit/test_school_routing.py; if ($?) { git commit -m "feat(plugin): school_route (micro-model assess + lesson report) and school_route_stats tools" }
+git add toolio/plugin_source.py tests/unit/test_toolio_routing.py; if ($?) { git commit -m "feat(plugin): toolio_route (micro-model assess + lesson report) and toolio_route_stats tools" }
 ```
 
 ---
@@ -724,12 +724,12 @@ git add school/plugin_source.py tests/unit/test_school_routing.py; if ($?) { git
 ### Task 3: MCP parity — two tools + helpers
 
 **Files:**
-- Modify: `school/mcp/server.py` (`_TOOLS` dict after `school_diagnose`; helpers after `_build_request`; `_call_tool` special-cases)
+- Modify: `toolio/mcp/server.py` (`_TOOLS` dict after `toolio_diagnose`; helpers after `_build_request`; `_call_tool` special-cases)
 - Test: `tests/unit/test_mcp_server.py` (extend)
 
 **Interfaces:**
 - Consumes: `_TOOLS`, `_build_request(worktree, tool, args)`, `_bridge_call(command, req)`, `_list_tools`, existing `types` import; `pathlib`/`json`/`os` already imported or to be imported.
-- Produces: `_engage_for(severity: str) -> str`, `_append_evidence(worktree: str, entry: dict) -> None`, `_read_stats(worktree: str, limit: int) -> dict`, `_call_route(worktree: str, arguments: dict) -> types.CallToolResult`, `_call_route_stats(worktree: str, arguments: dict) -> types.CallToolResult`; `_call_tool` dispatches `school_route` / `school_route_stats` to them before `_build_request`.
+- Produces: `_engage_for(severity: str) -> str`, `_append_evidence(worktree: str, entry: dict) -> None`, `_read_stats(worktree: str, limit: int) -> dict`, `_call_route(worktree: str, arguments: dict) -> types.CallToolResult`, `_call_route_stats(worktree: str, arguments: dict) -> types.CallToolResult`; `_call_tool` dispatches `toolio_route` / `toolio_route_stats` to them before `_build_request`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -738,58 +738,58 @@ Append to `tests/unit/test_mcp_server.py`:
 ```python
 class TestRouteToolsMCP:
     def test_tools_present_with_use_guidance(self):
-        from school.mcp.server import _TOOLS
-        for name in ("school_route", "school_route_stats"):
+        from toolio.mcp.server import _TOOLS
+        for name in ("toolio_route", "toolio_route_stats"):
             assert name in _TOOLS
             assert "Use" in _TOOLS[name]["description"]
             assert "coding" in _TOOLS[name]["description"]
 
     def test_route_schema(self):
-        from school.mcp.server import _TOOLS
-        props = _TOOLS["school_route"]["schema"]["properties"]
+        from toolio.mcp.server import _TOOLS
+        props = _TOOLS["toolio_route"]["schema"]["properties"]
         assert props["mode"]["enum"] == ["assess", "report"]
         assert props["severity"]["enum"] == ["light", "medium", "high"]
-        assert "situation" in _TOOLS["school_route"]["schema"]["required"]
+        assert "situation" in _TOOLS["toolio_route"]["schema"]["required"]
 
     def test_stats_annotations(self):
-        from school.mcp.server import _TOOLS
-        ann = _TOOLS["school_route_stats"]["annotations"]
+        from toolio.mcp.server import _TOOLS
+        ann = _TOOLS["toolio_route_stats"]["annotations"]
         assert ann["read_only_hint"] is True
 
     def test_engage_mapping_parity(self):
-        from school.mcp.server import _engage_for
+        from toolio.mcp.server import _engage_for
         assert _engage_for("light") == "skill"
         assert _engage_for("medium") == "both"
         assert _engage_for("high") == "both"
 
     def test_assess_requires_severity_and_writes_evidence(self, tmp_path):
-        from school.mcp.server import _call_tool
+        from toolio.mcp.server import _call_tool
         wt = str(tmp_path)
         with pytest.raises(ValueError) as exc:
-            _call_tool(wt, "school_route",
+            _call_tool(wt, "toolio_route",
                        {"mode": "assess", "situation": "planning a trip"})
         assert "severity" in str(exc.value).lower()
-        res = _call_tool(wt, "school_route",
+        res = _call_tool(wt, "toolio_route",
                          {"mode": "assess", "situation": "planning a trip",
                           "severity": "light"})
         assert res.is_error is False
         data = res.structured_content
         assert data["source"] == "self-rated"
         assert data["engage"] == "skill"
-        ev = tmp_path / ".school" / "routing-stats.jsonl"
+        ev = tmp_path / ".toolio" / "routing-stats.jsonl"
         assert ev.exists()
         assert "assess" in ev.read_text(encoding="utf-8")
 
     def test_report_stores_tagged_lesson(self, tmp_path, monkeypatch):
-        from school.mcp.server import _call_tool
-        res = _call_tool(str(tmp_path), "school_route",
+        from toolio.mcp.server import _call_tool
+        res = _call_tool(str(tmp_path), "toolio_route",
                          {"mode": "report", "situation": "debugging session",
                           "lesson": "recall first, search second",
                           "outcome": "helpful"})
         assert res.is_error is False
         assert res.structured_content["ok"] is True
         # Lesson is retrievable through the normal recall path.
-        res2 = _call_tool(str(tmp_path), "school_recall",
+        res2 = _call_tool(str(tmp_path), "toolio_recall",
                           {"query": "routing lesson"})
         assert res2.is_error is False
         found = " ".join(
@@ -799,10 +799,10 @@ class TestRouteToolsMCP:
         assert "recall first" in found
 
     def test_stats_aggregates(self, tmp_path):
-        from school.mcp.server import _call_tool
-        _call_tool(str(tmp_path), "school_route",
+        from toolio.mcp.server import _call_tool
+        _call_tool(str(tmp_path), "toolio_route",
                    {"mode": "assess", "situation": "x", "severity": "high"})
-        res = _call_tool(str(tmp_path), "school_route_stats", {"limit": 5})
+        res = _call_tool(str(tmp_path), "toolio_route_stats", {"limit": 5})
         assert res.is_error is False
         data = res.structured_content
         assert data["last_activity"]
@@ -811,9 +811,9 @@ class TestRouteToolsMCP:
 
     def test_default_assess_without_severity_fails(self, tmp_path):
         # MCP has no model client: severity is mandatory.
-        from school.mcp.server import _call_tool
+        from toolio.mcp.server import _call_tool
         with pytest.raises(ValueError):
-            _call_tool(str(tmp_path), "school_route",
+            _call_tool(str(tmp_path), "toolio_route",
                        {"mode": "assess", "situation": "x"})
 ```
 
@@ -824,14 +824,14 @@ Expected: FAIL (`_engage_for` missing, tools missing).
 
 - [ ] **Step 3: Implement MCP parity**
 
-In `school/mcp/server.py`:
+In `toolio/mcp/server.py`:
 
-1. Append to `_TOOLS` (after `school_diagnose`):
+1. Append to `_TOOLS` (after `toolio_diagnose`):
 
 ```python
-    "school_route": {
+    "toolio_route": {
         "description": (
-            "Assess how much School routing machinery a situation needs "
+            "Assess how much Toolio routing machinery a situation needs "
             "(MCP fallback: self-rated severity - light engages the skill, "
             "medium/high engages tool and skill together) or store a "
             "routing lesson tagged for later review. Use when starting "
@@ -868,11 +868,11 @@ In `school/mcp/server.py`:
             "required": ["mode", "situation"],
         },
     },
-    "school_route_stats": {
+    "toolio_route_stats": {
         "description": (
             "Aggregated routing evidence: per-tool call counts and average "
             "durations, recent assess/report entries, current knobs, and "
-            "recent routing lessons. Use before adjusting how School "
+            "recent routing lessons. Use before adjusting how Toolio "
             "routes, or when the routing skill asks for current numbers - "
             "for anything, not only coding."
         ),
@@ -914,11 +914,11 @@ def _engage_for(severity: str) -> str:
 
 
 def _memory_root(worktree: str) -> "Path":
-    for sub in (".school", ".lerev", ".evo"):
+    for sub in (".toolio", ".toolio", ".evo"):
         root = Path(worktree) / sub
         if (root / "memory").is_dir():
             return root
-    return Path(worktree) / ".school"
+    return Path(worktree) / ".toolio"
 
 
 def _append_evidence(worktree: str, entry: dict[str, Any]) -> None:
@@ -1004,12 +1004,12 @@ def _read_stats(worktree: str, limit: int) -> dict[str, Any]:
 def _call_tool(worktree: str, name: str, arguments: dict[str, Any]) -> types.CallToolResult:
     if name not in _TOOLS:
         raise ValueError(f"Unknown tool: {name}")
-    if name == "school_route":
+    if name == "toolio_route":
         return _call_route(worktree, arguments)
-    if name == "school_route_stats":
+    if name == "toolio_route_stats":
         return _call_route_stats(worktree, arguments)
     req = _build_request(worktree, name, arguments)
-    resp = _bridge_call(name.removeprefix("school_"), req)
+    resp = _bridge_call(name.removeprefix("toolio_"), req)
     payload = json.dumps(resp, default=str, ensure_ascii=False)
     structured = json.loads(payload)
     return types.CallToolResult(
@@ -1047,7 +1047,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
             worktree,
             {
                 "kind": "assess",
-                "tool": "school_route",
+                "tool": "toolio_route",
                 "ms": 0,
                 "ok": True,
                 "severity": severity,
@@ -1060,7 +1060,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
                 "severity": severity,
                 "engage": engage,
                 "reason": "self-rated (MCP has no model client)",
-                "next": "Load the `school-routing` skill so tool and skill work together.",
+                "next": "Load the `toolio-routing` skill so tool and skill work together.",
             }
         )
     if mode == "report":
@@ -1074,7 +1074,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
         )
         req = _build_request(
             worktree,
-            "school_remember",
+            "toolio_remember",
             {
                 "content": f"Routing lesson ({outcome}): {lesson}",
                 "observation": situation or None,
@@ -1091,7 +1091,7 @@ def _call_route(worktree: str, arguments: dict[str, Any]) -> types.CallToolResul
             worktree,
             {
                 "kind": "report",
-                "tool": "school_route",
+                "tool": "toolio_route",
                 "ms": 0,
                 "ok": bool(resp.get("ok")),
                 "outcome": outcome,
@@ -1110,7 +1110,7 @@ def _call_route_stats(worktree: str, arguments: dict[str, Any]) -> types.CallToo
     data = _read_stats(worktree, limit)
     recall_req = _build_request(
         worktree,
-        "school_recall",
+        "toolio_recall",
         {"query": "routing lesson", "confidence_threshold": 0, "limit": min(limit, 10)},
     )
     recall_req["context_budget"] = 1500
@@ -1133,13 +1133,13 @@ Expected: PASS — including the pre-existing description-parity test, which now
 
 - [ ] **Step 5: Ruff on changed files**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/mcp/server.py tests/unit/test_mcp_server.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/mcp/server.py tests/unit/test_mcp_server.py`
 Expected: clean (fix any line-length/import issues it reports).
 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add school/mcp/server.py tests/unit/test_mcp_server.py; if ($?) { git commit -m "feat(mcp): school_route and school_route_stats with self-rated fallback" }
+git add toolio/mcp/server.py tests/unit/test_mcp_server.py; if ($?) { git commit -m "feat(mcp): toolio_route and toolio_route_stats with self-rated fallback" }
 ```
 
 ---
@@ -1160,11 +1160,11 @@ def test_route_assess_self_rated(stdio_session):
     session, _ = stdio_session
     with pytest.raises(MCPError):
         session.call_tool(
-            "school_route",
+            "toolio_route",
             {"mode": "assess", "situation": "starting a migration"},
         )
     res = session.call_tool(
-        "school_route",
+        "toolio_route",
         {"mode": "assess", "situation": "starting a migration", "severity": "medium"},
     )
     assert res.is_error is False
@@ -1176,7 +1176,7 @@ def test_route_assess_self_rated(stdio_session):
 def test_route_report_then_stats(stdio_session, tmp_path_factory):
     session, _ = stdio_session
     res = session.call_tool(
-        "school_route",
+        "toolio_route",
         {
             "mode": "report",
             "situation": "refactor planning",
@@ -1185,7 +1185,7 @@ def test_route_report_then_stats(stdio_session, tmp_path_factory):
         },
     )
     assert res.is_error is False
-    stats = session.call_tool("school_route_stats", {"limit": 5})
+    stats = session.call_tool("toolio_route_stats", {"limit": 5})
     assert stats.is_error is False
     recent = stats.structured_content["recent"]
     assert any(e.get("kind") == "report" for e in recent)
@@ -1211,25 +1211,25 @@ git add tests/integration/test_mcp_stdio.py; if ($?) { git commit -m "test(mcp):
 
 ---
 
-### Task 5: `school-routing` skill + install wiring
+### Task 5: `toolio-routing` skill + install wiring
 
 **Files:**
-- Create: `school/skill_source.py`
-- Modify: `school/cli.py` (install function that writes the plugin — extend to also write the skill)
-- Test: `tests/unit/test_school_routing.py` (extend) or `tests/unit/test_school_skill.py` (create)
+- Create: `toolio/skill_source.py`
+- Modify: `toolio/cli.py` (install function that writes the plugin — extend to also write the skill)
+- Test: `tests/unit/test_toolio_routing.py` (extend) or `tests/unit/test_toolio_skill.py` (create)
 
 **Interfaces:**
-- Consumes: existing `school install` flow (find the function that writes `~/.config/opencode/plugins/school.ts`).
-- Produces: `school.skill_source.ROUTING_SKILL_MD: str`; `school.cli.install_skill(dest_root: str | None = None) -> Path` writing `<dest>/school-routing/SKILL.md`.
+- Consumes: existing `toolio install` flow (find the function that writes `~/.config/opencode/plugins/toolio.ts`).
+- Produces: `toolio.skill_source.ROUTING_SKILL_MD: str`; `toolio.cli.install_skill(dest_root: str | None = None) -> Path` writing `<dest>/toolio-routing/SKILL.md`.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```python
-# tests/unit/test_school_skill.py
+# tests/unit/test_toolio_skill.py
 import re
 from pathlib import Path
 
-from school.skill_source import ROUTING_SKILL_MD
+from toolio.skill_source import ROUTING_SKILL_MD
 
 
 def _frontmatter(md: str) -> dict[str, str]:
@@ -1245,7 +1245,7 @@ def _frontmatter(md: str) -> dict[str, str]:
 
 def test_frontmatter_valid():
     fm = _frontmatter(ROUTING_SKILL_MD)
-    assert fm["name"] == "school-routing"
+    assert fm["name"] == "toolio-routing"
     assert re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", fm["name"])
     assert 1 <= len(fm["description"]) <= 1024
     assert "light" in fm["description"]
@@ -1260,62 +1260,62 @@ def test_workflow_has_three_actions():
 
 
 def test_install_writes_skill(tmp_path):
-    from school.cli import install_skill
+    from toolio.cli import install_skill
     out = install_skill(dest_root=str(tmp_path))
-    assert out == tmp_path / "school-routing" / "SKILL.md"
+    assert out == tmp_path / "toolio-routing" / "SKILL.md"
     assert out.read_text(encoding="utf-8") == ROUTING_SKILL_MD
 ```
 
 - [ ] **Step 2: Run to verify failure**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_skill.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_skill.py -q`
 Expected: FAIL (module missing).
 
 - [ ] **Step 3: Implement skill source + install**
 
-Create `school/skill_source.py`:
+Create `toolio/skill_source.py`:
 
 ```python
-"""Single source of truth for the school-routing skill (Phase 1 routing loop).
+"""Single source of truth for the toolio-routing skill (Phase 1 routing loop).
 
-Installed to ~/.config/opencode/skills/school-routing/SKILL.md by
-`school install`. OpenCode discovers skills at
+Installed to ~/.config/opencode/skills/toolio-routing/SKILL.md by
+`toolio install`. OpenCode discovers skills at
 ~/.config/opencode/skills/<name>/SKILL.md (name must match the directory).
 """
 
 ROUTING_SKILL_MD = """\
 ---
-name: school-routing
-description: Decide where School tools should fire - audits routing stats, writes routing lessons, and tunes routing.json knobs for light and medium-light situations; escalates to tool+skill together at medium and higher. For anything, not only coding.
+name: toolio-routing
+description: Decide where Toolio tools should fire - audits routing stats, writes routing lessons, and tunes routing.json knobs for light and medium-light situations; escalates to tool+skill together at medium and higher. For anything, not only coding.
 ---
 
-# School Routing
+# Toolio Routing
 
-You are the light/medium-light half of School's adaptive routing loop.
-At medium and higher, the `school_route` assess tool engages you too
-(its response says "load the school-routing skill") — always show your
+You are the light/medium-light half of Toolio's adaptive routing loop.
+At medium and higher, the `toolio_route` assess tool engages you too
+(its response says "load the toolio-routing skill") — always show your
 work as you go.
 
 ## When to use me
 
 - You are starting light or medium-light work and want to know how
-  School's tools should behave for it.
-- `school_route` assess returned `engage: "skill"`.
+  Toolio's tools should behave for it.
+- `toolio_route` assess returned `engage: "skill"`.
 - The model reported a routing lesson and you want to tune around it.
 
 ## Workflow (do all three, visibly)
 
-1. **Gather evidence** — call `school_route_stats` (limit 20). Note
+1. **Gather evidence** — call `toolio_route_stats` (limit 20). Note
    per-tool call counts, avg_ms, recent assess/report entries, and the
    current knobs.
 2. **Review + decide** — find tools that are called with zero hits
    (candidates for `skip_tools`), tools that always help (candidates for
    `force_tools`), and thresholds that are too loose or too tight.
 3. **Act:**
-   - Write each routing lesson as a memory: `school_remember` with tags
-     `["routing", <helpful|useless|neutral>]`, or `school_route`
+   - Write each routing lesson as a memory: `toolio_remember` with tags
+     `["routing", <helpful|useless|neutral>]`, or `toolio_route`
      mode=report.
-   - Update `.school/routing.json` (per-project knobs). Valid keys only:
+   - Update `.toolio/routing.json` (per-project knobs). Valid keys only:
      `recall_threshold` (0-1), `hook_limit` (1-50), `hook_budget`
      (64-8000), `hook_timeout_ms` (250-5000), `skip_tools` (array of tool
      names that should NOT fire hooks), `force_tools` (array of tool
@@ -1340,15 +1340,15 @@ Store the chosen level as a `calibration` entry in routing.json
 """
 ```
 
-In `school/cli.py`, next to the plugin-install function, add:
+In `toolio/cli.py`, next to the plugin-install function, add:
 
 ```python
 def install_skill(dest_root: str | Path | None = None) -> Path:
-    """Write the school-routing skill to OpenCode's user skill directory."""
+    """Write the toolio-routing skill to OpenCode's user skill directory."""
     from .skill_source import ROUTING_SKILL_MD
 
     root = Path(dest_root) if dest_root else Path.home() / ".config" / "opencode" / "skills"
-    target = root / "school-routing" / "SKILL.md"
+    target = root / "toolio-routing" / "SKILL.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(ROUTING_SKILL_MD, encoding="utf-8")
     return target
@@ -1358,21 +1358,21 @@ Call `install_skill()` from wherever `install` finishes writing the plugin (same
 
 - [ ] **Step 4: Run tests**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_skill.py -q`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_skill.py -q`
 Expected: PASS.
 
 - [ ] **Step 5: Real install + discovery check**
 
 ```powershell
-& ".venv\Scripts\python.exe" -m school install --force
-Get-Content "$env:USERPROFILE\.config\opencode\skills\school-routing\SKILL.md" | Select-Object -First 5
+& ".venv\Scripts\python.exe" -m toolio install --force
+Get-Content "$env:USERPROFILE\.config\opencode\skills\toolio-routing\SKILL.md" | Select-Object -First 5
 ```
-Expected: frontmatter printed (name: school-routing). Restart note: skill appears in `<available_skills>` on next OpenCode start.
+Expected: frontmatter printed (name: toolio-routing). Restart note: skill appears in `<available_skills>` on next OpenCode start.
 
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add school/skill_source.py school/cli.py tests/unit/test_school_skill.py; if ($?) { git commit -m "feat(skill): school-routing skill with audit/knobs/lessons workflow, shipped by install" }
+git add toolio/skill_source.py toolio/cli.py tests/unit/test_toolio_skill.py; if ($?) { git commit -m "feat(skill): toolio-routing skill with audit/knobs/lessons workflow, shipped by install" }
 ```
 
 ---
@@ -1393,7 +1393,7 @@ Cover: what the loop is (assess tool, stats tool, evidence, knobs, skill), escal
 
 - [ ] **Step 2: README pointer**
 
-Add one line under the existing docs links: `- [Adaptive routing](docs/routing.md) - where School tools fire, and why`.
+Add one line under the existing docs links: `- [Adaptive routing](docs/routing.md) - where Toolio tools fire, and why`.
 
 - [ ] **Step 3: Full test suite**
 
@@ -1402,16 +1402,16 @@ Expected: all green (previous 2487 + new tests, 0 failed).
 
 - [ ] **Step 4: Ruff on all changed files**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/mcp/server.py school/cli.py school/skill_source.py tests/unit/test_school_routing.py tests/unit/test_school_skill.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/mcp/server.py toolio/cli.py toolio/skill_source.py tests/unit/test_toolio_routing.py tests/unit/test_toolio_skill.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
 Expected: clean (plugin_source.py: no NEW E501 beyond the pre-existing count — keep description lines ≤100 chars or split strings).
 
 - [ ] **Step 5: Live verification battery**
 
 1. Extract TS → `node --check` → exit 0.
-2. `school install --force` → plugin MATCH + skill file exists.
-3. `school doctor` → all PASS.
-4. Real micro-call: invoke `school_route` mode=assess through the plugin path in-session (as done previously for `school_status`) → returns `source: "micro-model"` with severity/engage/reason, scratch session deleted.
-5. MCP smoke: `school mcp config opencode` prints config; stdio integration tests green (already in Task 4).
+2. `toolio install --force` → plugin MATCH + skill file exists.
+3. `toolio doctor` → all PASS.
+4. Real micro-call: invoke `toolio_route` mode=assess through the plugin path in-session (as done previously for `toolio_status`) → returns `source: "micro-model"` with severity/engage/reason, scratch session deleted.
+5. MCP smoke: `toolio mcp config opencode` prints config; stdio integration tests green (already in Task 4).
 
 - [ ] **Step 6: Commit + final status**
 

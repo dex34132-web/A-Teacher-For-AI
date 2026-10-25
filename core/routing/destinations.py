@@ -1,6 +1,6 @@
-"""Routing destinations for School V2.5.
+"""Routing destinations for Toolio V2.5.
 
-Defines where information can be routed within School. Destinations are
+Defines where information can be routed within Toolio. Destinations are
 extensible and agent-agnostic. The same destination types work for
 coding agents, general agents, hosted models, and local models.
 """
@@ -15,13 +15,13 @@ from typing import Any
 class DestinationType(Enum):
     """Built-in routing destinations.
 
-    These are the standard destinations within School. Custom destinations
+    These are the standard destinations within Toolio. Custom destinations
     can be registered by extending the system.
     """
 
     # Agent interaction
     AGENT_CONTEXT = auto()  # Return to agent as context
-    SCHOOL_CONTEXT = auto()  # Internal School context
+    SCHOOL_CONTEXT = auto()  # Internal Toolio context
 
     # Learning & knowledge
     LEARNING = auto()  # Route to learning subsystem
@@ -98,7 +98,7 @@ class Destination:
 
 AGENT_CONTEXT = Destination(destination_type=DestinationType.AGENT_CONTEXT, name="agent_context")
 SCHOOL_CONTEXT = Destination(
-    destination_type=DestinationType.SCHOOL_CONTEXT, name="school_context"
+    destination_type=DestinationType.SCHOOL_CONTEXT, name="toolio_context"
 )
 LEARNING = Destination(destination_type=DestinationType.LEARNING, name="learning")
 RETRIEVAL = Destination(destination_type=DestinationType.RETRIEVAL, name="retrieval")

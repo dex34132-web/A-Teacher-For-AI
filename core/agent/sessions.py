@@ -1,4 +1,4 @@
-"""S7: school_session — manage session lifecycle, summaries, and exports."""
+"""S7: toolio_session — manage session lifecycle, summaries, and exports."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class SessionResult:
 
 
 def _session_path(worktree: str) -> Path:
-    return Path(worktree) / ".school" / "agent" / SESSION_FILE
+    return Path(worktree) / ".toolio" / "agent" / SESSION_FILE
 
 
 def _load(worktree: str) -> list[dict[str, Any]]:

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 try:
-    from school.mcp.server import _TOOLS
+    from toolio.mcp.server import _TOOLS
 
     HAS_MCP = True
 except ImportError:

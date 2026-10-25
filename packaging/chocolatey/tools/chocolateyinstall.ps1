@@ -1,13 +1,13 @@
 $ErrorActionPreference = 'Stop'
 
-$packageName = 'school'
+$packageName = 'toolio'
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# Install school.exe
+# Install toolio.exe
 Install-ChocolateyPackage -PackageName $packageName `
     -FileType 'exe' `
-    -File "$toolsDir\school.exe" `
+    -File "$toolsDir\toolio.exe" `
     -SilentArgs 'install'
 
-Write-Host "School has been installed successfully."
-Write-Host "Restart OpenCode to use School tools."
+Write-Host "Toolio has been installed successfully."
+Write-Host "Restart OpenCode to use Toolio tools."

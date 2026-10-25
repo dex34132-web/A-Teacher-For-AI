@@ -79,10 +79,10 @@ show("17. Emoji Status", v.render_emoji_status(
     cols=3,
 ))
 show("18. Comparison Table", v.render_comparison([
-    {"Feature":"Speed","School":"10ms","DCP":"15ms","Super":"25ms"},
-    {"Feature":"Memory","School":"2MB","DCP":"5MB","Super":"8MB"},
-    {"Feature":"Tools","School":"45","DCP":"12","Super":"8"},
-], winner_col="School"))
+    {"Feature":"Speed","Toolio":"10ms","DCP":"15ms","Super":"25ms"},
+    {"Feature":"Memory","Toolio":"2MB","DCP":"5MB","Super":"8MB"},
+    {"Feature":"Tools","Toolio":"45","DCP":"12","Super":"8"},
+], winner_col="Toolio"))
 show("19. Bar Chart", v.render_bar_chart(
     [("Revenue",12500),("Expenses",8300),("Profit",4200),("Tax",1200),("Savings",3000)],
     width=30, label="Financials",

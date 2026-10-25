@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="en" class="anim">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>School &mdash; Secure system</title>
+<meta name="description" content="School is a project-scoped memory engine for any agent that speaks MCP or loads a plugin. It records what worked, what broke and what your project already decided, then hands it back before the next task starts." />
+<meta name="theme-color" content="#0a0a0b" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Archivo:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css?v=163" />
+  <link rel="stylesheet" href="motion.css?v=163" />
+    <link rel="stylesheet" href="v2.css?v=163" />
+  <link rel="stylesheet" href="v3.css?v=163" />
+  <link rel="stylesheet" href="light.css?v=163" />
+  <link rel="stylesheet" href="tunnel.css?v=163" />
+  <link rel="stylesheet" href="fonts.css?v=163" />
+  <link rel="stylesheet" href="intro.css?v=163" />
+  <link rel="stylesheet" href="halftone.css?v=163" />
+  <link rel="stylesheet" href="glass.css?v=163" />
+
+<style>
+    @font-face{font-family:"Pusab";src:url("fonts/Pusab-Regular.ttf") format("truetype");font-weight:400;font-display:block}
+    @font-face{font-family:"BlowBrush";src:url("fonts/BlowBrush-Regular.ttf") format("truetype");font-weight:400;font-display:block}
+
+    :root{
+      --ink:#17171cfff;
+      --surface:#f4f1ea;
+      --orb-reveal:cubic-bezier(.16,1,.3,1);
+      --orb-soft:cubic-bezier(.25,.8,.28,1);
+      --signal:#ff3d00;
+      --ice:#a9d8d1;
+      --font-display:"Orbit Display","Pusab","Times New Roman",Times,serif;
+      --font-sans:"Orbit Sans","Archivo",Arial,Helvetica,sans-serif;
+      --font-brush:"BlowBrush","Segoe Script","Bradley Hand",cursive;
+      --word-size:min(11.4vw,23dvh);
+      --flower-size:min(78dvh,44vw);
+    }
+
+    html,body{width:100%;min-height:100%;margin:0;overflow-x:clip;overflow-y:visible;background:#f4f1ea}
+    body{
+      font-family:var(--font-sans);
+      color:#fff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      text-rendering:optimizeLegibility;
+    }
+    a{color:inherit;text-decoration:none}
+
+    /* ---------------------------------------------------------------
+       STAGE
+       --------------------------------------------------------------- */
+    .viewport{position:relative;inset:auto;background:transparent;overflow:visiblemin-height:100svh}
+    .stage{
+      position:relative;inset:auto;
+      background:#f4f1ea;
+      contain:layout style;
+      isolation:isolate;
+      overflow:hidden;
+    min-height:100svh}
+
+    /* ---------------------------------------------------------------
+       BRAND MARK
+       --------------------------------------------------------------- */
+    .brand-mark{
+      position:absolute;
+      top:2.141745dvh;
+      left:3.854167vw;
+      width:clamp(34px,min(3.4375vw,5.2dvh),66px);
+      height:auto;
+      z-index:4;
+      pointer-events:none;
+    }
+    .brand-mark path{stroke:#fff;stroke-width:5px;stroke-linecap:square;fill:none}
+
+    /* ---------------------------------------------------------------
+       PRIMARY NAV
+       --------------------------------------------------------------- */
+    .primary-nav{
+      position:absolute;inset:0;
+      z-index:4;
+      pointer-events:none;
+    }
+    .primary-nav ul{list-style:none;margin:0;padding:0}
+    .primary-nav li{
+      position:absolute;
+      top:3.426791dvh;
+      left:var(--x);
+      transform:scaleX(var(--sx));
+      transform-origin:left center;
+      font-size:clamp(13px,min(1.302083vw,2.05dvh),25px);
+      line-height:1;
+      white-space:nowrap;
+    }
+    .primary-nav a{
+      pointer-events:auto;
+      display:inline-block;
+      color:#fff;
+      opacity:.86;
+      transition:opacity .45s var(--orb-soft);
+    }
+    .primary-nav a:hover{opacity:1}
+
+    /* ---------------------------------------------------------------
+       PILL
+       --------------------------------------------------------------- */
+    .pill{
+      position:absolute;
+      top:2.336449dvh;
+      right:7.5vw;
+      height:clamp(34px,4.439252dvh,57px);
+      display:inline-flex;
+      align-items:center;
+      padding:0 clamp(16px,1.6vw,30px);
+      border-radius:999px;
+      background:#fff;
+      color:#f4f1ea;
+      font-family:var(--font-sans);
+      font-size:clamp(11px,min(1.041667vw,1.65dvh),19px);
+      letter-spacing:.026923em;
+      white-space:nowrap;
+      z-index:4;
+    }
+
+    /* ---------------------------------------------------------------
+       WORDMARK
+       --------------------------------------------------------------- */
+    .orbit-word{
+      position:absolute;
+      top:11.565421dvh;
+      left:4.348958vw;
+      margin:0;
+      font-family:var(--font-display);
+      font-size:var(--word-size);
+      line-height:.86;
+      font-weight:400;
+      letter-spacing:.033708em;
+      z-index:1;
+      pointer-events:none;
+    }
+    .orbit-word__mask{
+      display:block;
+      overflow:hidden;
+      padding-bottom:.14em;
+      margin-bottom:-.14em;
+    }
+    .orbit-word__inner{display:block;will-change:transform}
+    .orbit-word__white{color:var(--ink)}
+    .orbit-word__pink{
+      background:linear-gradient(180deg,#ffc5dc 0%,#fd86db 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .orbit-word__o{
+      display:inline-block;
+      transform:scaleX(1.0866);
+      margin-right:.042135em;
+    }
+
+    /* ---------------------------------------------------------------
+       FLOWER / NETWORK
+       --------------------------------------------------------------- */
+    .flower{
+      position:absolute;
+      top:12dvh;
+      left:49.121328vw;
+      height:var(--flower-size);
+      width:var(--flower-size);
+      transform:translateX(-50%);
+      pointer-events:none;
+      z-index:2;
+    }
+    .flower__sizer{
+      position:absolute;
+      height:100%;
+      width:auto;
+      opacity:0;
+      pointer-events:none;
+    }
+    .flower__layer{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      -webkit-mask-size:100% 100%;
+      mask-size:100% 100%;
+      -webkit-mask-repeat:no-repeat;
+      mask-repeat:no-repeat;
+      -webkit-mask-position:center;
+      mask-position:center;
+    }
+    .flower__layer img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .flower__layer--top{
+      -webkit-mask-image:linear-gradient(#0000,#0000);
+      mask-image:linear-gradient(#0000,#0000);
+      opacity:.96;
+      animation:netPulse 6.5s ease-in-out infinite;
+    }
+    @keyframes netPulse{0%,100%{opacity:.82}50%{opacity:1}}
+
+    /* ---------------------------------------------------------------
+       SLOGANS
+       --------------------------------------------------------------- */
+    .slogan{
+      position:absolute;
+      margin:0;
+      font-family:var(--font-brush);
+      color:var(--signal);
+      font-size:clamp(30px,3.6vw,66px);
+      line-height:1;
+      z-index:3;
+      pointer-events:none;
+    }
+    .slogan--left{left:15.5vw;top:43dvh;transform:rotate(-6deg)}
+    .slogan--right{right:4.5vw;top:55dvh;transform:rotate(4deg);color:var(--ice)}
+
+    /* ---------------------------------------------------------------
+       CORNER COPY
+       --------------------------------------------------------------- */
+    .support-copy{
+      position:absolute;
+      bottom:4.361371dvh;
+      color:#f7f7f7;
+      font-size:clamp(14px,min(1.40625vw,2.102804dvh),27px);
+      line-height:1.28;
+      z-index:3;
+      pointer-events:none;
+    }
+    .support-copy--left{left:3.177083vw;transform:scaleX(1.073);transform-origin:left center}
+    .support-copy--right{left:78.28125vw;transform:scaleX(1.058);transform-origin:left center}
+    .support-copy p{margin:0}
+
+    /* ---------------------------------------------------------------
+       HERO COPY
+       --------------------------------------------------------------- */
+    .hero-copy{
+      position:absolute;
+      left:50%;
+      bottom:6.5dvh;
+      transform:translateX(-50%);
+      width:min(820px,88vw);
+      text-align:center;
+      z-index:5;
+    }
+    .hero-copy__eyebrow{
+      margin:0 0 .9em;
+      font-family:var(--font-sans);
+      font-size:clamp(10px,.78vw,14px);
+      letter-spacing:.24em;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.62);
+    }
+    .hero-copy__lede{
+      margin:0 auto 1.6em;
+      max-width:52ch;
+      font-size:clamp(14px,min(1.15vw,1.9dvh),21px);
+      line-height:1.5;
+      color:rgba(255,255,255,.86);
+    }
+    .hero-copy__actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+    }
+    .hbtn{
+      display:inline-flex;
+      align-items:center;
+      gap:.6em;
+      height:clamp(38px,4.6dvh,56px);
+      padding:0 clamp(16px,1.5vw,26px);
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.28);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-family:var(--font-sans);
+      font-size:clamp(12px,.86vw,15px);
+      letter-spacing:.02em;
+      cursor:pointer;
+      transition:transform .5s var(--orb-soft),background .5s var(--orb-soft),border-color .5s var(--orb-soft);
+    }
+    .hbtn:hover{transform:translateY(-3px);background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.5)}
+    .hbtn--solid{background:#fff;color:#f4f1ea;border-color:#fff}
+    .hbtn--solid:hover{background:#fff;transform:translateY(-3px)}
+    .hbtn__arrow{transition:transform .5s var(--orb-soft)}
+    .hbtn:hover .hbtn__arrow{transform:translate(3px,-3px)}
+
+    /* ---------------------------------------------------------------
+       MOBILE CHROME
+       --------------------------------------------------------------- */
+    .scrim,.sheet,.burger{display:none}
+    .scrim{
+      position:absolute;inset:0;
+      background:rgba(0,0,0,.62);
+      backdrop-filter:blur(3px);
+      z-index:9;
+    }
+    .sheet{
+      position:absolute;
+      inset:auto 0 0 0;
+      padding:34px 28px 44px;
+      background:rgba(20,20,20,.86);
+      backdrop-filter:blur(22px) saturate(160%);
+      border-top:1px solid rgba(255,255,255,.16);
+      border-radius:22px 22px 0 0;
+      z-index:10;
+    }
+    .sheet ul{list-style:none;margin:0 0 18px;padding:0}
+    .sheet a{
+      display:block;
+      padding:13px 0;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      font-size:clamp(18px,5.4vw,26px);
+      color:#fff;
+    }
+    .burger{
+      position:absolute;
+      top:2.1dvh;
+      right:5vw;
+      width:clamp(42px,5.4dvh,54px);
+      height:clamp(42px,5.4dvh,54px);
+      border-radius:50%;
+      border:0;
+      background:#fff;
+      z-index:12;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      cursor:pointer;
+    }
+    .burger span{display:block;width:18px;height:2px;background:#f4f1ea;transition:transform .45s var(--orb-soft),opacity .3s linear}
+    .menu-open .burger span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    .menu-open .burger span:nth-child(2){opacity:0}
+    .menu-open .burger span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+    /* ---------------------------------------------------------------
+       ENTRANCE
+       --------------------------------------------------------------- */
+    @keyframes orb-word{from{transform:translateY(118%)}to{transform:translateY(0)}}
+    @keyframes orb-subject{
+      from{opacity:0;transform:translateX(-50%) translateY(3.4dvh)}
+      to{opacity:1;transform:translateX(-50%) translateY(0)}
+    }
+    @keyframes orb-corner{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes orb-quiet{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes orb-dim{from{opacity:0}to{opacity:1}}
+    @keyframes orb-stage{from{opacity:0}to{opacity:1}}
+
+    html.anim .orb-word{animation:orb-word 1150ms var(--orb-reveal) 300ms both}
+    html.anim .orb-subject{animation:orb-subject 1150ms var(--orb-reveal) 660ms both}
+    html.anim .orb-corner{animation:orb-corner 720ms var(--orb-soft) 980ms both}
+    html.anim .orb-quiet{animation:orb-quiet 620ms var(--orb-soft) 100ms both}
+    html.anim .orb-dim{animation:orb-dim 550ms var(--orb-soft) 180ms both}
+    html.anim .orb-dim:nth-of-type(2){animation-delay:225ms}
+    html.anim .orb-dim:nth-of-type(3){animation-delay:270ms}
+    html.anim .orb-dim:nth-of-type(4){animation-delay:315ms}
+    html.anim .orb-quiet--pill{animation-delay:340ms}
+
+    @media (prefers-reduced-motion:reduce){
+      html.anim .stage{animation:orb-stage 280ms linear bothmin-height:100svh}
+      html.anim .orb-word,html.anim .orb-subject,html.anim .orb-corner,
+      html.anim .orb-quiet,html.anim .orb-dim{animation:none;opacity:1;transform:none}
+      .flower__layer--top{animation:none}
+    }
+
+    /* ---------------------------------------------------------------
+       RESPONSIVE
+       --------------------------------------------------------------- */
+    @media (max-width:1200px){
+      .orbit-word{left:0;width:100%;text-align:center}
+    }
+    @media (max-width:900px),(max-aspect-ratio:4/5){
+      :root{--word-size:min(15.5vw,13dvh);--flower-size:min(58dvh,86vw)}
+      .primary-nav,.pill{display:none}
+      .brand-mark{top:2.4dvh;left:6vw;width:clamp(30px,9vw,44px)}
+      .orbit-word{top:12dvh;left:0;width:100%;text-align:center}
+      .flower{top:22dvh;left:50%}
+      .slogan--left{left:8vw;top:62dvh;font-size:clamp(26px,9vw,48px)}
+      .slogan--right{right:7vw;top:70dvh;font-size:clamp(24px,8vw,44px)}
+      .support-copy{
+        left:6vw;right:6vw;
+        font-size:clamp(13px,3.4vw,18px);
+        text-align:center;
+        bottom:auto;
+        top:auto;
+      }
+      .support-copy--left{top:80dvh;transform:none}
+      .support-copy--right{top:86dvh;transform:none}
+      .hero-copy{left:50%;bottom:4.5dvh;width:92vw}
+      .hero-copy__lede{font-size:14px}
+      .scrim,.sheet,.burger{display:flex}
+      .sheet{flex-direction:column}
+      .sheet[hidden]{display:none}
+    }
+    @media (max-aspect-ratio:4/5) and (min-width:901px){
+      :root{--word-size:min(27.5vw,18dvh);--flower-size:min(55dvh,110vw)}
+      .orbit-word{left:0;width:100%;text-align:center}
+      .support-copy{left:6vw;right:6vw;transform:none;text-align:center}
+    }
+  
+/* ---- scroll into the network (independent scale/opacity props: they never
+   fight the entrance animation, which owns transform on .flower) ---- */
+#layerBg,#layerTop{scale:var(--zoom,1);transform-origin:50% 50%}
+#imgFront,#imgReveal{opacity:var(--zo,1)}
+/* the fixed chrome must read over the dark stage AND the light sections */
+.topbar{color:#fff !important;mix-blend-mode:difference}
+.topbar.is-stuck{color:#17171c !important;mix-blend-mode:normal}
+.rail{color:#fff;mix-blend-mode:difference}
+</style>
+  <link rel="stylesheet" href="hero.css?v=163" />
+  <link rel="stylesheet" href="pipe.css?v=163" />
+  <link rel="stylesheet" href="lower.css?v=163" />
+  <link rel="stylesheet" href="compress.css?v=163" />
+  <link rel="stylesheet" href="assets/tw.css?v=163" />
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"><span class="cursor__cross cursor__cross--x"></span><span class="cursor__cross cursor__cross--y"></span><span class="cursor__aperture"><i></i><i></i><i></i><i></i></span><span class="cursor__read mono"><b class="cursor__idx">00</b><b class="cursor__depth">0000 m</b><b class="cursor__tag"></b></span></div>
+
+<header class="topbar">
+  
+  <div class="topbar__meta">
+    <a class="topbar__link mono" href="#install">install</a>
+    <a class="topbar__link mono" href="https://github.com/dex34132-web/A-School-For-AI" target="_blank" rel="noopener">github&nbsp;&#8599;</a>
+  </div>
+</header>
+
+>
+    <!-- SLOT: the scroll animation was removed on request. A React Native component drops in here. -->
+
+
+<main class="viewport">
+  <section class="stage" id="stage">
+
+    <svg class="brand-mark orb-quiet" viewBox="0 0 66 62" aria-hidden="true">
+      <path d="M33 1 L33 61"/>
+      <path d="M3 31 L63 31"/>
+      <path d="M11.8 9.8 L54.2 52.2"/>
+      <path d="M54.2 9.8 L11.8 52.2"/>
+    </svg>
+
+    <nav class="primary-nav" aria-label="Primary">
+      <ul>
+        <li class="orb-dim" style="--x:10.104167vw;--sx:1.165"><a href="#home">School</a></li>
+        <li class="orb-dim" style="--x:17.526042vw;--sx:1.052"><a href="#pipeline">Pipeline</a></li>
+        <li class="orb-dim" style="--x:27.578125vw;--sx:1.126"><a href="#tools">Tools</a></li>
+        <li class="orb-dim" style="--x:36.171875vw;--sx:1.168"><a href="#install">Install</a></li>
+      </ul>
+    </nav>
+
+    
+
+    <h1 class="orbit-word" id="orbit-title" aria-label="School">
+      <span class="orbit-word__mask">
+        <span class="orbit-word__inner orb-word">
+          <span class="orbit-word__white">SCH</span><span class="orbit-word__pink"><span class="orbit-word__o">O</span>OL</span>
+        </span>
+      </span>
+    </h1>
+
+    <div class="tg-mount" id="tiltedGrid"></div>
+
+    
+    <div class="support-copy support-copy--right">
+      <div class="support-copy__inner orb-corner">
+        <p>Less manual work.</p>
+        <p>More meaningful output.</p>
+      </div>
+    </div>
+
+    <div class="hero-copy orb-quiet" style="animation-delay:1180ms">
+      <p class="hero-copy__eyebrow">[ the learning layer for every agent ]</p>
+      <p class="hero-copy__lede">
+        School is the learning layer behind an agent &mdash; coding, research, ops, support.
+        It learns what worked, what broke, and what your project already decided,
+        then hands it back before the next task starts.
+      </p>
+      
+    
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <nav class="sheet" id="sheet" aria-label="Menu" hidden>
+      <ul>
+        <li><a href="#home">School</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#tools">Tools</a></li>
+        <li><a href="#mcp">MCP</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI" target="_blank" rel="noopener noreferrer">GitHub &nearr;</a></li>
+      </ul>
+    </nav>
+    <button class="burger" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="sheet">
+      <span></span><span></span><span></span>
+    </button>
+
+  </section>
+</main>
+
+
+<main>
+
+<section class="ticker" aria-label="The 52 tools">
+  <div class="ticker__track" id="ticker"></div>
+</section>
+
+<div class="v2-divider" aria-hidden="true">
+      <span class="v2-divider__rule"></span>
+      <span class="v2-divider__glyph mono">&#9581;&#9472;&#9476; &#9472;&#9472;&#9581;</span>
+      <span class="v2-divider__rule"></span>
+    </div>
+        <section class="chapter cx-chapter" id="forgetting">
+      <div class="chapter__head">
+        <span class="chapter__num">01</span>
+        <h2 class="chapter__title">The window filled up</h2>
+        <p class="chapter__sub">A transcript grows until it no longer fits the window. School counts the tokens, cuts the oldest messages into named blocks, and keeps the originals. No model is asked, and nothing is thrown away.</p>
+      </div>
+
+      <div class="cx-stage">
+        <div class="cx-deck">
+          <div class="cx-window" id="cx-window">
+            <div class="cx-window__bar mono"><span class="cx-window__dots"><i></i><i></i><i></i></span><span>session &#183; teach &#183; 14:02</span><span class="cx-window__live">recording</span></div>
+            <div class="cx-window__body">
+              <ul class="cx-lines" id="cx-lines"></ul>
+              <div class="cx-meter">
+                <div class="cx-meter__track"><div class="cx-meter__fill" id="cx-fill"></div><div class="cx-meter__cut" id="cx-cut"></div></div>
+                <div class="cx-meter__legend mono"><span>context window</span><span id="cx-tokens"><b>0k</b> / 128k</span></div>
+              </div>
+            </div>
+            <div class="cx-stamp" id="cx-stamp">Context truncated<small>12 messages &#8594; 1 block &#183; originals kept</small></div>
+          </div>
+
+          <div class="cx-stack" id="cx-blocks"></div>
+        </div>
+
+        <div class="cx-readout" id="cx-readout">
+          <div class="cx-readout__kicker mono" id="cx-kicker">compressed context</div>
+          <div class="cx-readout__value"><span id="cx-value">0.0K</span><i>tokens</i></div>
+          <div class="cx-readout__note" id="cx-note">waiting for the first block</div>
+        </div>
+      </div>
+
+      <div class="cx-facts">
+        <article class="cx-fact" style="--cx-accent:var(--cx-orange)">
+          <span class="cx-fact__k mono">the meter</span>
+          <h3>Tokens are counted as each message lands</h3>
+          <p>Nothing disappears silently. Every compression is visible, with the number that caused it.</p>
+          <span class="cx-fact__v mono">92% trigger</span>
+        </article>
+        <article class="cx-fact" style="--cx-accent:var(--cx-teal)">
+          <span class="cx-fact__k mono">the trigger</span>
+          <h3>Deterministic, and entirely local</h3>
+          <p>No model call, no network, no waiting. It is a pure function of the messages already in hand.</p>
+          <span class="cx-fact__v mono">0 network calls</span>
+        </article>
+        <article class="cx-fact" style="--cx-accent:var(--cx-violet)">
+          <span class="cx-fact__k mono">the block</span>
+          <h3>A range, a summary and both costs</h3>
+          <p>A block stores the exact message range, the summary, and the token cost of the original and of the summary.</p>
+          <span class="cx-fact__v mono">originals kept</span>
+        </article>
+        <article class="cx-fact" style="--cx-accent:var(--cx-amber)">
+          <span class="cx-fact__k mono">the restore</span>
+          <h3>Ask for a block, get the messages back</h3>
+          <p>The window reopens. When the agent needs the old detail it asks for the block and gets the originals, not a paraphrase.</p>
+          <span class="cx-fact__v mono">idempotent</span>
+        </article>
+      </div>
+
+      <div class="cx-related">
+        <div class="cx-related__head">
+          <div>
+            <span class="cx-related__k mono">related tools</span>
+            <h3>The context engine, as five calls</h3>
+          </div>
+          <p>Every one of them ships over the MCP server, the CLI and the OpenCode plugin &#8212; part of the same fifty-two.</p>
+        </div>
+        <ul class="cx-tools">
+          <li class="cx-tool" style="--cx-accent:var(--cx-orange)">
+            <div class="cx-tool__top"><code>context_compress</code><span class="cx-tool__mcp mono">mcp</span></div>
+            <p>Compress the session now, on demand. Returns the blocks added, the tokens before and after, and the trigger that fired.</p>
+            <span class="cx-tool__u mono">use when the window is close to full</span>
+          </li>
+          <li class="cx-tool" style="--cx-accent:var(--cx-teal)">
+            <div class="cx-tool__top"><code>context_restore</code><span class="cx-tool__mcp mono">mcp</span></div>
+            <p>Restore one block, or every block. Gives the original messages back for a block id, and reports what it reopened.</p>
+            <span class="cx-tool__u mono">use when the agent needs the old detail</span>
+          </li>
+          <li class="cx-tool" style="--cx-accent:var(--cx-violet)">
+            <div class="cx-tool__top"><code>context_status</code><span class="cx-tool__mcp mono">mcp</span></div>
+            <p>What the engine is holding right now: blocks stored, restores served, tokens saved and the view mode in force.</p>
+            <span class="cx-tool__u mono">use when you want the numbers</span>
+          </li>
+          <li class="cx-tool" style="--cx-accent:var(--cx-amber)">
+            <div class="cx-tool__top"><code>context_view</code><span class="cx-tool__mcp mono">mcp</span></div>
+            <p>Builds the layered view the agent is actually given, with the token ratio and the segments it will see.</p>
+            <span class="cx-tool__u mono">use when you want to see the view</span>
+          </li>
+          <li class="cx-tool" style="--cx-accent:var(--cx-rose)">
+            <div class="cx-tool__top"><code>context_coexist</code><span class="cx-tool__mcp mono">mcp</span></div>
+            <p>Decides who owns the context window &#8212; School, another compressor, or both &#8212; and lets you switch without a restart.</p>
+            <span class="cx-tool__u mono">use when something else is compressing too</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+<div class="v2-divider" aria-hidden="true">
+      <span class="v2-divider__rule"></span>
+      <span class="v2-divider__glyph mono">&#9581;&#9472;&#9476; &#9472;&#9472;&#9581;</span>
+      <span class="v2-divider__rule"></span>
+    </div>
+    <section class="chapter" id="pipeline">
+      <div class="chapter__head">
+        <span class="chapter__num">02</span>
+        <h2 class="chapter__title">One request, five hops</h2>
+        <p class="chapter__sub">A tool call becomes one line of JSON on a pipe. The engine answers on the same pipe. No server runs, no account exists, nothing leaves the machine.</p>
+      </div>
+      <div class="v2-pipe">
+        <div class="v2-pipe__rail">
+          <svg class="v2-pipe__svg" viewBox="0 0 1200 160" preserveAspectRatio="none" aria-hidden="true">
+            <path class="v2-pipe__base" d="M70 80 H1130"></path>
+            <path class="v2-pipe__flow" id="pipe-path" d="M70 80 H1130"></path>
+            <circle class="v2-pipe__dot" id="pipe-dot" r="6"></circle>
+          </svg>
+          <ol class="v2-pipe__nodes" id="pipe-nodes">
+            <li class="v2-pnode" data-node="0"><span class="v2-pnode__idx mono">01</span><b>agent</b><span class="v2-pnode__tag mono">opencode</span></li>
+            <li class="v2-pnode" data-node="1"><span class="v2-pnode__idx mono">02</span><b>plugin</b><span class="v2-pnode__tag mono">school.ts</span></li>
+            <li class="v2-pnode" data-node="2"><span class="v2-pnode__idx mono">03</span><b>bridge</b><span class="v2-pnode__tag mono">stdin &#8594; stdout</span></li>
+            <li class="v2-pnode" data-node="3"><span class="v2-pnode__idx mono">04</span><b>engine</b><span class="v2-pnode__tag mono">v2.6</span></li>
+            <li class="v2-pnode" data-node="4"><span class="v2-pnode__idx mono">05</span><b>store</b><span class="v2-pnode__tag mono">.school/memory</span></li>
+          </ol>
+        </div>
+        <ol class="v2-pipe__stations" id="pipe-stations">
+          <li class="v2-station" data-station="0">
+            <span class="v2-station__idx mono">01</span>
+            <h3>The agent asks</h3>
+            <p>One of 52 typed tools, with a schema the model already knows.</p>
+            <code class="v2-station__code mono">school_remember({ content: "&#8230;" })</code>
+          </li>
+          <li class="v2-station" data-station="1">
+            <span class="v2-station__idx mono">02</span>
+            <h3>The plugin translates</h3>
+            <p>Arguments become a JSON request. The plugin never talks to a network &#8212; it owns one child process.</p>
+            <code class="v2-station__code mono">{ "command": "remember", "worktree": "&#8230;" }</code>
+          </li>
+          <li class="v2-station" data-station="2">
+            <span class="v2-station__idx mono">03</span>
+            <h3>The bridge carries it</h3>
+            <p>One process per call, one line in, one line out. If it dies, the tool fails loudly instead of lying.</p>
+            <code class="v2-station__code mono">python scripts/school_bridge.py &lt; request.json</code>
+          </li>
+          <li class="v2-station" data-station="3">
+            <span class="v2-station__idx mono">04</span>
+            <h3>The engine decides</h3>
+            <p>Dedupe, conflict detection, confidence scoring and scope checks happen before anything is written.</p>
+            <code class="v2-station__code mono">MemoryManager.store_experience(...)</code>
+          </li>
+          <li class="v2-station" data-station="4">
+            <span class="v2-station__idx mono">05</span>
+            <h3>The store persists</h3>
+            <p>One file per project, one namespace per session. Another project can never read it.</p>
+            <code class="v2-station__code mono">.school/memory/v26_memory.json</code>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+<div class="v2-divider" aria-hidden="true">
+      <span class="v2-divider__rule"></span>
+      <span class="v2-divider__glyph mono">&#9581;&#9472;&#9476; &#9472;&#9472;&#9581;</span>
+      <span class="v2-divider__rule"></span>
+    </div>
+    <section class="chapter" id="anatomy">
+      <div class="chapter__head">
+        <span class="chapter__num">03</span>
+        <h2 class="chapter__title">What a block actually holds</h2>
+        <p class="chapter__sub">Forty-eight cells, three blocks, one honest accounting: what went in, what it costs now, and how to get the original back.</p>
+      </div>
+      <div class="v2-anat">
+        <div class="v2-anat__cells" id="cellgrid" aria-hidden="true"></div>
+        <div class="v2-anat__side">
+          <ol class="v2-anat__steps">
+            <li class="v2-astep" data-step="0">
+              <b class="mono">b1</b><span class="mono">messages 0 &#8594; 4</span>
+              <p>Four messages, one summary, both stored. The summary is what the model sees; the range is what you can restore.</p>
+            </li>
+            <li class="v2-astep" data-step="1">
+              <b class="mono">b3</b><span class="mono">messages 8 &#8594; 12</span>
+              <p>Blocks stay independent. Restoring one never rewrites the others, so a compression can always be undone.</p>
+            </li>
+            <li class="v2-astep" data-step="2">
+              <b class="mono">b7</b><span class="mono">messages 24 &#8594; 31</span>
+              <p>Layer 0 blocks are deterministic: no model wrote them, so they cost nothing to regenerate and nothing to doubt.</p>
+            </li>
+          </ol>
+          <dl class="v2-anat__meter mono">
+            <div class="v2-anat__meter__row"><dt>tokens in</dt><dd id="anat-before">128 000</dd></div>
+            <div class="v2-anat__meter__row"><dt>tokens out</dt><dd id="anat-after">9 400</dd></div>
+            <div class="v2-anat__meter__row v2-anat__meter__row--hi"><dt>saved</dt><dd id="anat-saved">92.6%</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+<div class="v2-divider" aria-hidden="true">
+      <span class="v2-divider__rule"></span>
+      <span class="v2-divider__glyph mono">&#9581;&#9472;&#9476; &#9472;&#9472;&#9581;</span>
+      <span class="v2-divider__rule"></span>
+    </div>
+    <section class="chapter tools" id="tools">
+  <div class="chapter__head">
+    <span class="chapter__num mono">04</span>
+    <h2 class="chapter__title">Fifty-two tools</h2>
+    <p class="chapter__sub">Not fifty-two commands you have to remember. Six folders, one per area. Open a folder and the tools are inside it.</p>
+  </div>
+  <div class="gf-mount" id="glassFolders"></div>
+</section>
+
+<section class="chapter install" id="install">
+  <div class="chapter__head">
+    <span class="chapter__num mono">05</span>
+    <h2 class="chapter__title">Install it from the source</h2>
+    <p class="chapter__sub">Nothing is published yet &#8212; no PyPI package, no Homebrew tap, no Chocolatey package, no npm package, no built installer. The five steps below are the whole install, in order, and each one actually runs.</p>
+  </div>
+  <div class="v2-inst">
+    <div class="v2-inst__grid" id="inst-grid">
+      <button class="v2-os is-on" data-os="clone" type="button"><b>1 &#183; clone</b><span>git clone</span></button>
+      <button class="v2-os" data-os="pip" type="button"><b>2 &#183; install</b><span>pip install -e "[mcp]"</span></button>
+      <button class="v2-os" data-os="wire" type="button"><b>3 &#183; wire</b><span>school install</span></button>
+      <button class="v2-os" data-os="mcp" type="button"><b>4 &#183; mcp</b><span>python -m school.mcp</span></button>
+      <button class="v2-os" data-os="check" type="button"><b>5 &#183; check</b><span>school doctor</span></button>
+    </div>
+    <div class="terminal v2-term">
+      <div class="terminal__bar"><span class="terminal__title" id="term-title">1 &#183; clone</span><button id="copy-install" class="terminal__copy" type="button">copy</button></div>
+      <div class="terminal__body"><code><span class="t-prompt">$</span> <span id="term-cmd">git clone https://github.com/dex34132-web/A-School-For-AI.git</span></code></div>
+      <div class="terminal__out mono" id="term-out"></div>
+    </div>
+  </div>
+  <p class="v2-inst__note mono">This is not a coding-agent tool. It runs behind any agent that speaks MCP or loads a plugin &#183; <a href="https://github.com/dex34132-web/A-School-For-AI" target="_blank" rel="noopener">github.com/dex34132-web/A-School-For-AI</a></p>
+</section>
+
+<section class="chapter numbers" id="numbers">
+  <div class="chapter__head">
+    <span class="chapter__num mono">06</span>
+    <h2 class="chapter__title">Measured, not asserted</h2>
+    <p class="chapter__sub">Three views of the same repository, counted from it: every commit, every test file, every source file. Nothing here is a benchmark, and nothing here is about your results.</p>
+  </div>
+  <div class="ms-mount" id="measureMount"></div>
+</section>
+
+<section class="chapter" id="mcp">
+  <div class="chapter__head">
+    <span class="chapter__num mono">07</span>
+    <h2 class="chapter__title">Any agent that speaks MCP</h2>
+    <p class="chapter__sub">Claude Code, Codex, Cursor, Windsurf, Cline, Roo Code, Gemini CLI, Goose, Aider, Continue, Copilot Chat &#8212; or anything else that speaks the Model Context Protocol. One server, one memory, the same 52 tools, with a budgeted resource set instead of a firehose.</p>
+  </div>
+  <div class="v2-mcp">
+    <div class="v2-mcp__code">
+      <div class="v2-mcp__tabs" role="tablist" aria-label="MCP client">
+        <button class="v2-mcp__tab is-on" data-mcp="claude" type="button">claude code</button>
+        <button class="v2-mcp__tab" data-mcp="codex" type="button">codex</button>
+        <button class="v2-mcp__tab" data-mcp="generic" type="button">any client</button>
+      </div>
+      <pre class="v2-mcp__pre mono" id="mcp-body"></pre>
+      <p class="v2-mcp__hint mono"><code>school mcp config &lt;client&gt;</code> prints the block for that client. The same server answers every one of them.</p>
+    </div>
+    <div class="v2-mcp__side">
+      <h3 class="v2-mcp__h">Budgeted resources</h3>
+      <ul class="v2-mcp__res">
+        <li><code class="mono">school://context</code><span>the live window, trimmed to the budget</span></li>
+        <li><code class="mono">school://memories</code><span>project memories, newest first</span></li>
+        <li><code class="mono">school://skills</code><span>the skill registry for this project</span></li>
+        <li><code class="mono">school://prompt/relevant_context</code><span>the prompt that primes a session</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="v2-divider" aria-hidden="true">
+      <span class="v2-divider__rule"></span>
+      <span class="v2-divider__glyph mono">&#9581;&#9472;&#9476; &#9472;&#9472;&#9581;</span>
+      <span class="v2-divider__rule"></span>
+    </div>
+    
+    <div class="v2-divider" aria-hidden="true">
+      <span class="v2-divider__rule"></span>
+      <span class="v2-divider__glyph mono">&#9581;&#9472;&#9476; &#9472;&#9472;&#9581;</span>
+      <span class="v2-divider__rule"></span>
+    </div>
+    
+
+
+</main>
+
+<footer class="hwf-root" id="hwf">
+  <canvas id="hwf-canvas" aria-hidden="true"></canvas>
+  <span class="hwf-sr">school</span>
+  <div class="hwf-top">
+    <div class="hwf-brand">
+      <strong>School</strong>
+      <span>a local-first runtime that teaches every agent your project &mdash; formerly LEREV, the old names still work</span>
+    </div>
+    <nav class="hwf-col" aria-label="Product">
+      <h3>Product</h3>
+      <ul>
+        <li><a href="#forgetting">Why School</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#tools">Fifty-two tools</a></li>
+        <li><a href="#mcp">MCP</a></li>
+        <li><a href="#install">Install</a></li>
+      </ul>
+    </nav>
+    <nav class="hwf-col" aria-label="Reference">
+      <h3>Reference</h3>
+      <ul>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI" target="_blank" rel="noopener">Repository</a></li>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI/blob/main/README.md" target="_blank" rel="noopener">README</a></li>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI/blob/main/docs/mcp.md" target="_blank" rel="noopener">MCP docs</a></li>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI/blob/main/docs/architecture.md" target="_blank" rel="noopener">Architecture</a></li>
+      </ul>
+    </nav>
+    <nav class="hwf-col" aria-label="Install">
+      <h3>Install</h3>
+      <ul>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI" target="_blank" rel="noopener">Source repository</a></li>
+        <li><a href="#install">The five steps</a></li>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI/blob/main/pyproject.toml" target="_blank" rel="noopener">pyproject.toml</a></li>
+        <li><a href="https://github.com/dex34132-web/A-School-For-AI/tree/main/packaging" target="_blank" rel="noopener">Packaging (unbuilt)</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="hwf-rule">
+    <span>memory lives in <code>.school/memory/</code></span>
+    <span id="clock">--:--:--</span>
+    <button type="button" class="hwf-up" data-hwf-top>Back to top &uarr;</button>
+  </div>
+</footer>
+<script>window.addEventListener("error",function(e){var b=document.getElementById("__fatal")||(function(){var d=document.createElement("div");d.id="__fatal";d.setAttribute("style","position:fixed;left:0;right:0;top:0;z-index:2147483647;background:#b3261e;color:#fff;font:12px/1.5 ui-monospace,monospace;padding:8px 12px");document.body.appendChild(d);return d})();b.textContent=(b.textContent?b.textContent+"  |  ":"")+(e.message||"script error")+" @"+(e.filename||"").split("/").pop()+":"+e.lineno});</script>
+  <script src="main.js?v=163"></script>
+    <script src="v2.js?v=163"></script>
+<script src="compress.js?v=163"></script>
+  <script src="halftone.js?v=163"></script>
+  <script src="glass.js?v=163"></script>
+
+<script>
+(function () {
+  "use strict"
+
+  var root = document.documentElement
+  var stage = document.getElementById("stage")
+  var flower = document.getElementById("flower")
+  var layerBg = document.getElementById("layerBg")
+  var layerTop = document.getElementById("layerTop")
+  var imgFront = document.getElementById("imgFront")
+  var imgReveal = document.getElementById("imgReveal")
+  var sizer = document.getElementById("flowerSizer")
+
+  /* ==========================================================
+     THE SUBJECT
+     A generated neural-network diagram replaces the lily:
+     the front layer is the dormant graph, the reveal layer is
+     the same graph energised. The morph trail swaps between
+     them, so the interaction survives the swap.
+     Flip USE_LILY to true to fall back to the original flowers.
+     ========================================================== */
+  var USE_LILY = true
+
+  var LILY_FRONT = "https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260808_192942_e1086505-d7da-433b-a59b-8220f4e6c808.png&w=1280&q=85"
+  var LILY_REVEAL = "https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260808_151324_bf318a5f-5525-4fc7-aab5-e9a341018828.png&w=1280&q=85"
+
+  function rng(seed) {
+    var s = seed >>> 0
+    return function () {
+      s = (s * 1664525 + 1013904223) >>> 0
+      return s / 4294967296
+    }
+  }
+
+  function buildNetwork(seed, hot) {
+    var r = rng(seed)
+    var W = 1000, H = 1000, pad = 96
+    var layers = [5, 7, 7, 5, 3]
+    var nodes = []
+    layers.forEach(function (count, li) {
+      var x = pad + (li * (W - 2 * pad)) / (layers.length - 1)
+      var arr = []
+      for (var i = 0; i < count; i++) {
+        var y = H / 2 + (i - (count - 1) / 2) * ((H * 0.66) / Math.max(count, 3))
+        arr.push([x, y])
+      }
+      nodes.push(arr)
+    })
+
+    var edges = ""
+    for (var li = 0; li < layers.length - 1; li++) {
+      for (var a = 0; a < nodes[li].length; a++) {
+        for (var b = 0; b < nodes[li + 1].length; b++) {
+          if (r() < 0.45) continue
+          var lit = hot && r() < 0.24
+          var sx = nodes[li][a], ex = nodes[li + 1][b]
+          edges +=
+            '<line x1="' + sx[0].toFixed(1) + '" y1="' + sx[1].toFixed(1) +
+            '" x2="' + ex[0].toFixed(1) + '" y2="' + ex[1].toFixed(1) +
+            '" stroke="' + (lit ? "#ff3d00" : (hot ? "#8fd8cf" : "#2f4a4d")) +
+            '" stroke-width="' + (lit ? 2.4 : (hot ? 1.5 : 1.1)) +
+            '" opacity="' + (lit ? 0.95 : (hot ? 0.55 : 0.75)) + '"/>'
+        }
+      }
+    }
+
+    var marks = ""
+    nodes.forEach(function (layer, li) {
+      layer.forEach(function (p) {
+        var isEdge = li === 0 || li === layers.length - 1
+        var rr = isEdge ? 9 : 7
+        marks +=
+          '<rect x="' + (p[0] - rr).toFixed(1) + '" y="' + (p[1] - rr).toFixed(1) +
+          '" width="' + rr * 2 + '" height="' + rr * 2 + '" rx="' + (isEdge ? 3 : rr) +
+          '" fill="' + (hot ? "#ff3d00" : "#7fd0c6") +
+          '" opacity="' + (hot ? 0.95 : 0.7) + '"/>'
+        if (hot) {
+          marks +=
+            '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) +
+            '" r="' + (rr + 9) + '" fill="none" stroke="#ff3d00" stroke-width="1" opacity=".4"/>'
+        }
+      })
+    })
+
+    var halo = hot
+      ? '<circle cx="500" cy="500" r="430" fill="none" stroke="#ff3d00" stroke-width="1" opacity=".18" stroke-dasharray="3 9"/>'
+      : '<circle cx="500" cy="500" r="430" fill="none" stroke="#7fd0c6" stroke-width="1" opacity=".14" stroke-dasharray="3 9"/>'
+
+    return (
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H +
+      '" viewBox="0 0 ' + W + " " + H + '">' + halo + edges + marks + "</svg>"
+    )
+  }
+
+  function toDataUri(svg) {
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)
+  }
+
+  if (USE_LILY) {
+    if (imgFront) imgFront.src = LILY_FRONT
+    if (imgReveal) imgReveal.src = LILY_FRONT
+    if (sizer) sizer.src = LILY_FRONT
+  } else {
+    var frontUri = toDataUri(buildNetwork(20260808, false))
+    var revealUri = toDataUri(buildNetwork(20260808, true))
+    imgFront.src = frontUri
+    imgReveal.src = revealUri
+    sizer.src = frontUri
+    root.classList.add("net")
+  }
+
+  /* ==========================================================
+     MORPH REVEAL TRAIL
+     ========================================================== */
+  var TRAIL_MAX_POINTS = 60
+  var TRAIL_HEAD_R = 140
+  var TRAIL_NOISE_AMP = 44
+  var TRAIL_BLOB_PTS = 24
+  var TRAIL_FADE_SPEED = 0.92
+  var TRAIL_SAMPLE_DIST = 8
+
+  var maskFront = document.createElement("canvas")
+  var maskTop = document.createElement("canvas")
+  maskFront.style.display = "none"
+  maskTop.style.display = "none"
+  document.body.appendChild(maskFront)
+  document.body.appendChild(maskTop)
+  var ctxFront = maskFront.getContext("2d")
+  var ctxTop = maskTop.getContext("2d")
+
+  var trail = []
+  var headRadius = 0
+  var hovering = false
+  var time = 0
+  var lastSample = null
+  var pointer = { x: 0, y: 0 }
+  var sized = false
+  var hadTrail = false
+
+  function sizeCanvases() {
+    if (!flower) return false
+    var rect = flower.getBoundingClientRect()
+    if (!rect.width || !rect.height) return false
+    var w = Math.max(2, Math.round(rect.width))
+    var h = Math.max(2, Math.round(rect.height))
+    if (maskFront.width !== w || maskFront.height !== h) {
+      maskFront.width = w
+      maskFront.height = h
+      maskTop.width = w
+      maskTop.height = h
+    }
+    sized = true
+    return true
+  }
+
+  function drawMorphBlob(ctx, cx, cy, r, t, seed) {
+    if (r < 2) return
+    var pts = []
+    for (var i = 0; i < TRAIL_BLOB_PTS; i++) {
+      var a = (i / TRAIL_BLOB_PTS) * Math.PI * 2
+      var n1 = Math.sin(a * 3 + t * 1.4 + seed) * 0.45
+      var n2 = Math.sin(a * 5 - t * 0.9 + seed * 2.3) * 0.3
+      var n3 = Math.cos(a * 2 + t * 1.8 + seed * 0.7) * 0.25
+      var noise = (n1 + n2 + n3) * TRAIL_NOISE_AMP * (r / TRAIL_HEAD_R)
+      var rad = r + noise
+      pts.push([cx + Math.cos(a) * rad, cy + Math.sin(a) * rad])
+    }
+    ctx.beginPath()
+    var prev = pts[pts.length - 1]
+    var mx = (prev[0] + pts[0][0]) / 2
+    var my = (prev[1] + pts[0][1]) / 2
+    ctx.moveTo(mx, my)
+    for (var j = 0; j < pts.length; j++) {
+      var cur = pts[j]
+      var nxt = pts[(j + 1) % pts.length]
+      ctx.quadraticCurveTo(cur[0], cur[1], (cur[0] + nxt[0]) / 2, (cur[1] + nxt[1]) / 2)
+    }
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  function render() {
+    if (!sized) return
+    var W = maskFront.width
+    var H = maskFront.height
+
+    /* Idle = no trail = nothing to mask. Re-encoding two PNG masks every
+       frame while the mouse is still is what made the page burn CPU, so
+       the masks are only rebuilt while something is actually moving. */
+    if (!trail.length) {
+      if (hadTrail) {
+        layerBg.style.webkitMaskImage = "none"
+        layerBg.style.maskImage = "none"
+        layerTop.style.webkitMaskImage = "linear-gradient(#0000,#0000)"
+        layerTop.style.maskImage = "linear-gradient(#0000,#0000)"
+        hadTrail = false
+      }
+      return
+    }
+    hadTrail = true
+
+    /* The front layer is NEVER erased.
+
+       Punching holes in it is what let the cursor delete the flower: the
+       hole revealed whatever the reveal layer happened to be showing, and
+       the two layers were not always the same picture. Instead the trail
+       now paints the charged layer ON TOP of the intact one, so the
+       subject can never disappear - it only lights up. */
+    layerBg.style.webkitMaskImage = "none"
+    layerBg.style.maskImage = "none"
+
+    ctxTop.clearRect(0, 0, W, H)
+    ctxTop.fillStyle = "#fff"
+    for (var k = 0; k < trail.length; k++) {
+      var q = trail[k]
+      ctxTop.globalAlpha = Math.max(0, Math.min(1, q.alpha))
+      drawMorphBlob(ctxTop, q.x, q.y, q.r, time, q.seed)
+    }
+    ctxTop.globalAlpha = 1
+
+    layerTop.style.webkitMaskImage = "url(" + maskTop.toDataURL() + ")"
+    layerTop.style.maskImage = "url(" + maskTop.toDataURL() + ")"
+  }
+
+  function toFlowerSpace(clientX, clientY) {
+    if (!flower) return { x: 0, y: 0 }
+    var rect = flower.getBoundingClientRect()
+    var sx = maskFront.width / (rect.width || 1)
+    var sy = maskFront.height / (rect.height || 1)
+    return { x: (clientX - rect.left) * sx, y: (clientY - rect.top) * sy }
+  }
+
+  function onMove(e) {
+    pointer = toFlowerSpace(e.clientX, e.clientY)
+    hovering = true
+  }
+  function onLeave() {
+    hovering = false
+    lastSample = null
+  }
+
+  stage.addEventListener("mousemove", onMove)
+  stage.addEventListener("mouseenter", onMove)
+  stage.addEventListener("mouseleave", onLeave)
+
+  var raf = null
+  var lastFrameAt = 0
+  function step() {
+    time += 0.016
+    var targetR = hovering ? TRAIL_HEAD_R : 0
+    headRadius += (targetR - headRadius) * (hovering ? 0.14 : 0.04)
+
+    if (hovering && headRadius > 5) {
+      var far = !lastSample ||
+        Math.abs(pointer.x - lastSample.x) > TRAIL_SAMPLE_DIST ||
+        Math.abs(pointer.y - lastSample.y) > TRAIL_SAMPLE_DIST
+      if (far) {
+        trail.push({
+          x: pointer.x,
+          y: pointer.y,
+          r: headRadius,
+          alpha: 1,
+          seed: Math.random() * 100,
+        })
+        while (trail.length > TRAIL_MAX_POINTS) trail.shift()
+        lastSample = { x: pointer.x, y: pointer.y }
+      }
+    } else {
+      lastSample = null
+    }
+
+    for (var i = 0; i < trail.length; i++) {
+      trail[i].alpha *= TRAIL_FADE_SPEED
+      trail[i].r *= 0.995
+    }
+    while (trail.length && trail[0].alpha < 0.01) trail.shift()
+
+    render()
+    lastFrameAt = performance.now()
+  }
+  function frame() {
+    step()
+    raf = requestAnimationFrame(frame)
+  }
+
+  raf = requestAnimationFrame(frame)
+  sizeCanvases()
+  /* A throttled, hidden or headless tab can stop requestAnimationFrame
+     entirely. The trail must not freeze with it, so a timer drives the
+     same step whenever rAF goes quiet. */
+  setInterval(function () {
+    if (!sized) sizeCanvases()
+    if (performance.now() - lastFrameAt > 220) step()
+  }, 70)
+
+  if (window.ResizeObserver) {
+    if (flower) { new ResizeObserver(function () { sizeCanvases() }).observe(flower) }
+  }
+  window.addEventListener("resize", function () { sizeCanvases() })
+
+  /* ?demo=1 - self-drive the trail so screenshots and demos show it */
+  if (/demo=1/i.test(location.search)) {
+    setTimeout(function () {
+      if (!flower) return
+      var rect = flower.getBoundingClientRect()
+      for (var i = 0; i < 44; i++) {
+        var x = rect.left + 40 + i * (rect.width - 80) / 43
+        var y = rect.top + rect.height * (0.34 + 0.28 * Math.sin(i / 4.2))
+        onMove({ clientX: x, clientY: y })
+      }
+    }, 2400)
+  }
+
+  /* ==========================================================
+     ENTRANCE -------- remove .anim once, never replay
+     ========================================================== */
+  var last = null
+  var animated = stage.querySelectorAll(".orb-word, .orb-subject, .orb-corner, .orb-quiet, .orb-dim")
+  animated.forEach(function (el) {
+    var d = 0
+    try { d = parseFloat(getComputedStyle(el).animationDelay) || 0 } catch (e) {}
+    var dur = 0
+    try { dur = parseFloat(getComputedStyle(el).animationDuration) || 0 } catch (e) {}
+    var end = d + dur
+    if (last === null || end > last) last = end
+  })
+  var total = (last === null ? 0 : last) * 1000
+  setTimeout(function () {
+    root.classList.remove("anim")
+  }, Math.max(total + 120, 6000) === 6000 && total < 6000 ? total + 120 : 6000)
+
+  /* ==========================================================
+     COPY BUTTON
+     ========================================================== */
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var value = btn.getAttribute("data-copy") || ""
+      var label = btn.querySelector(".hbtn__label")
+      var done = function () {
+        if (!label) return
+        var old = label.textContent
+        label.textContent = "copied"
+        setTimeout(function () { label.textContent = old }, 1400)
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(done, done)
+      } else {
+        done()
+      }
+    })
+  })
+
+  /* ==========================================================
+     MOBILE MENU
+     ========================================================== */
+  var burger = document.getElementById("burger")
+  var sheet = document.getElementById("sheet")
+  var scrim = document.getElementById("scrim")
+  var open = false
+
+  function setMenu(next) {
+    open = next
+    root.classList.toggle("menu-open", open)
+    burger.setAttribute("aria-expanded", open ? "true" : "false")
+    if (open) {
+      sheet.hidden = false
+      scrim.hidden = false
+      sheet.removeAttribute("inert")
+      var first = sheet.querySelector("a")
+      if (first) first.focus()
+    } else {
+      sheet.hidden = true
+      scrim.hidden = true
+      sheet.setAttribute("inert", "")
+      burger.focus()
+    }
+  }
+
+  if (burger && sheet && scrim) {
+    sheet.setAttribute("inert", "")
+    burger.addEventListener("click", function () { setMenu(!open) })
+    scrim.addEventListener("click", function () { setMenu(false) })
+    document.addEventListener("keydown", function (e) {
+      if (!open) return
+      if (e.key === "Escape") { setMenu(false); return }
+      if (e.key === "Tab") {
+        var items = sheet.querySelectorAll("a, button")
+        if (!items.length) return
+        var first = items[0]
+        var lastItem = items[items.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          
+          lastItem.focus()
+        } else if (!e.shiftKey && document.activeElement === lastItem) {
+          
+          first.focus()
+        }
+      }
+    })
+    sheet.addEventListener("click", function (e) {
+      if (e.target && e.target.tagName === "A") setMenu(false)
+    })
+  }
+})()
+</script>
+<script>
+(function () {
+  var stage = document.getElementById("stage");
+  var flower = document.getElementById("flower");
+  if (!stage || !flower) return;
+  var word = document.getElementById("orbit-title");
+  var copy = document.querySelector(".hero-copy");
+  function apply() {
+    var r = stage.getBoundingClientRect();
+    var h = Math.max(1, r.height);
+    var p = Math.min(1, Math.max(0, -r.top / h));
+    var e = p * p * (3 - 2 * p);
+    if (flower) { flower.style.setProperty("--zoom", (1 + e * 1.15).toFixed(4)); flower.style.setProperty("--zo", (1 - e * 0.95).toFixed(3)); }
+    if (word) { word.style.opacity = (1 - e * 0.9).toFixed(3); word.style.transform = "translateY(" + (e * -70).toFixed(1) + "px)"; }
+    if (copy) { copy.style.opacity = (1 - e * 0.9).toFixed(3); }
+  }
+  var t = false;
+  function onScroll() {
+    // no requestAnimationFrame here: rAF is throttled away in background and
+    // headless tabs, and the zoom would simply never update
+    if (t) return;
+    t = true;
+    apply();
+    setTimeout(function () { t = false; apply(); }, 40);
+  }
+  // scroll events are delivered during the rendering steps, which a throttled
+  // or hidden tab may never run - so poll the position as well
+  setInterval(apply, 60);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  apply();
+})();
+</script>
+  <script src="flower.js?v=163"></script>
+<script src="bloom.js?v=163"></script>
+  <div class="glass-lens" id="glassLens" aria-hidden="true"></div>
+  <script src="assets/glass-folders.js?v=163"></script>
+    <script src="assets/measurements.js?v=163"></script>
+  <script src="tilted-grid.js?v=163"></script>
+
+</body>
+</html>

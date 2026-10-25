@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from core.context.types import Block
-from school.config import resolve_memory_dir
+from toolio.config import resolve_memory_dir
 
 _LOCK = threading.RLock()
 _MAX_BLOCKS_DEFAULT = 200
@@ -36,7 +36,7 @@ def context_dir(worktree: str) -> Path:
     try:
         return resolve_memory_dir(worktree).parent / "context"
     except Exception:  # noqa: BLE001 — fail-open to a safe temp location
-        return Path(tempfile.gettempdir()) / "school-context"
+        return Path(tempfile.gettempdir()) / "toolio-context"
 
 
 def session_file(worktree: str, session_id: str) -> Path:
@@ -46,7 +46,7 @@ def session_file(worktree: str, session_id: str) -> Path:
         safe = safe[:80].rstrip(". ") or "default"
         return context_dir(worktree) / f"{safe}.blocks.json"
     except Exception:  # noqa: BLE001
-        return Path(tempfile.gettempdir()) / "school-context" / "default.blocks.json"
+        return Path(tempfile.gettempdir()) / "toolio-context" / "default.blocks.json"
 
 
 class BlockStore:

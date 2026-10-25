@@ -94,7 +94,7 @@ REFACTOR against the repro check.
   (or over the period it used to fail in) before claiming victory.
 
 Close the loop: run the `gate` checklist on the whole deliverable, then write
-the lesson down via `school_remember` (what the boundary was, what the
+the lesson down via `toolio_remember` (what the boundary was, what the
 mechanism was — tags `["triage", <area>]`, only when it is durable enough to
 change future work) so the next agent starts at step 2 instead of step 1.
 
@@ -138,9 +138,9 @@ verify cohort week-one retention recovers over two cohorts.
 - Never blame a person before you have isolated a condition. Systems, not
   villains.
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-`clarion` (interview) → `school_clarion` · `blueprint` (spec) → `school_blueprint` · `edict` (commands) → `school_edict`
-`weave` (formation) → `school_weave` · `compass` (acceptance) → `school_compass` · `brainstorm` (ideas) → `school_brainstorm`
-CLI: `school <artifact>` — e.g. `school edict`, `school brainstorm` (legacy alias: `school prism`).
+`clarion` (interview) → `toolio_clarion` · `blueprint` (spec) → `toolio_blueprint` · `edict` (commands) → `toolio_edict`
+`weave` (formation) → `toolio_weave` · `compass` (acceptance) → `toolio_compass` · `brainstorm` (ideas) → `toolio_brainstorm`
+CLI: `toolio <artifact>` — e.g. `toolio edict`, `toolio brainstorm` (legacy alias: `toolio prism`).
 Bridge wire names: `clarion`, `blueprint`, `edict`, `weave`, `compass`, `prism` (`prism` = brainstorm, legacy wire name kept for compatibility).

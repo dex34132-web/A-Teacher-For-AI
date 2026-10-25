@@ -1,4 +1,4 @@
-"""S7 tests: school_goal."""
+"""S7 tests: toolio_goal."""
 
 from __future__ import annotations
 

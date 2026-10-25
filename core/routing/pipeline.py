@@ -1,11 +1,11 @@
-"""Universal Router for School V2.5.
+"""Universal Router for Toolio V2.5.
 
 The core router orchestrates routing operations. It is agent-agnostic
 and does not depend on any specific AI model or agent architecture.
 
 The key principle:
     Let the agent do the semantic thinking.
-    Let School make the routing structured, efficient, safe, explainable,
+    Let Toolio make the routing structured, efficient, safe, explainable,
     and cheap.
 """
 

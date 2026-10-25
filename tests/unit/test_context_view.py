@@ -17,7 +17,7 @@ def test_range_replaced_by_compaction_marker() -> None:
     assert len(view.messages) == 2
     marker = view.messages[0]
     assert marker["role"] == "system"
-    assert marker["school_block"] == "b1"
+    assert marker["toolio_block"] == "b1"
     assert "User asked a" in marker["content"]
     assert view.messages[1]["content"] == "c"
     assert view.blocks_included == ["b1"]

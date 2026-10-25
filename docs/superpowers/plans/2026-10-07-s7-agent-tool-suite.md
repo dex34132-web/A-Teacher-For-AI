@@ -1,27 +1,27 @@
 # S7: Agent-Native Tool Suite — Implementation Plan
 
 Spec: `docs/superpowers/specs/2026-10-07-s7-agent-tool-suite-design.md`
-Master spec: `docs/superpowers/specs/2026-10-06-school-context-engine-design.md`
+Master spec: `docs/superpowers/specs/2026-10-06-toolio-context-engine-design.md`
 Base: HEAD c62e3ce (NO COMMITS rule)
 
 ## Task Batches
 
-- **Batch 1** — Tasks 1–2: `school_observe` + `school_goal`
-- **Batch 2** — Tasks 3–4: `school_research` + `school_explore`
-- **Batch 3** — Tasks 5–6: `school_progress` + `school_session`
-- **Batch 4** — Tasks 7–8: `school_execute` + `school_navigate`
+- **Batch 1** — Tasks 1–2: `toolio_observe` + `toolio_goal`
+- **Batch 2** — Tasks 3–4: `toolio_research` + `toolio_explore`
+- **Batch 3** — Tasks 5–6: `toolio_progress` + `toolio_session`
+- **Batch 4** — Tasks 7–8: `toolio_execute` + `toolio_navigate`
 - **Batch 5** — Task 9: Integration + full regression gates
 
 ---
 
-### Task 1: `school_observe`
+### Task 1: `toolio_observe`
 
 **Files:**
 - Create: `core/agent/observer.py`
 - Create: `tests/unit/test_agent_observer.py`
-- Modify: `school/plugin_source.py` (add TS tool block)
-- Modify: `school/mcp/server.py` (add MCP tool)
-- Modify: `school/bridge.py` (add bridge command)
+- Modify: `toolio/plugin_source.py` (add TS tool block)
+- Modify: `toolio/mcp/server.py` (add MCP tool)
+- Modify: `toolio/bridge.py` (add bridge command)
 
 **Interfaces:**
 - Produces: `observe(observation, category, evidence) -> ObserveResult`
@@ -37,12 +37,12 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 
 ---
 
-### Task 2: `school_goal`
+### Task 2: `toolio_goal`
 
 **Files:**
 - Create: `core/agent/goals.py`
 - Create: `tests/unit/test_agent_goals.py`
-- Modify: `school/plugin_source.py`, `school/mcp/server.py`, `school/bridge.py`
+- Modify: `toolio/plugin_source.py`, `toolio/mcp/server.py`, `toolio/bridge.py`
 
 **Interfaces:**
 - Produces: `goal(action, goal_id, objective, success_criteria, ...) -> GoalResult`
@@ -58,12 +58,12 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 
 ---
 
-### Task 3: `school_research`
+### Task 3: `toolio_research`
 
 **Files:**
 - Create: `core/agent/researcher.py`
 - Create: `tests/unit/test_agent_researcher.py`
-- Modify: `school/plugin_source.py`, `school/mcp/server.py`, `school/bridge.py`
+- Modify: `toolio/plugin_source.py`, `toolio/mcp/server.py`, `toolio/bridge.py`
 
 **Interfaces:**
 - Produces: `research(query, depth, format) -> ResearchResult`
@@ -79,12 +79,12 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 
 ---
 
-### Task 4: `school_explore`
+### Task 4: `toolio_explore`
 
 **Files:**
 - Create: `core/agent/explorer.py`
 - Create: `tests/unit/test_agent_explorer.py`
-- Modify: `school/plugin_source.py`, `school/mcp/server.py`, `school/bridge.py`
+- Modify: `toolio/plugin_source.py`, `toolio/mcp/server.py`, `toolio/bridge.py`
 
 **Interfaces:**
 - Produces: `explore(target, depth, focus) -> ExploreResult`
@@ -100,12 +100,12 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 
 ---
 
-### Task 5: `school_progress`
+### Task 5: `toolio_progress`
 
 **Files:**
 - Create: `core/agent/progress.py`
 - Create: `tests/unit/test_agent_progress.py`
-- Modify: `school/plugin_source.py`, `school/mcp/server.py`, `school/bridge.py`
+- Modify: `toolio/plugin_source.py`, `toolio/mcp/server.py`, `toolio/bridge.py`
 
 **Interfaces:**
 - Produces: `progress(action, items, context) -> ProgressResult`
@@ -121,12 +121,12 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 
 ---
 
-### Task 6: `school_session`
+### Task 6: `toolio_session`
 
 **Files:**
 - Create: `core/agent/sessions.py`
 - Create: `tests/unit/test_agent_sessions.py`
-- Modify: `school/plugin_source.py`, `school/mcp/server.py`, `school/bridge.py`
+- Modify: `toolio/plugin_source.py`, `toolio/mcp/server.py`, `toolio/bridge.py`
 
 **Interfaces:**
 - Produces: `session(action, session_id, focus) -> SessionResult`
@@ -142,12 +142,12 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 
 ---
 
-### Task 7: `school_execute`
+### Task 7: `toolio_execute`
 
 **Files:**
 - Create: `core/agent/executor.py`
 - Create: `tests/unit/test_agent_executor.py`
-- Modify: `school/plugin_source.py`, `school/mcp/server.py`, `school/bridge.py`
+- Modify: `toolio/plugin_source.py`, `toolio/mcp/server.py`, `toolio/bridge.py`
 
 **Interfaces:**
 - Produces: `execute(command, learn, context) -> ExecuteResult`
@@ -163,12 +163,12 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 
 ---
 
-### Task 8: `school_navigate`
+### Task 8: `toolio_navigate`
 
 **Files:**
 - Create: `core/agent/navigator.py`
 - Create: `tests/unit/test_agent_navigator.py`
-- Modify: `school/plugin_source.py`, `school/mcp/server.py`, `school/bridge.py`
+- Modify: `toolio/plugin_source.py`, `toolio/mcp/server.py`, `toolio/bridge.py`
 
 **Interfaces:**
 - Produces: `navigate(action, path, pattern, depth) -> NavigateResult`

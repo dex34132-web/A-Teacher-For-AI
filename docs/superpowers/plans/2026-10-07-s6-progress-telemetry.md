@@ -1,7 +1,7 @@
 # S6: Progress & Live Telemetry UX — Implementation Plan
 
 Spec: `docs/superpowers/specs/2026-10-07-s6-progress-telemetry-design.md`
-Master spec: `docs/superpowers/specs/2026-10-06-school-context-engine-design.md`
+Master spec: `docs/superpowers/specs/2026-10-06-toolio-context-engine-design.md`
 Base: HEAD c62e3ce (NO COMMITS rule)
 
 ## Task Batches
@@ -109,7 +109,7 @@ Base: HEAD c62e3ce (NO COMMITS rule)
 - Create: `tests/unit/test_context_parity.py`
 
 **Interfaces:**
-- Consumes: `school.plugin_source.TS_PLUGIN_SOURCE`, `school.mcp.server`, `school.cli`
+- Consumes: `toolio.plugin_source.TS_PLUGIN_SOURCE`, `toolio.mcp.server`, `toolio.cli`
 
 **Steps:**
 1. Write failing tests: `test_progress_bar_parity`, `test_bar_graph_parity`, `test_cumulative_chip_parity`, `test_watchdog_stub_parity`

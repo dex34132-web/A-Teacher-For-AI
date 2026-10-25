@@ -1,6 +1,6 @@
-# Lerev V2.5 Certification Report
+# Toolio V2.5 Certification Report
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *School*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 **Date:** 2026-09-11
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Lerev V2.5 implements a **Universal Agent Routing & Intelligence Layer** that transforms Lerev from a direct-consumption learning engine into a universal intelligence routing system. The implementation is complete, tested, documented, and certified.
+Toolio V2.5 implements a **Universal Agent Routing & Intelligence Layer** that transforms Toolio from a direct-consumption learning engine into a universal intelligence routing system. The implementation is complete, tested, documented, and certified.
 
 ## What Was Delivered
 
@@ -34,7 +34,7 @@ Lerev V2.5 implements a **Universal Agent Routing & Intelligence Layer** that tr
 | `core/routing/router.py` | 140 | UniversalRouter (main entry point) |
 | `core/routing/protocol.py` | 160 | AgentOperation (10), RoutingIntent, protocol prompt (<100 tokens) |
 | `core/routing/contracts.py` | 45 | AgentRoutingContract ABC, DestinationHandler ABC |
-| `core/routing/integration.py` | 185 | LerevIntegrationBridge, convenience handlers |
+| `core/routing/integration.py` | 185 | ToolioIntegrationBridge, convenience handlers |
 | **Total** | **~2,065** | |
 
 ### Test Suite
@@ -176,7 +176,7 @@ The V2.5 routing system consumes **~5-10%** of an agent's total power:
 
 ## Certification
 
-This report certifies that Lerev V2.5:
+This report certifies that Toolio V2.5:
 - Implements all specified features
 - Passes all 146 V2.5 tests
 - Maintains backward compatibility with V2.4.2 (85 certification tests pass)

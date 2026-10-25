@@ -1,6 +1,6 @@
 # LEREV Orchestrator + Tool Interface Implementation Plan
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *School*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -17,7 +17,7 @@
 
 - No new learning engines — all tools use existing learner/conflict/confidence/lifecycle systems
 - No LLM calls in execution path
-- Backward compatible: existing `lerev_status`, `lerev_remember`, `lerev_recall` bridge commands unchanged
+- Backward compatible: existing `toolio_status`, `toolio_remember`, `toolio_recall` bridge commands unchanged
 - No global mutable state
 - Deterministic and auditable
 - TDD: write failing tests first, then implement
@@ -366,7 +366,7 @@ git commit -m "feat(v26/tools): add base classes - Tool ABC, ToolResult, ToolReg
 
 **Interfaces:**
 - Consumes: nothing (checks component imports)
-- Produces: `StatusTool` with name `"lerev_status"`
+- Produces: `StatusTool` with name `"toolio_status"`
 
 - [ ] **Step 1: Write failing test**
 
@@ -378,7 +378,7 @@ from core.routing.v26.tools.status import StatusTool
 class TestStatusTool:
     def test_name(self):
         t = StatusTool()
-        assert t.name == "lerev_status"
+        assert t.name == "toolio_status"
 
     def test_execute_returns_ok(self):
         t = StatusTool()
@@ -409,7 +409,7 @@ from core.routing.v26.tools.base import Tool, ToolResult
 class StatusTool(Tool):
     @property
     def name(self) -> str:
-        return "lerev_status"
+        return "toolio_status"
 
     @property
     def description(self) -> str:
@@ -493,7 +493,7 @@ git commit -m "feat(v26/tools): add StatusTool for component availability checks
 
 **Interfaces:**
 - Consumes: `MemoryManager` (injected via constructor)
-- Produces: `RememberTool` with name `"lerev_remember"`
+- Produces: `RememberTool` with name `"toolio_remember"`
 
 - [ ] **Step 1: Write failing test**
 
@@ -506,7 +506,7 @@ from core.routing.v26.tools.remember import RememberTool
 class TestRememberTool:
     def test_name(self):
         t = RememberTool(manager=MagicMock())
-        assert t.name == "lerev_remember"
+        assert t.name == "toolio_remember"
 
     def test_schema_has_content(self):
         t = RememberTool(manager=MagicMock())
@@ -563,7 +563,7 @@ class RememberTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_remember"
+        return "toolio_remember"
 
     @property
     def description(self) -> str:
@@ -647,7 +647,7 @@ git commit -m "feat(v26/tools): add RememberTool for storing experiences"
 
 **Interfaces:**
 - Consumes: `MemoryManager` (injected via constructor)
-- Produces: `RecallTool` with name `"lerev_recall"`
+- Produces: `RecallTool` with name `"toolio_recall"`
 
 - [ ] **Step 1: Write failing test**
 
@@ -660,7 +660,7 @@ from core.routing.v26.tools.recall import RecallTool
 class TestRecallTool:
     def test_name(self):
         t = RecallTool(manager=MagicMock())
-        assert t.name == "lerev_recall"
+        assert t.name == "toolio_recall"
 
     def test_validate_requires_query(self):
         t = RecallTool(manager=MagicMock())
@@ -708,7 +708,7 @@ class RecallTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_recall"
+        return "toolio_recall"
 
     @property
     def description(self) -> str:
@@ -803,7 +803,7 @@ git commit -m "feat(v26/tools): add RecallTool for retrieving memories"
 
 **Interfaces:**
 - Consumes: `MemoryManager` (injected via constructor)
-- Produces: `ConflictDetectionTool` (`"lerev_conflict"`), `ConfidenceTool` (`"lerev_confidence"`)
+- Produces: `ConflictDetectionTool` (`"toolio_conflict"`), `ConfidenceTool` (`"toolio_confidence"`)
 
 - [ ] **Step 1: Write failing tests**
 
@@ -816,7 +816,7 @@ from core.routing.v26.tools.conflict import ConflictDetectionTool
 class TestConflictDetectionTool:
     def test_name(self):
         t = ConflictDetectionTool(manager=MagicMock())
-        assert t.name == "lerev_conflict"
+        assert t.name == "toolio_conflict"
 
     def test_validate_requires_content(self):
         t = ConflictDetectionTool(manager=MagicMock())
@@ -842,7 +842,7 @@ from core.routing.v26.tools.confidence import ConfidenceTool
 class TestConfidenceTool:
     def test_name(self):
         t = ConfidenceTool()
-        assert t.name == "lerev_confidence"
+        assert t.name == "toolio_confidence"
 
     def test_execute_returns_confidence(self):
         t = ConfidenceTool()
@@ -884,7 +884,7 @@ class ConflictDetectionTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_conflict"
+        return "toolio_conflict"
 
     @property
     def description(self) -> str:
@@ -949,7 +949,7 @@ from core.routing.v26.tools.base import Tool, ToolResult
 class ConfidenceTool(Tool):
     @property
     def name(self) -> str:
-        return "lerev_confidence"
+        return "toolio_confidence"
 
     @property
     def description(self) -> str:
@@ -1020,7 +1020,7 @@ git commit -m "feat(v26/tools): add ConflictDetectionTool and ConfidenceTool"
 
 **Interfaces:**
 - Consumes: `MemoryStore`, `FeatureExtractor` (injected via constructor)
-- Produces: `SemanticSearchTool` (`"lerev_search"`), `DeduplicateTool` (`"lerev_deduplicate"`)
+- Produces: `SemanticSearchTool` (`"toolio_search"`), `DeduplicateTool` (`"toolio_deduplicate"`)
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1033,7 +1033,7 @@ from core.routing.v26.tools.semantic_search import SemanticSearchTool
 class TestSemanticSearchTool:
     def test_name(self):
         t = SemanticSearchTool(store=MagicMock(), extractor=MagicMock())
-        assert t.name == "lerev_search"
+        assert t.name == "toolio_search"
 
     def test_validate_requires_query(self):
         t = SemanticSearchTool(store=MagicMock(), extractor=MagicMock())
@@ -1058,7 +1058,7 @@ from core.routing.v26.tools.deduplicate import DeduplicateTool
 class TestDeduplicateTool:
     def test_name(self):
         t = DeduplicateTool(store=MagicMock(), extractor=MagicMock())
-        assert t.name == "lerev_deduplicate"
+        assert t.name == "toolio_deduplicate"
 
     def test_validate_requires_content(self):
         t = DeduplicateTool(store=MagicMock(), extractor=MagicMock())
@@ -1103,7 +1103,7 @@ class SemanticSearchTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_search"
+        return "toolio_search"
 
     @property
     def description(self) -> str:
@@ -1175,7 +1175,7 @@ class DeduplicateTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_deduplicate"
+        return "toolio_deduplicate"
 
     @property
     def description(self) -> str:
@@ -1255,7 +1255,7 @@ git commit -m "feat(v26/tools): add SemanticSearchTool and DeduplicateTool"
 
 **Interfaces:**
 - Consumes: `MemoryManager` (injected via constructor)
-- Produces: `KnowledgeExtractionTool` (`"lerev_knowledge"`), `LifecycleTool` (`"lerev_lifecycle"`), `DiagnoseTool` (`"lerev_diagnose"`)
+- Produces: `KnowledgeExtractionTool` (`"toolio_knowledge"`), `LifecycleTool` (`"toolio_lifecycle"`), `DiagnoseTool` (`"toolio_diagnose"`)
 
 - [ ] **Step 1: Write failing tests**
 
@@ -1268,7 +1268,7 @@ from core.routing.v26.tools.knowledge import KnowledgeExtractionTool
 class TestKnowledgeExtractionTool:
     def test_name(self):
         t = KnowledgeExtractionTool(manager=MagicMock())
-        assert t.name == "lerev_knowledge"
+        assert t.name == "toolio_knowledge"
 
     def test_execute_returns_knowledge(self):
         mock_manager = MagicMock()
@@ -1290,7 +1290,7 @@ from core.routing.v26.tools.lifecycle import LifecycleTool
 class TestLifecycleTool:
     def test_name(self):
         t = LifecycleTool(manager=MagicMock())
-        assert t.name == "lerev_lifecycle"
+        assert t.name == "toolio_lifecycle"
 
     def test_validate_action(self):
         t = LifecycleTool(manager=MagicMock())
@@ -1313,7 +1313,7 @@ from core.routing.v26.tools.diagnose import DiagnoseTool
 class TestDiagnoseTool:
     def test_name(self):
         t = DiagnoseTool(manager=MagicMock())
-        assert t.name == "lerev_diagnose"
+        assert t.name == "toolio_diagnose"
 
     def test_execute_returns_diagnostics(self):
         mock_manager = MagicMock()
@@ -1351,7 +1351,7 @@ class KnowledgeExtractionTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_knowledge"
+        return "toolio_knowledge"
 
     @property
     def description(self) -> str:
@@ -1401,7 +1401,7 @@ class LifecycleTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_lifecycle"
+        return "toolio_lifecycle"
 
     @property
     def description(self) -> str:
@@ -1476,7 +1476,7 @@ class DiagnoseTool(Tool):
 
     @property
     def name(self) -> str:
-        return "lerev_diagnose"
+        return "toolio_diagnose"
 
     @property
     def description(self) -> str:
@@ -1675,10 +1675,10 @@ class Orchestrator:
                                 **kwargs) -> PipelineResult:
         """Full learning pipeline: store -> conflict check -> deduplicate."""
         steps = [
-            ("lerev_remember", {"content": content, "outcome": outcome,
+            ("toolio_remember", {"content": content, "outcome": outcome,
                                 "project": project, "session": session, **kwargs}),
-            ("lerev_conflict", {"content": content, "project": project}),
-            ("lerev_deduplicate", {"content": content, "project": project}),
+            ("toolio_conflict", {"content": content, "project": project}),
+            ("toolio_deduplicate", {"content": content, "project": project}),
         ]
         return self.pipeline(steps)
 ```
@@ -1773,7 +1773,7 @@ class BackgroundWorker:
         """Called after each successful remember."""
         self._memory_count += 1
         if self._memory_count >= self._consolidation_threshold:
-            self._orchestrator.trigger_background("lerev_knowledge", min_occurrences=3)
+            self._orchestrator.trigger_background("toolio_knowledge", min_occurrences=3)
             self._memory_count = 0
 
     def run_cycle(self) -> list[ToolResult]:
@@ -1843,16 +1843,16 @@ class TestFactory:
         orch = create_orchestrator()
         tools = orch._registry.list_tools()
         names = [t["name"] for t in tools]
-        assert "lerev_status" in names
-        assert "lerev_remember" in names
-        assert "lerev_recall" in names
-        assert "lerev_conflict" in names
-        assert "lerev_confidence" in names
-        assert "lerev_search" in names
-        assert "lerev_deduplicate" in names
-        assert "lerev_knowledge" in names
-        assert "lerev_lifecycle" in names
-        assert "lerev_diagnose" in names
+        assert "toolio_status" in names
+        assert "toolio_remember" in names
+        assert "toolio_recall" in names
+        assert "toolio_conflict" in names
+        assert "toolio_confidence" in names
+        assert "toolio_search" in names
+        assert "toolio_deduplicate" in names
+        assert "toolio_knowledge" in names
+        assert "toolio_lifecycle" in names
+        assert "toolio_diagnose" in names
 
     def test_all_tools_executable(self):
         orch = create_orchestrator()
@@ -1963,7 +1963,7 @@ git commit -m "feat(v26/tools): add factory for creating fully configured orches
 ### Task 11: Bridge Extension
 
 **Files:**
-- Modify: `lerev/bridge.py`
+- Modify: `toolio/bridge.py`
 - Create: `tests/unit/test_tools/test_bridge_extension.py`
 
 **Interfaces:**
@@ -1981,13 +1981,13 @@ from core.routing.v26.tools.base import ToolResult
 
 class TestBridgeExtension:
     def test_new_commands_registered(self):
-        from lerev.bridge import _COMMANDS
+        from toolio.bridge import _COMMANDS
         new_commands = ["learn", "diagnose", "conflict", "confidence", "deduplicate", "lifecycle", "search", "knowledge"]
         for cmd in new_commands:
             assert cmd in _COMMANDS, f"Command '{cmd}' not in _COMMANDS"
 
     def test_existing_commands_preserved(self):
-        from lerev.bridge import _COMMANDS
+        from toolio.bridge import _COMMANDS
         assert "status" in _COMMANDS
         assert "remember" in _COMMANDS
         assert "recall" in _COMMANDS
@@ -2000,32 +2000,32 @@ Expected: FAIL (new commands not yet in `_COMMANDS`)
 
 - [ ] **Step 3: Write implementation**
 
-Add to `lerev/bridge.py` after the existing `_COMMANDS`:
+Add to `toolio/bridge.py` after the existing `_COMMANDS`:
 ```python
 # New orchestrator-based commands
 def _handle_learn(req):
-    return _dispatch_to_orchestrator("lerev_remember", req)
+    return _dispatch_to_orchestrator("toolio_remember", req)
 
 def _handle_diagnose(req):
-    return _dispatch_to_orchestrator("lerev_diagnose", req)
+    return _dispatch_to_orchestrator("toolio_diagnose", req)
 
 def _handle_conflict(req):
-    return _dispatch_to_orchestrator("lerev_conflict", req)
+    return _dispatch_to_orchestrator("toolio_conflict", req)
 
 def _handle_confidence(req):
-    return _dispatch_to_orchestrator("lerev_confidence", req)
+    return _dispatch_to_orchestrator("toolio_confidence", req)
 
 def _handle_deduplicate(req):
-    return _dispatch_to_orchestrator("lerev_deduplicate", req)
+    return _dispatch_to_orchestrator("toolio_deduplicate", req)
 
 def _handle_lifecycle(req):
-    return _dispatch_to_orchestrator("lerev_lifecycle", req)
+    return _dispatch_to_orchestrator("toolio_lifecycle", req)
 
 def _handle_search(req):
-    return _dispatch_to_orchestrator("lerev_search", req)
+    return _dispatch_to_orchestrator("toolio_search", req)
 
 def _handle_knowledge(req):
-    return _dispatch_to_orchestrator("lerev_knowledge", req)
+    return _dispatch_to_orchestrator("toolio_knowledge", req)
 
 
 _orchestrator = None
@@ -2068,7 +2068,7 @@ Expected: ALL PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lerev/bridge.py tests/unit/test_tools/test_bridge_extension.py
+git add toolio/bridge.py tests/unit/test_tools/test_bridge_extension.py
 git commit -m "feat(bridge): extend command dispatch with 8 new orchestrator-based commands"
 ```
 
@@ -2098,50 +2098,50 @@ class TestFullPipeline:
 
     def test_dispatch_status(self):
         orch = create_orchestrator()
-        r = orch.dispatch("lerev_status")
+        r = orch.dispatch("toolio_status")
         assert r.success is True
 
     def test_dispatch_confidence(self):
         orch = create_orchestrator()
-        r = orch.dispatch("lerev_confidence", content="test", prediction="out")
+        r = orch.dispatch("toolio_confidence", content="test", prediction="out")
         assert r.success is True
         assert "score" in r.data
 
     def test_dispatch_remember_and_recall(self):
         orch = create_orchestrator()
-        r_store = orch.dispatch("lerev_remember", content="test memory", outcome="SUCCESS")
+        r_store = orch.dispatch("toolio_remember", content="test memory", outcome="SUCCESS")
         assert r_store.success is True
-        r_recall = orch.dispatch("lerev_recall", query="test")
+        r_recall = orch.dispatch("toolio_recall", query="test")
         assert r_recall.success is True
 
     def test_dispatch_conflict(self):
         orch = create_orchestrator()
-        r = orch.dispatch("lerev_conflict", content="test content")
+        r = orch.dispatch("toolio_conflict", content="test content")
         assert r.success is True
         assert "conflicts" in r.data
 
     def test_dispatch_deduplicate(self):
         orch = create_orchestrator()
-        r = orch.dispatch("lerev_deduplicate", content="test content")
+        r = orch.dispatch("toolio_deduplicate", content="test content")
         assert r.success is True
         assert "duplicates" in r.data
 
     def test_dispatch_lifecycle(self):
         orch = create_orchestrator()
-        r = orch.dispatch("lerev_lifecycle", action="score")
+        r = orch.dispatch("toolio_lifecycle", action="score")
         assert r.success is True
 
     def test_dispatch_diagnose(self):
         orch = create_orchestrator()
-        r = orch.dispatch("lerev_diagnose")
+        r = orch.dispatch("toolio_diagnose")
         assert r.success is True
         assert "health" in r.data
 
     def test_pipeline_sequential(self):
         orch = create_orchestrator()
         result = orch.pipeline([
-            ("lerev_remember", {"content": "pipeline test", "outcome": "SUCCESS"}),
-            ("lerev_conflict", {"content": "pipeline test"}),
+            ("toolio_remember", {"content": "pipeline test", "outcome": "SUCCESS"}),
+            ("toolio_conflict", {"content": "pipeline test"}),
         ])
         assert result.success is True
         assert len(result.steps) == 2

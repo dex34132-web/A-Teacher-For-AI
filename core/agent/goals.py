@@ -1,4 +1,4 @@
-"""S7: school_goal — track learning objectives and milestones."""
+"""S7: toolio_goal — track learning objectives and milestones."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ class GoalResult:
 
 
 def _goal_path(worktree: str) -> Path:
-    return Path(worktree) / ".school" / "agent" / GOAL_FILE
+    return Path(worktree) / ".toolio" / "agent" / GOAL_FILE
 
 
 def _load(worktree: str) -> list[dict[str, Any]]:

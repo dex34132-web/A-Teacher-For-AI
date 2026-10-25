@@ -1,4 +1,4 @@
-"""Security policy for School V2.6 long-term memory.
+"""Security policy for Toolio V2.6 long-term memory.
 
 Enforces agent/project/session isolation, validates memory requests,
 validates stored content, and ensures instruction/data boundaries.

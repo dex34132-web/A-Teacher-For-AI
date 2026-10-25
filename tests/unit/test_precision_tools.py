@@ -6,12 +6,12 @@ from __future__ import annotations
 
 import re
 
-from school import bridge, plugin_source
-from school.mcp import server as mcp_server
+from toolio import bridge, plugin_source
+from toolio.mcp import server as mcp_server
 
 # --- wire registration -------------------------------------------------------
 
-NEW_TOOLS = ("school_quantify", "school_elicit", "school_investigate")
+NEW_TOOLS = ("toolio_quantify", "toolio_elicit", "toolio_investigate")
 NEW_CMDS = ("quantify", "elicit", "investigate")
 
 
@@ -254,5 +254,5 @@ class TestNewSkills:
         root = Path(__file__).resolve().parents[2] / "skills"
         for name in self.SKILLS:
             body = (root / name / "SKILL.md").read_text(encoding="utf-8")
-            for tool in re.findall(r"`(school_[a-z_]+)`", body):
+            for tool in re.findall(r"`(toolio_[a-z_]+)`", body):
                 assert tool in mcp_server._TOOLS, f"{name}: phantom tool {tool}"

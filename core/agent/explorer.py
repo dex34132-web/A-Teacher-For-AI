@@ -1,4 +1,4 @@
-"""S7: school_explore — explore codebases and extract structural knowledge."""
+"""S7: toolio_explore — explore codebases and extract structural knowledge."""
 
 from __future__ import annotations
 

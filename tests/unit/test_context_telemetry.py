@@ -37,7 +37,7 @@ class TestTelemetry:
         assert len(events) <= 200
 
     def test_corrupt_line_skipped(self, tmp_path: Path) -> None:
-        log_path = tmp_path / ".school" / "context" / "telemetry.jsonl"
+        log_path = tmp_path / ".toolio" / "context" / "telemetry.jsonl"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_path.write_text('{"event":"ok"}\nNOT_JSON\n{"event":"ok2"}\n', encoding="utf-8")
         tc = TelemetryCollector(worktree=str(tmp_path))

@@ -1,4 +1,4 @@
-"""Conflict detection tool for School V2.6."""
+"""Conflict detection tool for Toolio V2.6."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ class ConflictDetectionTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_conflict"
+        return "toolio_conflict"
 
     @property
     def description(self) -> str:
@@ -123,6 +123,29 @@ class ConflictDetectionTool(Tool):
                         })
             except Exception:  # noqa: BLE001 - skip unreadable memories
                 continue
+
+        # LLM-in-the-loop advisory review (non-breaking: annotates only).
+        try:
+            from core.llm import llm_complete
+
+            for c in conflicts:
+                try:
+                    reply = llm_complete(
+                        "New content: {!r}\nExisting memory: {!r}\n"
+                        "Is this a real conflict? Reply YES or NO only.".format(
+                            content[:200], coerce_text(c.get("content", ""))[:200]
+                        ),
+                        system="You are a conflict judge. Reply YES or NO only.",
+                        temperature=0.0,
+                        max_tokens=4,
+                    )
+                    if reply is not None:
+                        low = reply.strip().lower()
+                        c["llm_verdict"] = "conflict" if low.startswith("y") else "not-conflict"
+                except Exception:  # noqa: BLE001
+                    pass
+        except Exception:  # noqa: BLE001
+            pass
 
         return ToolResult(
             success=True,

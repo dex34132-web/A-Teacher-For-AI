@@ -2,11 +2,11 @@
 
 Date: 2026-10-07
 Status: design — derived from master spec §10 (S6 row) and §7 (dashboards)
-Master spec: `docs/superpowers/specs/2026-10-06-school-context-engine-design.md`
+Master spec: `docs/superpowers/specs/2026-10-06-toolio-context-engine-design.md`
 
 ## 1. Goal
 
-Every School surface gains **live, Apple-grade progress and telemetry**:
+Every Toolio surface gains **live, Apple-grade progress and telemetry**:
 animated progress bars for long operations, bar graphs of context/token usage,
 cumulative stats (tokens saved, contexts saved/restored), and a hard
 **always-working guarantee** on every context tool (fail-open + watchdog +
@@ -19,7 +19,7 @@ parity tests).
 | 2.1 | **Progress renderer** | Unicode bar/gauge builder: `████████░░ 80%` with label + ETA. Deterministic (mocked clock). | OpenCode `todowrite` progress, Apple Activity Monitor |
 | 2.2 | **Telemetry collector** | Append-only JSONL ledger per session: every tool call, token delta, compression event, restore event. Reconciles with block store. | OpenCode `browser.network.list`, `browser.cpu.analyze` |
 | 2.3 | **Bar graph builder** | Horizontal bar graphs for context/token usage by tool. Renders in CLI, MCP text, footer chip. | OpenCode `browser.heap.compare` (class deltas) |
-| 2.4 | **Cumulative stats** | Tokens saved, contexts compressed, contexts restored, blocks alive — rolling window + all-time. Surfaced in `school_dashboard`, `school status`, footer. | OpenCode `get_goal_history` |
+| 2.4 | **Cumulative stats** | Tokens saved, contexts compressed, contexts restored, blocks alive — rolling window + all-time. Surfaced in `toolio_dashboard`, `toolio status`, footer. | OpenCode `get_goal_history` |
 | 2.5 | **Watchdog** | Context-tool always-working guarantee: any error/timeout/corrupt-store path must return a valid response (fail-open). Watchdog retries once, then degrades to a no-op chip. | OpenCode fail-open pattern |
 | 2.6 | **Parity tests** | TS ↔ MCP ↔ CLI output byte-equal for every telemetry surface. | Existing S2 parity tests |
 
@@ -32,10 +32,10 @@ tool call / compression / restore
 TelemetryCollector.record(event)
     │  (append-only JSONL, atomic, bounded)
     ▼
-<worktree>/.school/telemetry/<session>.jsonl
+<worktree>/.toolio/telemetry/<session>.jsonl
     │
     ├─► CumulativeStats.refresh()  ──►  dashboard / footer / CLI
-    ├─► BarGraphBuilder.build()    ──►  CLI `school tokens report` / MCP text
+    ├─► BarGraphBuilder.build()    ──►  CLI `toolio tokens report` / MCP text
     └─► ProgressRenderer.render()  ──►  live TUI / footer chip
 ```
 
@@ -61,11 +61,11 @@ def render_bar_graph(items: list[tuple[str, float]], width: int = 24) -> str:
 - Each line: `label ▕████████░░░░░░░░░░░░░░░░▏ 1.2k`
 - Values use compact notation (`1.2k`, `3.4M`).
 - Empty list → `"(no data)"`.
-- Used by `school tokens report --graph` and `school_dashboard`.
+- Used by `toolio tokens report --graph` and `toolio_dashboard`.
 
 ## 6. Cumulative stats
 
-Stored at `<worktree>/.school/telemetry/cumulative.json`:
+Stored at `<worktree>/.toolio/telemetry/cumulative.json`:
 
 ```json
 {
@@ -80,10 +80,10 @@ Stored at `<worktree>/.school/telemetry/cumulative.json`:
 
 - Atomic write (tmp + `os.replace`).
 - Updated on every telemetry event.
-- Surfaced in `school_dashboard` as a compact block:
+- Surfaced in `toolio_dashboard` as a compact block:
 
 ```
-[school] saved 18.4k tok · 12 compacted · 3 restored · 47 blocks
+[toolio] saved 18.4k tok · 12 compacted · 3 restored · 47 blocks
 ```
 
 ## 7. Watchdog (always-working guarantee)
@@ -95,7 +95,7 @@ def watchdog(fn, *args, **kwargs):
     """Call fn; on any exception/timeout, retry once, then return fail-open stub."""
 ```
 
-- Fail-open stub: `{"ok": True, "mode": "degraded", "chip": "[school] degraded"}`
+- Fail-open stub: `{"ok": True, "mode": "degraded", "chip": "[toolio] degraded"}`
 - Timeout: 5s per call (configurable via `SCHOOL_WATCHDOG_MS`).
 - Kill switch: `SCHOOL_WATCHDOG=0` disables retry (still fail-open).
 - Covers: `context_status`, `context_compress`, `context_restore`, `context_view`, `context_coexist`.

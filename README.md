@@ -20,7 +20,7 @@
 
 Every agent starts from zero. It re-reads the same files, re-derives the same decisions, and re-makes the same mistakes — every session, every task. Context windows fill up and get truncated. Nothing is learned.
 
-**Toolio** is a learning layer that sits behind any agent. It stores what happened, compresses what no longer fits, and recalls what matters before the next task starts. It works with any agent that speaks [MCP](https://modelcontextprotocol.io/) or loads a plugin — coding, research, ops, support, or anything else.
+**Toolio** is a tool system that sits behind any agent — not a single "learning layer", but 52 tools across memory, context, skills, planning, routing, and diagnostics. It stores what happened, compresses what no longer fits, recalls what matters before the next task starts, and learns from outcomes. It works with any agent that speaks [MCP](https://modelcontextprotocol.io/) or loads a plugin — coding, research, ops, support, or anything else.
 
 - **Not a coding-agent tool.** Toolio runs behind *any* agent that speaks MCP or loads a plugin.
 - **Nothing published yet.** Source install only — see [Install status](#install-status).
@@ -61,15 +61,16 @@ Then restart your agent. The `school`/`toolio` plugin (52 tools) and the MCP ser
 | Mistakes repeat | Failures are recorded and avoided |
 | One agent, one window | One memory, shared across agents |
 
-Core capabilities:
+Core capabilities (52 tools total):
 
-- **Memory** — store, recall, and search facts, decisions, and lessons, scoped per project.
-- **Context engine** — count tokens, compress overflowing transcripts into named blocks, restore them on demand.
-- **Learning** — record what worked and what broke; promote patterns into skills.
-- **Skills** — create, use, evolve, and share agent skills (candidate → proven).
-- **MCP server** — 52 tools over stdio, budgeted resources instead of a firehose.
-- **CLI** — install, diagnose, visualize, and run the whole system from the terminal.
-- **Planning tools** — clarify, blueprint, edict, weave, compass, brainstorm, quantify, elicit, investigate.
+- **Memory** (9 tools) — store, recall, search, forget, lifecycle, observe, learn, knowledge, conflict detection, deduplication. Scoped per project; never leaks between projects.
+- **Context engine** (5 tools) — count tokens, compress overflowing transcripts into named blocks, restore them on demand, inspect status and coexistence. Nothing is thrown away.
+- **Skills** (13 tools) — create, search, use, evolve, share, and track agent skills (candidate → proven). Local + GitHub discovery, import, feedback.
+- **Planning & precision** (12 tools) — clarify requirements, blueprint, edict, weave, compass, brainstorm, quantify, elicit, investigate, forge, chart, diagnose.
+- **Routing & meta** (6 tools) — route decisions, confidence scoring, dashboard, progress, workflow, goal tracking.
+- **MCP server** — all 52 tools over stdio, with budgeted resources (trimmed, never dumped) instead of a firehose.
+- **CLI** — install, diagnose, visualize, run, and manage the whole system from the terminal.
+- **Plugin** — auto-installs into OpenCode; works with any agent that speaks MCP or loads a plugin.
 
 ---
 

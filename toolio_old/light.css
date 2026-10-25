@@ -1,0 +1,108 @@
+/* ==========================================================================
+   LIGHT THEME — the archive, inverted.
+   Loaded last, so it wins over styles.css / motion.css / v2.css / v3.css.
+   Dark surfaces become paper; dark text becomes ink; the orange stays.
+   ========================================================================== */
+
+:root {
+  --paper: #f4f1ea;
+  --muted: #6a6459;
+  --muted-2: #857f72;
+  --line: rgba(23, 23, 28, 0.14);
+  --line-strong: rgba(23, 23, 28, 0.3);
+  --line-dark: rgba(23, 23, 28, 0.12);
+  --line-dark-strong: rgba(23, 23, 28, 0.26);
+  --ice: #0e8a80;
+  --signal: #ff3d00;
+}
+
+/* --- page + sections --------------------------------------------------- */
+html { background: #f4f1ea; }
+body { background: #f4f1ea !important; color: #17171c !important; }
+.hero, section.chapter, footer { background: #f4f1ea !important; color: #17171c !important; }
+section.chapter:nth-of-type(even) { background: #faf8f2 !important; }
+.ticker { background: #e9e5da !important; }
+.grain { opacity: 0.32 !important; }
+
+/* --- headings + copy ---------------------------------------------------- */
+.chapter__title, .hero__title { color: #17171c !important; }
+.chapter__sub, .hero__lede { color: #6a6459 !important; }
+.hero__lede code { color: #0e8a80 !important; }
+.chapter__num { color: #ff3d00 !important; }
+.eyebrow { color: #ff3d00 !important; }
+
+/* --- surfaces that used to be dark -------------------------------------- */
+.figure { background: #ffffff !important; border: 1px solid rgba(23, 23, 28, 0.14) !important; color: #17171c !important; }
+.figure__n { --num: #17171c !important; }
+.figure__d { color: #6a6459 !important; }
+.figures { background: transparent !important; }
+.terminal { background: #ffffff !important; border: 1px solid rgba(23, 23, 28, 0.18) !important; color: #17171c !important; }
+.terminal__bar { color: #857f72 !important; }
+.terminal__copy { color: #6a6459 !important; }
+.terminal__copy:hover { color: #17171c !important; border-color: #17171c !important; }
+.tool { background: #ffffff !important; color: #17171c !important; border-color: rgba(23, 23, 28, 0.14) !important; }
+.tool:hover { background: #fbf9f4 !important; }
+.tool__i, .tool__cat, .tool p { color: #6a6459 !important; }
+.tool__bar { background: rgba(23, 23, 28, 0.1) !important; }
+.chip { background: #ffffff !important; color: #6a6459 !important; border-color: rgba(23, 23, 28, 0.16) !important; }
+.chip.is-on { background: #17171c !important; color: #ffffff !important; border-color: #17171c !important; }
+.tab { background: #ffffff !important; color: #6a6459 !important; }
+.tab.is-on { background: #17171c !important; color: #ffffff !important; }
+.cmd { background: #ffffff !important; color: #17171c !important; border-color: rgba(23, 23, 28, 0.18) !important; }
+.cmd:hover { background: #f6f3ec !important; border-color: #17171c !important; }
+.btn { color: #17171c !important; border-color: rgba(23, 23, 28, 0.28) !important; }
+.btn:hover { background: #17171c !important; color: #ffffff !important; }
+.footer__nav a { color: #17171c !important; }
+.footer__base, .footer__base code, .footer__brand p, .footer__nav span { color: #857f72 !important; }
+.ticker__item b { color: #17171c !important; }
+.cursor__dot { background: #17171c !important; }
+.installer__notes strong { color: #17171c !important; }
+.installer__notes code { background: rgba(23, 23, 28, 0.06) !important; }
+
+/* --- chrome ------------------------------------------------------------- */
+.topbar.is-stuck { background: rgba(244, 241, 234, 0.9) !important; border-bottom: 1px solid rgba(23, 23, 28, 0.1) !important; }
+.rail a, .rail__num, .rail__label { color: #6a6459 !important; }
+.rail a.is-active, .rail a:hover { color: #ff3d00 !important; }
+.strip { background: rgba(255, 255, 255, 0.92) !important; border-color: rgba(23, 23, 28, 0.12) !important; color: #17171c !important; }
+.strip b { color: #17171c !important; }
+.strip__dot { background: #ff3d00 !important; }
+
+/* --- v2 components: one card system for every surface ------------------- */
+#forgetting, #pipeline, #anatomy, #mcp, #tools, #numbers, #install {
+  --card-bg: #ffffff;
+  --card-fg: #17171c;
+  --card-line: rgba(23, 23, 28, 0.15);
+  --card-muted: #6a6459;
+  --card-hi: rgba(255, 61, 0, 0.1);
+}
+.v2-station, .v2-pnode, .v2-astep, .beat, .win { color: var(--card-fg) !important; }
+.v2-station h3, .v2-pnode b, .v2-astep h3, .v2-astep h4, .beat h3 { color: #17171c !important; }
+.v2-station p, .v2-astep p, .beat p { color: #6a6459 !important; }
+.v2-station.is-live, .v2-pnode.is-live { border-color: rgba(255, 61, 0, 0.5) !important; }
+.v2-mcp__list > li, .v2-mcp__list li { background: #ffffff !important; border-color: rgba(23, 23, 28, 0.14) !important; color: #17171c !important; }
+.v2-mcp__list > li span, .v2-mcp__list li span { color: #6a6459 !important; }
+.v2-mcp__pre { background: #ffffff !important; color: #17171c !important; border-color: rgba(23, 23, 28, 0.14) !important; }
+.v2-mcp__tab { color: #6a6459 !important; }
+.v2-mcp__tab:hover, .v2-mcp__tab.is-on { color: #17171c !important; }
+.v2-os { background: #ffffff !important; color: #17171c !important; border-color: rgba(23, 23, 28, 0.16) !important; }
+.v2-os.is-on { background: #ffffff !important; border-color: #ff3d00 !important; }
+.v2-os.is-on b { color: #17171c !important; }
+.v2-os.is-on span { color: #ff3d00 !important; }
+.v2-os span { color: #6a6459 !important; }
+.v2-anat__cells i { background: rgba(23, 23, 28, 0.08) !important; }
+.v2-anat__cells i.lit, .v2-anat__cells i.is-lit { background: #ff3d00 !important; }
+.v2-anat__meter__row, .v2-anat__side li { background: #ffffff !important; color: #17171c !important; border-color: rgba(23, 23, 28, 0.14) !important; }
+.v2-frame, .v2-tag { border-color: rgba(23, 23, 28, 0.2) !important; color: #17171c !important; }
+.v2-divider { border-color: rgba(23, 23, 28, 0.16) !important; }
+.v2-divider__glyph { color: #ff3d00 !important; }
+.win { background: #ffffff !important; border-color: rgba(23, 23, 28, 0.16) !important; }
+.win__bar { color: #857f72 !important; }
+.win__lines li { color: #17171c !important; }
+.win__cut { color: #ff3d00 !important; }
+.stamp { color: #ff3d00 !important; border-color: #ff3d00 !important; }
+.v2-magnet__read { color: #17171c !important; }
+.cursor__read { background: rgba(255, 255, 255, 0.9) !important; border-color: rgba(255, 61, 0, 0.4) !important; }
+
+/* --- the tunnel reads as paper too -------------------------------------- */
+.tunnel-card__win { background: rgba(255, 255, 255, 0.95); }
+.tunnel-card__name { color: #857f72; }

@@ -26,14 +26,14 @@ Not for: running the work (`forge`), the pass/fail verdict on finished work
 ## The two moves
 
 **1. Elicit — find the questions worth asking.**
-Feed the goal + knowns to `school_elicit`. It returns prioritized material
+Feed the goal + knowns to `toolio_elicit`. It returns prioritized material
 unknowns (never asks what can be derived, never re-asks, respects dependencies),
 a question batch under a budget, and an honest completion status. The question
 budget is user-set (1–100, default 20): follow-ups share it, exhaustion is
 **not** success. Pass the session dict back to keep state.
 
 **2. Quantify — check every number and rule.**
-Feed the plan to `school_quantify`: budget lines (Decimal money, explicit
+Feed the plan to `toolio_quantify`: budget lines (Decimal money, explicit
 currency), percentage claims (numerator/denominator/scope/period/source),
 before/after changes (percentage-points vs relative change), risks (probability
 class or honest "unknown"), scenarios (E[X] only when probabilities sum to 1),
@@ -60,12 +60,12 @@ NO-GO; time-relative warnings are reported, never silently promoted.
 counts UNVERIFIED unless the user accepted the proxy before the verdict) ·
 EXPLORATORY (claim downgraded; never "done")`
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-- `elicit` (questions) → `school_elicit` · `quantify` (checks) → `school_quantify`
-- CLI: `school elicit`, `school quantify` (same reports, byte-identical)
+- `elicit` (questions) → `toolio_elicit` · `quantify` (checks) → `toolio_quantify`
+- CLI: `toolio elicit`, `toolio quantify` (same reports, byte-identical)
 - Ship reports as `reports/precision-<deliverable>.md`; durable lessons go to
-  `school_remember`.
+  `toolio_remember`.
 
 The precision layer is universal and deterministic; the intelligence is in what
 you feed it. Ask the material questions first, then check every claim — any

@@ -1,10 +1,10 @@
-# School MCP Server
+# Toolio MCP Server
 
-School exposes its V2.6 memory system as a standard **Model Context Protocol (MCP)**
+Toolio exposes its V2.6 memory system as a standard **Model Context Protocol (MCP)**
 server over stdio. Any MCP-compatible client — Claude Code, Codex, OpenCode, Cursor,
 Windsurf, Cline, Roo Code, Gemini CLI, Goose, Aider, Continue, Copilot Chat, or any
 custom MCP client — can store, retrieve, score, and lifecycle-manage memories through
-the same core School uses everywhere else.
+the same core Toolio uses everywhere else.
 
 The MCP layer is a **thin translation only**: every request is routed to the existing
 bridge command handlers (the same scope-aware, security-validated paths the OpenCode
@@ -14,53 +14,53 @@ plugin uses). There is no second memory system and no duplicated business logic.
 agent (Claude Code / Codex / OpenCode / …)
         │  MCP (stdio)
         ▼
-school.mcp  ──►  bridge handlers  ──►  School core (V2.6)
+toolio.mcp  ──►  bridge handlers  ──►  Toolio core (V2.6)
         │                                   │
         └──── JSON bridge (unchanged) ◄─────┘
                                               │
-                                       .school/memory (JSON files)
+                                       .toolio/memory (JSON files)
 ```
 
-School stays a three-tier system:
+Toolio stays a three-tier system:
 
 | Tier | Interface | Status |
 |------|-----------|--------|
-| 1 | **MCP server (`school mcp`)** | this document |
-| 2 | Generic JSON bridge (`python -m school.bridge`) | unchanged |
-| 3 | OpenCode plugin (`.opencode/plugins/school.ts` / `~/.config/opencode/plugins/school.ts`) | unchanged |
+| 1 | **MCP server (`toolio mcp`)** | this document |
+| 2 | Generic JSON bridge (`python -m toolio.bridge`) | unchanged |
+| 3 | OpenCode plugin (`.opencode/plugins/toolio.ts` / `~/.config/opencode/plugins/toolio.ts`) | unchanged |
 
 ## Install
 
 The MCP server depends on the official `mcp` Python package (optional extra):
 
 ```bash
-pip install "school[mcp]"
+pip install "toolio[mcp]"
 # from source
 pip install -e ".[mcp]"
 ```
 
-Without the extra, `school mcp` prints an install hint instead of starting.
+Without the extra, `toolio mcp` prints an install hint instead of starting.
 
 ## Run
 
 ```bash
-school mcp              # stdio MCP server (what client configs spawn)
-python -m school.mcp    # identical entry point
+toolio mcp              # stdio MCP server (what client configs spawn)
+python -m toolio.mcp    # identical entry point
 ```
 
 Print copy-paste client configuration (works even without the `mcp` extra installed):
 
 ```bash
-school mcp config             # generic mcpServers block
-school mcp config claude      # Claude Code
-school mcp config codex       # Codex (TOML)
-school mcp config opencode    # OpenCode
-school mcp config cursor      # …also: windsurf, cline, roo, gemini, vscode
+toolio mcp config             # generic mcpServers block
+toolio mcp config claude      # Claude Code
+toolio mcp config codex       # Codex (TOML)
+toolio mcp config opencode    # OpenCode
+toolio mcp config cursor      # …also: windsurf, cline, roo, gemini, vscode
 ```
 
 ## Client configuration
 
-Replace `python` with the absolute path of the interpreter that has School
+Replace `python` with the absolute path of the interpreter that has Toolio
 installed if your client does not inherit your shell environment.
 
 ### Claude Code
@@ -70,10 +70,10 @@ Project scope: `.mcp.json` in the repo root (or user scope in `~/.claude.json`):
 ```json
 {
   "mcpServers": {
-    "school": {
+    "toolio": {
       "type": "stdio",
       "command": "python",
-      "args": ["-m", "school.mcp"]
+      "args": ["-m", "toolio.mcp"]
     }
   }
 }
@@ -82,7 +82,7 @@ Project scope: `.mcp.json` in the repo root (or user scope in `~/.claude.json`):
 CLI alternative:
 
 ```bash
-claude mcp add school -- python -m school.mcp
+claude mcp add toolio -- python -m toolio.mcp
 ```
 
 ### Codex
@@ -90,15 +90,15 @@ claude mcp add school -- python -m school.mcp
 `~/.codex/config.toml`:
 
 ```toml
-[mcp_servers.school]
+[mcp_servers.toolio]
 command = "python"
-args = ["-m", "school.mcp"]
+args = ["-m", "toolio.mcp"]
 ```
 
 CLI alternative:
 
 ```bash
-codex mcp add school -- python -m school.mcp
+codex mcp add toolio -- python -m toolio.mcp
 ```
 
 ### OpenCode
@@ -109,9 +109,9 @@ codex mcp add school -- python -m school.mcp
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "school": {
+    "toolio": {
       "type": "local",
-      "command": ["python", "-m", "school.mcp"],
+      "command": ["python", "-m", "toolio.mcp"],
       "enabled": true
     }
   }
@@ -128,10 +128,10 @@ memory storage, scope rules, and bridge handlers.
 ```json
 {
   "mcpServers": {
-    "school": {
+    "toolio": {
       "type": "stdio",
       "command": "python",
-      "args": ["-m", "school.mcp"]
+      "args": ["-m", "toolio.mcp"]
     }
   }
 }
@@ -149,9 +149,9 @@ or `~/.cline/data/settings/` for the CLI):
 ```json
 {
   "mcpServers": {
-    "school": {
+    "toolio": {
       "command": "python",
-      "args": ["-m", "school.mcp"],
+      "args": ["-m", "toolio.mcp"],
       "disabled": false,
       "autoApprove": []
     }
@@ -171,15 +171,15 @@ or `~/.cline/data/settings/` for the CLI):
 ```json
 {
   "mcpServers": {
-    "school": {
+    "toolio": {
       "command": "python",
-      "args": ["-m", "school.mcp"]
+      "args": ["-m", "toolio.mcp"]
     }
   }
 }
 ```
 
-CLI alternative: `gemini mcp add school python -m school.mcp`
+CLI alternative: `gemini mcp add toolio python -m toolio.mcp`
 
 ### VS Code
 
@@ -188,10 +188,10 @@ CLI alternative: `gemini mcp add school python -m school.mcp`
 ```json
 {
   "servers": {
-    "school": {
+    "toolio": {
       "type": "stdio",
       "command": "python",
-      "args": ["-m", "school.mcp"]
+      "args": ["-m", "toolio.mcp"]
     }
   }
 }
@@ -213,17 +213,17 @@ advertise `readOnlyHint`/`idempotentHint` annotations for client-side auto-appro
 
 | Tool | Purpose | Key arguments |
 |------|---------|---------------|
-| `school_status` | Runtime/component health | — |
-| `school_remember` | Store an experience | `content`* , `outcome`, `observation`, `action`, `tags`, `confidence`, `project`, `session`, `agent_id` |
-| `school_recall` | Scope-aware retrieval | `query`*, `confidence_threshold`, `context_budget`, `limit`, `project`, `session`, `agent_id` |
-| `school_learn` | Learn-bridge store (alias of remember) | same as `school_remember` |
-| `school_conflict` | Conflict detection vs stored memories | `content`*, `project`, `session`, `agent_id` |
-| `school_confidence` | Confidence score + factors | `content`*, `prediction`, `evidence_count`, `conflict_count` |
-| `school_search` | TF-IDF semantic search | `query`*, `limit`, `project`, `agent_id` |
-| `school_deduplicate` | Find/merge duplicates | `content`*, `threshold`, `project`, `agent_id` |
-| `school_knowledge` | Extract knowledge patterns | `project`, `session`, `agent_id`, `min_occurrences` |
-| `school_lifecycle` | score / decay / promote / archive | `action`* , `memory_id`, `project` |
-| `school_diagnose` | Diagnostics | `detail` (`summary`\|`full`) |
+| `toolio_status` | Runtime/component health | — |
+| `toolio_remember` | Store an experience | `content`* , `outcome`, `observation`, `action`, `tags`, `confidence`, `project`, `session`, `agent_id` |
+| `toolio_recall` | Scope-aware retrieval | `query`*, `confidence_threshold`, `context_budget`, `limit`, `project`, `session`, `agent_id` |
+| `toolio_learn` | Learn-bridge store (alias of remember) | same as `toolio_remember` |
+| `toolio_conflict` | Conflict detection vs stored memories | `content`*, `project`, `session`, `agent_id` |
+| `toolio_confidence` | Confidence score + factors | `content`*, `prediction`, `evidence_count`, `conflict_count` |
+| `toolio_search` | TF-IDF semantic search | `query`*, `limit`, `project`, `agent_id` |
+| `toolio_deduplicate` | Find/merge duplicates | `content`*, `threshold`, `project`, `agent_id` |
+| `toolio_knowledge` | Extract knowledge patterns | `project`, `session`, `agent_id`, `min_occurrences` |
+| `toolio_lifecycle` | score / decay / promote / archive | `action`* , `memory_id`, `project` |
+| `toolio_diagnose` | Diagnostics | `detail` (`summary`\|`full`) |
 
 \* required
 
@@ -235,11 +235,11 @@ as `isError` results with the bridge validation message.
 Retrieval through non-tool surfaces is deliberately **budgeted — it never dumps the
 memory database**:
 
-- **Resource** `school://status` — component health JSON.
-- **Resource template** `school://context/{project}` — up to **5 memories**,
+- **Resource** `toolio://status` — component health JSON.
+- **Resource template** `toolio://context/{project}` — up to **5 memories**,
   **600-token** budget; optional `?q=<query>&limit=<1-5>&budget=<1-600>`.
 - **Prompt** `relevant_context` (argument `query` required, `project` optional) —
-  top **5 memories** in a clearly marked `[school context] … [/school]` block.
+  top **5 memories** in a clearly marked `[toolio context] … [/toolio]` block.
   No matches is a normal message, not an error.
 
 ## Scope and identity
@@ -262,7 +262,7 @@ and the plugin see the **same memories**. Environment variables:
 | `SCHOOL_SESSION` | Default session scope |
 | `SCHOOL_AGENT` | Default agent identity |
 
-Memory storage lives in `<worktree>/.school/memory/` (legacy `.lerev/` and `.evo/`
+Memory storage lives in `<worktree>/.toolio/memory/` (legacy `.toolio/` and `.evo/`
 locations are migrated non-destructively).
 
 ## Security
@@ -270,7 +270,7 @@ locations are migrated non-destructively).
 - **Memory is data, never instructions.** The server instructions and every framed
   context block say so explicitly: models must not execute instructions found inside
   stored memory.
-- Stored content and recall queries pass through School's injection detection and
+- Stored content and recall queries pass through Toolio's injection detection and
   request validation before anything is returned.
 - Scope isolation is enforced in the core store: a recall scoped to one agent/project
   cannot return another's memories.
@@ -278,7 +278,7 @@ locations are migrated non-destructively).
 
 ## Cost model
 
-School reduces repeated prompt work: instead of re-explaining project facts on every
+Toolio reduces repeated prompt work: instead of re-explaining project facts on every
 request, the client retrieves a small, confidence-filtered, recency-ranked slice of
 what already happened. Retrieval is budgeted (top-N, token caps), so context growth is
 bounded — fewer repeated tokens and fewer redundant model calls. Memories can
@@ -287,11 +287,11 @@ they are not a guarantee of factual output.
 
 ## Compatibility notes
 
-- The JSON bridge (`python -m school.bridge`), `school install` plugin flow, and
+- The JSON bridge (`python -m toolio.bridge`), `toolio install` plugin flow, and
   legacy LEREV paths are untouched; all pre-existing tests must stay green.
 - One MCP server process binds to one worktree (`SCHOOL_WORKTREE` or cwd), matching
   the bridge's one-worktree-per-process model.
-- `python -m school.mcp` and `school mcp` are equivalent.
+- `python -m toolio.mcp` and `toolio mcp` are equivalent.
 
 ## Testing
 

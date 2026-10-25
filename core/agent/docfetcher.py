@@ -1,4 +1,4 @@
-"""S7: school_fetch_docs — cached live-doc fetcher with token-efficient summaries."""
+"""S7: toolio_fetch_docs — cached live-doc fetcher with token-efficient summaries."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ class DocResult:
 
 
 def _cache_path(worktree: Path) -> Path:
-    return worktree / ".school" / "agent" / DOC_CACHE_FILE
+    return worktree / ".toolio" / "agent" / DOC_CACHE_FILE
 
 
 def _est_tokens(text: str) -> int:
@@ -108,7 +108,7 @@ def _build_url(query: str, library: str | None, version: str | None) -> str:
 
 def _fetch_url(url: str, timeout: float = FETCH_TIMEOUT_S) -> str:
     """Fetch raw doc text over HTTP. Raises on network failure."""
-    req = urllib.request.Request(url, headers={"User-Agent": "school-docfetcher/2.6"})
+    req = urllib.request.Request(url, headers={"User-Agent": "toolio-docfetcher/2.6"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
         return resp.read().decode("utf-8", "replace")
 
@@ -218,7 +218,7 @@ def fetch_docs(
     version: str | None = None,
     use_cache: bool = True,
 ) -> DocResult:
-    """Fetch up-to-date library docs, cached locally under ``.school/agent/``.
+    """Fetch up-to-date library docs, cached locally under ``.toolio/agent/``.
 
     The cache key is ``library:version:query`` (version pinning), cached content
     is skeletonized for token efficiency, and every fetch attempt is recorded in

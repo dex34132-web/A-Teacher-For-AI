@@ -68,7 +68,7 @@ def test_layer0_creates_blocks_and_view(tmp_path, monkeypatch) -> None:
     assert msgs == before
     assert len(engine.store.load()) == report.blocks_added
     view = engine.view(msgs)
-    assert any(m.get("school_block") for m in view.messages)
+    assert any(m.get("toolio_block") for m in view.messages)
 
 
 def test_layer1_used_when_no_layer0_spans(tmp_path, monkeypatch) -> None:

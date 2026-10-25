@@ -1,4 +1,4 @@
-"""Episodic experience abstraction for School V2.6.
+"""Episodic experience abstraction for Toolio V2.6.
 
 Represents agent experiences as first-class objects that can be stored,
 retrieved, and potentially promoted into learned knowledge.
@@ -39,6 +39,14 @@ class ExperienceOutcome(Enum):
 # ---------------------------------------------------------------------------
 # Experience
 # ---------------------------------------------------------------------------
+
+
+def _short_id() -> str:
+    """Generate a short 3-letter id."""
+    import random
+    import string
+
+    return "".join(random.choice(string.ascii_lowercase) for _ in range(3))
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,7 +93,7 @@ class Experience:
         **kwargs: Any,
     ) -> Experience:
         """Create an Experience with auto-generated ID and timestamp."""
-        experience_id = uuid.uuid4().hex[:16]
+        experience_id = _short_id()
         ts = kwargs.pop("timestamp", None)
         if ts is None:
             ts = datetime.now(UTC).timestamp()

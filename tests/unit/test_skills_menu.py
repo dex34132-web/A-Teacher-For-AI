@@ -1,4 +1,4 @@
-"""School skills interactive-menu: module, wire, and package bundle.
+"""Toolio skills interactive-menu: module, wire, and package bundle.
 
 ALL FIXTURES AND INPUTS ARE SYNTHETIC.
 """
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from school.skills_menu import (
+from toolio.skills_menu import (
     MENU_ITEMS,
     build_tool_args,
     install_bundled_skills,
@@ -40,12 +40,12 @@ class TestMenuSurface:
         assert action is None
         assert err is not None and "unknown choice" in err
 
-    def test_tool_name_maps_every_action_to_school_skill_family(self):
-        assert tool_name("list") == "school_skill_list"
-        assert tool_name("github-search") == "school_skill_search_github"
-        assert tool_name("analyze") == "school_skill_analyze_external"
+    def test_tool_name_maps_every_action_to_toolio_skill_family(self):
+        assert tool_name("list") == "toolio_skill_list"
+        assert tool_name("github-search") == "toolio_skill_search_github"
+        assert tool_name("analyze") == "toolio_skill_analyze_external"
         for name, _blurb, _fields in MENU_ITEMS:
-            assert tool_name(name).startswith("school_skill_") or name in {
+            assert tool_name(name).startswith("toolio_skill_") or name in {
                 "github-search",
                 "analyze",
             }
@@ -108,7 +108,7 @@ class TestInstallBundledSkills:
 
 class TestWireSurface:
     def test_no_choice_returns_menu(self):
-        from school import bridge
+        from toolio import bridge
 
         out = bridge._COMMANDS["skills_menu"]({"worktree": "."})
         assert out["ok"] is True
@@ -116,7 +116,7 @@ class TestWireSurface:
         assert "12) import" in out["menu"] or "import" in out["menu"]
 
     def test_digit_and_name_choices_run_status(self):
-        from school import bridge
+        from toolio import bridge
 
         by_digit = bridge._COMMANDS["skills_menu"]({"worktree": ".", "choice": "6"})
         assert by_digit["ok"] is True
@@ -127,7 +127,7 @@ class TestWireSurface:
         assert by_name["action"] == "status"
 
     def test_unknown_choice_fails_closed_with_menu(self):
-        from school import bridge
+        from toolio import bridge
 
         out = bridge._COMMANDS["skills_menu"]({"worktree": ".", "choice": "99"})
         assert out["ok"] is False
@@ -135,7 +135,7 @@ class TestWireSurface:
         assert "menu" in out
 
     def test_fields_accept_json_string(self):
-        from school import bridge
+        from toolio import bridge
 
         out = bridge._COMMANDS["skills_menu"](
             {
@@ -152,17 +152,17 @@ class TestWireSurface:
         assert result is not None and ("ok" in result or "errors" in result or text)
 
     def test_wrong_typed_fields_fail_closed(self):
-        from school import bridge
+        from toolio import bridge
 
         out = bridge._COMMANDS["skills_menu"]({"worktree": ".", "choice": "1", "fields": [1, 2]})
         assert out["ok"] is False
         assert "fields" in out["error"]
 
     def test_mcp_tool_registered_and_dispatches(self):
-        from school.mcp.server import _TOOLS, _call_tool
+        from toolio.mcp.server import _TOOLS, _call_tool
 
-        assert "school_skills_menu" in _TOOLS
-        res = _call_tool(str(REPO), "school_skills_menu", {})
+        assert "toolio_skills_menu" in _TOOLS
+        res = _call_tool(str(REPO), "toolio_skills_menu", {})
         sc = getattr(res, "structured_content", None)
         assert isinstance(sc, dict) and sc.get("ok") is True and "menu" in sc
 
@@ -172,7 +172,7 @@ class TestPackagesBundle:
         repo_skills = REPO / "skills"
         bundled = REPO / "packages" / "skills"
         names = sorted(p.name for p in repo_skills.iterdir() if p.is_dir())
-        assert len(names) == 11, names
+        assert len(names) == 12, names
         for name in names:
             repo_text = (repo_skills / name / "SKILL.md").read_text(encoding="utf-8")
             pkg_text = (bundled / name / "SKILL.md").read_text(encoding="utf-8")
@@ -182,8 +182,8 @@ class TestPackagesBundle:
         import sys
 
         sys.path.insert(0, str(REPO / "packages" / "mcp"))
-        from school_mcp.tools import CATALOG, TOOL_NAMES  # noqa: PLC0415
+        from toolio_mcp.tools import CATALOG, TOOL_NAMES  # noqa: PLC0415
 
         assert len(TOOL_NAMES) == 52
         names = [row[0] for row in CATALOG]
-        assert "school_skills_menu" in names
+        assert "toolio_skills_menu" in names

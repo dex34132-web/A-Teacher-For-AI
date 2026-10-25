@@ -392,5 +392,5 @@ class TestQuickObserve:
             str(tmp_path), strong_exp(), task="t-quick", judge=MockJudge()
         )
         assert report["action"] == "created"
-        registry_file = tmp_path / ".school" / "memory" / "skillgen_v1.json"
+        registry_file = tmp_path / ".toolio" / "memory" / "skillgen_v1.json"
         assert registry_file.exists()

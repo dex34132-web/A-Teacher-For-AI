@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>toolio</id>
+    <version>2.6.0</version>
+    <title>Toolio</title>
+    <authors>Toolio Contributors</authors>
+    <description>Universal agent learning and memory system for AI coding agents.</description>
+    <projectUrl>https://github.com/dex34132-web/toolio</projectUrl>
+    <projectSourceUrl>https://github.com/dex34132-web/toolio</projectSourceUrl>
+    <licenseUrl>https://github.com/dex34132-web/toolio/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags>ai agent learning memory opencode</tags>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

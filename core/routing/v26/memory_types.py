@@ -44,6 +44,14 @@ class MemoryKind(Enum):
 # ---------------------------------------------------------------------------
 
 
+def _short_id() -> str:
+    """Generate a short 3-letter id."""
+    import random
+    import string
+
+    return "".join(random.choice(string.ascii_lowercase) for _ in range(3))
+
+
 @dataclass(frozen=True, slots=True)
 class MemoryEntry:
     """A single memory stored in V2.6 long-term memory.
@@ -84,7 +92,7 @@ class MemoryEntry:
         **kwargs: Any,
     ) -> MemoryEntry:
         """Create a MemoryEntry with auto-generated ID and timestamp."""
-        memory_id = uuid.uuid4().hex[:16]
+        memory_id = _short_id()
         timestamp = datetime.now(UTC).timestamp()
         return cls(
             memory_id=memory_id,

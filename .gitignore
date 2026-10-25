@@ -108,7 +108,7 @@ benchmarks/results/
 *.log
 logs/
 
-# School runtime memory (legacy .teacher/ and .lerev/ kept for existing projects)
-.school/
+# Toolio runtime memory (legacy .teacher/ and .toolio/ kept for existing projects)
+.toolio/
 .teacher/
-.lerev/
+.toolio/

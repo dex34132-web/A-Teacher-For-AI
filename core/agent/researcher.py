@@ -1,6 +1,6 @@
-"""S7: school_research — research topics and distill cited learnings.
+"""S7: toolio_research — research topics and distill cited learnings.
 
-Internal knowledge first (``.school/agent/observations.jsonl``), knowledge
+Internal knowledge first (``.toolio/agent/observations.jsonl``), knowledge
 synthesis when internal evidence is thin, and structured per-finding
 citations: richer provenance than web-search tooling that only returns
 loose source URLs.

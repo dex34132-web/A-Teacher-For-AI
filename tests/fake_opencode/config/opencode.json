@@ -1,0 +1,43 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "small_model": "anthropic/claude-haiku-4-5-20251001",
+  "provider": {
+    "anthropic": {
+      "options": {
+        "baseURL": "https://api.anthropic.com",
+        "apiKey": "env://ANTHROPIC_API_KEY"
+      }
+    },
+    "openai": {
+      "options": {
+        "baseURL": "https://api.openai.com/v1",
+        "apiKey": "env://OPENAI_API_KEY"
+      }
+    },
+    "groq": {
+      "options": {
+        "baseURL": "https://api.groq.com/openai/v1",
+        "apiKey": "env://GROQ_API_KEY"
+      }
+    }
+  },
+  "mcp": {
+    "toolio": {
+      "type": "local",
+      "command": ["python", "-m", "toolio_mcp", "serve"],
+      "enabled": true
+    }
+  },
+  "plugin": ["toolio-opencode-plugin"],
+  "permission": {
+    "bash": "ask",
+    "edit": "allow",
+    "webfetch": "allow"
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "instructions": ["AGENTS.md", "CLAUDE.md"]
+}

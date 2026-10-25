@@ -1,0 +1,143 @@
+/* ==========================================================================
+   INTRO LAYER — the tunnel is the entry, the site is what you scroll into.
+   Loaded after every other stylesheet, so it wins.
+   ========================================================================== */
+
+/* ---- the intro is locked until the flight is over ------------------------ */
+html.intro-lock { overflow: hidden; }
+html.intro-lock body { overflow: hidden; }
+
+/* while the flight runs, the copy clears the frame and the tunnel owns it */
+html.intro-flying .hero__copy {
+  opacity: 0;
+  transform: translate3d(0, -3vh, 0) scale(1.04);
+  filter: blur(6px);
+  transition: opacity 0.5s ease, transform 0.9s cubic-bezier(0.19, 1, 0.22, 1),
+    filter 0.6s ease;
+  pointer-events: none;
+}
+html.intro-flying .hero__scroll { opacity: 0; }
+html.intro-flying .tunnel { filter: saturate(1.15) brightness(1.04); }
+
+.hero__copy { transition: opacity 0.6s ease, transform 0.9s cubic-bezier(0.19, 1, 0.22, 1), filter 0.6s ease; }
+
+/* ---- type: Pusab for the display, BlowBrush for the hand ---------------- */
+.hero__title {
+  font-family: var(--pusab);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+}
+.hero__title em {
+  font-family: var(--brush);
+  font-style: normal;
+  font-weight: 400;
+  text-transform: none;
+  font-size: 1.24em;
+  letter-spacing: 0;
+  color: #ff3d00;
+  display: inline-block;
+  transform: rotate(-3.5deg) translateY(-0.04em);
+  padding: 0 0.04em;
+}
+.hero__title .line__in { font-family: inherit; }
+
+/* the hand-written note beside the actions */
+.hero__note {
+  font-family: var(--brush);
+  font-size: clamp(19px, 1.5vw, 27px);
+  color: #ff3d00;
+  line-height: 1.15;
+  opacity: 0.9;
+  transform: rotate(-2deg);
+  display: inline-block;
+  margin-top: 2px;
+}
+
+/* ---- cards are photographs now, not terminal panels --------------------- */
+.tunnel-card__fig {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #101013;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.tunnel-card__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92) contrast(1.04);
+  transition: transform 0.9s cubic-bezier(0.19, 1, 0.22, 1), filter 0.6s ease;
+}
+.tunnel-card:hover .tunnel-card__img { transform: scale(1.05); filter: saturate(1.1) contrast(1.06); }
+.tunnel-card__cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 11px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #efeae0;
+  background: linear-gradient(to top, rgba(8, 8, 10, 0.94), rgba(8, 8, 10, 0));
+}
+.tunnel-card__cap i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff3d00;
+  font-style: normal;
+  flex: none;
+}
+.tunnel-card__cap b { font-weight: 500; }
+.tunnel-card__cap span { opacity: 0.55; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tunnel-card__win { position: absolute; inset: 0; }
+
+/* ---- the halftone wordmark prints in pixel type ------------------------ */
+.hwf-root { --hwf-display: var(--pusab); }
+
+/* ---------------------------------------------------------------------------
+   The intro screen is pure imagery. No headline, no lede, no buttons, no
+   stats - those belong to the site, and the site only begins when the user
+   scrolls in. The copy then arrives slowly, like a page settling.
+   --------------------------------------------------------------------------- */
+html.intro-quiet .hero__copy,
+html.intro-lock .hero__copy,
+html.intro-flying .hero__copy { opacity: 0 !important; }
+html.intro-quiet .hero__copy { transform: translate3d(0, 3vh, 0) !important; filter: blur(6px) !important; }
+/* while the intro holds, the copy is simply not there - no fade to wait for */
+html.intro-quiet .hero__copy,
+html.intro-lock .hero__copy { opacity: 0 !important; transition: none !important; }
+.hero__copy { transition: opacity 1.4s ease .3s, transform 1.4s cubic-bezier(.19,1,.22,1) .3s, filter 1.4s ease .3s; }
+html.intro-lock .hero__scroll { opacity: 1 !important; }
+.hero__scroll { transition: opacity .8s ease; }
+
+/* the headline is one line on a wide screen - the pixel face is very wide
+   and used to wrap into two lines with a half-empty measure */
+/* Once the intro is over the copy belongs to the page again. This rule wins
+   over the intro's own opacity:0 rules by specificity, so the hero can never
+   be left invisible - the only thing that hides it is the intro itself. */
+html:not(.intro-lock):not(.intro-quiet):not(.intro-flying) .hero__copy {
+  opacity: 1 !important;
+}
+@media (min-width: 1081px) {
+  .hero__title { display: flex !important; justify-content: center; align-items: baseline; gap: .34em; flex-wrap: nowrap; white-space: nowrap; font-size: clamp(30px, 4vw, 74px) !important; }
+  .hero__title .line { display: inline-block; }
+  .hero__title .line__in { display: inline-block; }
+}
+
+/* Safety net: once the intro has had its window, nothing may be left hidden.
+   The per-character title reveal and the copy fade are CSS animations, and a
+   throttled renderer never advances them - this makes the end state explicit. */
+html.intro-done .hero__copy { opacity: 1 !important; }
+html.intro-done .hero__title .ch { opacity: 1 !important; transform: none !important; filter: none !important; }
+html.intro-done .hero__scroll { opacity: 0 !important; }

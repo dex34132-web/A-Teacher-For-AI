@@ -78,7 +78,7 @@ class TestAuthHeaders:
         client.get_repository("octo", "repo")
         headers = transport.calls[0].headers
         assert "Authorization" not in headers
-        assert headers["User-Agent"].startswith("school-skillgen/")
+        assert headers["User-Agent"].startswith("toolio-skillgen/")
         assert headers["Accept"] == "application/vnd.github+json"
         assert client.authenticated is False
 

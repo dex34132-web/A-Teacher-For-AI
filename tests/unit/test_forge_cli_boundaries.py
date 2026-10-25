@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-CLI = REPO / "school" / "cli.py"
+CLI = REPO / "toolio" / "cli.py"
 
 
 def _run(*args: str) -> subprocess.CompletedProcess[str]:

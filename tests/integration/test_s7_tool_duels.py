@@ -1,7 +1,7 @@
-"""S7 competitive duels: each School agent tool vs its OpenCode inspiration.
+"""S7 competitive duels: each Toolio agent tool vs its OpenCode inspiration.
 
-Every test class pits one School tool against a faithful simulation of the
-OpenCode harness tool that inspired it and asserts School is superior on
+Every test class pits one Toolio tool against a faithful simulation of the
+OpenCode harness tool that inspired it and asserts Toolio is superior on
 measurable criteria: richer result surface, persistence, learning output,
 action coverage, and fail-open error resilience.
 
@@ -100,7 +100,7 @@ def baseline_read(path: str) -> dict[str, str]:
 @pytest.fixture
 def worktree() -> Iterator[str]:
     """Isolated worktree via tempfile.mkdtemp (not tmp_path: OneDrive-safe)."""
-    wt = tempfile.mkdtemp(prefix="school_duel_")
+    wt = tempfile.mkdtemp(prefix="toolio_duel_")
     try:
         yield wt
     finally:
@@ -108,15 +108,15 @@ def worktree() -> Iterator[str]:
 
 
 def _obs_file(wt: str) -> Path:
-    return Path(wt) / ".school" / "agent" / "observations.jsonl"
+    return Path(wt) / ".toolio" / "agent" / "observations.jsonl"
 
 
 def _goal_file(wt: str) -> Path:
-    return Path(wt) / ".school" / "agent" / "goals.json"
+    return Path(wt) / ".toolio" / "agent" / "goals.json"
 
 
 def _session_file(wt: str) -> Path:
-    return Path(wt) / ".school" / "agent" / "sessions.json"
+    return Path(wt) / ".toolio" / "agent" / "sessions.json"
 
 
 def _snapshot(wt: str) -> set[str]:
@@ -139,22 +139,22 @@ def _make_project(wt: str) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Duel 1: school_observe vs browser.observe
+# Duel 1: toolio_observe vs browser.observe
 # ---------------------------------------------------------------------------
 
 
 class TestObserveDuel:
-    """School persists, extracts patterns, counts cumulatively, and learns."""
+    """Toolio persists, extracts patterns, counts cumulatively, and learns."""
 
     def test_result_surface_dominates_baseline(self) -> None:
-        school_fields = {f.name for f in fields(ObserveResult)}
+        toolio_fields = {f.name for f in fields(ObserveResult)}
         baseline_fields = set(baseline_browser_observe("tab_1"))
-        assert len(school_fields) > len(baseline_fields)
+        assert len(toolio_fields) > len(baseline_fields)
         for cap in ("observation_id", "pattern", "learning", "total"):
-            assert cap in school_fields
+            assert cap in toolio_fields
             assert cap not in baseline_fields
 
-    def test_school_persists_baseline_is_ephemeral(self, worktree: str) -> None:
+    def test_toolio_persists_baseline_is_ephemeral(self, worktree: str) -> None:
         r = observe(worktree, "user always calls recall first", category="tool_call")
         assert r.ok is True
         assert r.observation_id.startswith("obs-")
@@ -167,7 +167,7 @@ class TestObserveDuel:
         baseline_browser_observe("tab_1", "snapshot the page")
         assert _snapshot(worktree) == before
 
-    def test_school_extracts_patterns(self, worktree: str) -> None:
+    def test_toolio_extracts_patterns(self, worktree: str) -> None:
         # Default category surfaces as a "pattern ..." learning on a fresh store.
         r2 = observe(worktree, "generic event")
         assert "pattern" in r2.pattern
@@ -179,11 +179,11 @@ class TestObserveDuel:
         assert "appears" in r.pattern
         assert "pattern" not in baseline_browser_observe("tab_1")
 
-    def test_school_counts_cumulatively(self, worktree: str) -> None:
+    def test_toolio_counts_cumulatively(self, worktree: str) -> None:
         totals = [observe(worktree, f"event {i}").total for i in range(3)]
         assert totals == [1, 2, 3]
 
-    def test_school_emits_learning_output(self, worktree: str) -> None:
+    def test_toolio_emits_learning_output(self, worktree: str) -> None:
         r = observe(worktree, "always verify exit codes after shell calls")
         assert r.learning
         assert "verify exit codes" in r.learning
@@ -201,16 +201,16 @@ class TestObserveDuel:
 
 
 # ---------------------------------------------------------------------------
-# Duel 2: school_goal vs goal_set
+# Duel 2: toolio_goal vs goal_set
 # ---------------------------------------------------------------------------
 
 
 class TestGoalDuel:
-    """School runs a full 8-action lifecycle with persisted criteria tracking."""
+    """Toolio runs a full 8-action lifecycle with persisted criteria tracking."""
 
     ALL_ACTIONS = ("set", "status", "complete", "block", "pause", "resume", "clear", "history")
 
-    def test_school_supports_8_actions_vs_1(self, worktree: str) -> None:
+    def test_toolio_supports_8_actions_vs_1(self, worktree: str) -> None:
         baseline_actions = {"set"}  # goal_set is the only goal action
         assert len(self.ALL_ACTIONS) == 8
         assert len(self.ALL_ACTIONS) > len(baseline_actions)
@@ -221,7 +221,7 @@ class TestGoalDuel:
         for action in self.ALL_ACTIONS:
             assert goal(worktree, action, goal_id="g1").ok is True, action
 
-    def test_school_persists_across_calls(self, worktree: str) -> None:
+    def test_toolio_persists_across_calls(self, worktree: str) -> None:
         goal(worktree, "set", goal_id="g1", objective="learn routing")
         assert _goal_file(worktree).is_file()
         status = goal(worktree, "status")
@@ -230,7 +230,7 @@ class TestGoalDuel:
         baseline_goal_set("learn routing")
         assert _snapshot(worktree) == before
 
-    def test_school_tracks_criteria_constraints_progress(self, worktree: str) -> None:
+    def test_toolio_tracks_criteria_constraints_progress(self, worktree: str) -> None:
         goal(
             worktree,
             "set",
@@ -244,13 +244,13 @@ class TestGoalDuel:
         assert entry["success_criteria"] == "tests green"
         assert entry["constraints"] == "no new deps"
         assert entry["max_turns"] == 5
-        school_fields = {f.name for f in fields(GoalResult)}
-        assert "progress" in school_fields
+        toolio_fields = {f.name for f in fields(GoalResult)}
+        assert "progress" in toolio_fields
         baseline = baseline_goal_set("ship feature")
         for cap in ("success_criteria", "constraints", "progress", "state"):
             assert cap not in baseline
 
-    def test_school_full_lifecycle_transitions(self, worktree: str) -> None:
+    def test_toolio_full_lifecycle_transitions(self, worktree: str) -> None:
         goal(worktree, "set", goal_id="g1", objective="duel")
         assert goal(worktree, "pause", goal_id="g1").state == "paused"
         assert goal(worktree, "resume", goal_id="g1").state == "active"
@@ -270,14 +270,14 @@ class TestGoalDuel:
 
 
 # ---------------------------------------------------------------------------
-# Duel 3: school_research vs websearch
+# Duel 3: toolio_research vs websearch
 # ---------------------------------------------------------------------------
 
 
 class TestResearchDuel:
-    """School builds a learning trail in the observer; websearch is stateless."""
+    """Toolio builds a learning trail in the observer; websearch is stateless."""
 
-    def test_school_logs_learning_trail(self, worktree: str) -> None:
+    def test_toolio_logs_learning_trail(self, worktree: str) -> None:
         r = research(worktree, "how does routing decide tool calls")
         assert r.ok is True
         assert _obs_file(worktree).is_file()
@@ -290,7 +290,7 @@ class TestResearchDuel:
         baseline_websearch("how does routing decide tool calls")
         assert _snapshot(worktree) == before
 
-    def test_school_supports_depth_and_fmt(self, worktree: str) -> None:
+    def test_toolio_supports_depth_and_fmt(self, worktree: str) -> None:
         r = research(worktree, "deep question", depth="deep", fmt="bullets")
         assert r.ok is True
         assert r.query == "deep question"
@@ -298,7 +298,7 @@ class TestResearchDuel:
         assert "depth" not in baseline_params
         assert "fmt" not in baseline_params
 
-    def test_school_returns_learnings(self, worktree: str) -> None:
+    def test_toolio_returns_learnings(self, worktree: str) -> None:
         r = research(worktree, "test-driven teaching")
         assert r.learnings
         assert isinstance(r.learnings, str) and "teaching" in r.learnings
@@ -309,9 +309,9 @@ class TestResearchDuel:
         assert "learnings" not in baseline
 
     def test_result_surface_dominates_baseline(self) -> None:
-        school_fields = {f.name for f in fields(ResearchResult)}
+        toolio_fields = {f.name for f in fields(ResearchResult)}
         baseline_fields = set(baseline_websearch("q"))
-        assert len(school_fields) > len(baseline_fields)
+        assert len(toolio_fields) > len(baseline_fields)
 
     def test_fail_open_bad_input_returns_error_not_exception(self, worktree: str) -> None:
         r = research(worktree, "")
@@ -320,14 +320,14 @@ class TestResearchDuel:
 
 
 # ---------------------------------------------------------------------------
-# Duel 4: school_explore vs glob/grep
+# Duel 4: toolio_explore vs glob/grep
 # ---------------------------------------------------------------------------
 
 
 class TestExploreDuel:
-    """School extracts conventions, patterns, and extension stats; glob/grep don't."""
+    """Toolio extracts conventions, patterns, and extension stats; glob/grep don't."""
 
-    def test_school_extracts_conventions(self, worktree: str) -> None:
+    def test_toolio_extracts_conventions(self, worktree: str) -> None:
         _make_project(worktree)
         r = explore(worktree, ".")
         assert r.ok is True
@@ -336,7 +336,7 @@ class TestExploreDuel:
         for baseline in (baseline_glob("*.py"), baseline_grep("def")):
             assert "conventions" not in baseline
 
-    def test_school_extracts_patterns_and_extensions(self, worktree: str) -> None:
+    def test_toolio_extracts_patterns_and_extensions(self, worktree: str) -> None:
         _make_project(worktree)
         r = explore(worktree, ".")
         assert any(".py" in p and "x2" in p for p in r.patterns)
@@ -346,9 +346,9 @@ class TestExploreDuel:
         assert set(baseline) == {"pattern", "files"}  # raw list only
 
     def test_result_surface_dominates_baseline(self) -> None:
-        school_fields = {f.name for f in fields(ExploreResult)}
+        toolio_fields = {f.name for f in fields(ExploreResult)}
         baseline_fields = set(baseline_grep("x"))
-        assert len(school_fields) > len(baseline_fields)
+        assert len(toolio_fields) > len(baseline_fields)
 
     def test_fail_open_bad_input_returns_error_not_exception(self, worktree: str) -> None:
         missing = explore(worktree, "does-not-exist")
@@ -360,12 +360,12 @@ class TestExploreDuel:
 
 
 # ---------------------------------------------------------------------------
-# Duel 5: school_progress vs todowrite
+# Duel 5: toolio_progress vs todowrite
 # ---------------------------------------------------------------------------
 
 
 class TestProgressDuel:
-    """School renders visual bars, supports ETA, and persists across calls."""
+    """Toolio renders visual bars, supports ETA, and persists across calls."""
 
     ITEMS = [
         {"content": "write tests", "status": "completed"},
@@ -373,7 +373,7 @@ class TestProgressDuel:
         {"content": "ship it", "status": "pending"},
     ]
 
-    def test_school_renders_visual_bars(self, worktree: str) -> None:
+    def test_toolio_renders_visual_bars(self, worktree: str) -> None:
         r = progress(worktree, "write", items=self.ITEMS)
         assert r.ok is True
         assert "█" in r.bars
@@ -383,15 +383,15 @@ class TestProgressDuel:
         assert "█" not in baseline["content"]
         assert "░" not in baseline["content"]
 
-    def test_school_supports_eta(self) -> None:
-        # School's progress renderer (used by school_progress) computes ETAs.
+    def test_toolio_supports_eta(self) -> None:
+        # Toolio's progress renderer (used by toolio_progress) computes ETAs.
         assert render_eta(5000, 0.5) == "~5s"
         assert render_eta(90_000, 0.5) == "~1m 30s"
         assert render_eta(0, 0.0) == "—"
         baseline = baseline_todowrite(self.ITEMS)
         assert "eta" not in {k.lower() for k in baseline}
 
-    def test_school_persists_across_calls(self, worktree: str) -> None:
+    def test_toolio_persists_across_calls(self, worktree: str) -> None:
         written = progress(worktree, "write", items=self.ITEMS)
         reread = progress(worktree, "read")
         assert reread.items == written.items
@@ -399,9 +399,9 @@ class TestProgressDuel:
         assert len(reread.items) == 3
 
     def test_result_surface_dominates_baseline(self, worktree: str) -> None:
-        school_fields = {f.name for f in fields(ProgressResult)}
+        toolio_fields = {f.name for f in fields(ProgressResult)}
         baseline_fields = set(baseline_todowrite(self.ITEMS))
-        assert len(school_fields) > len(baseline_fields)
+        assert len(toolio_fields) > len(baseline_fields)
         assert progress(worktree, "write", items=self.ITEMS).ok is True
 
     def test_fail_open_bad_input_returns_error_not_exception(self, worktree: str) -> None:
@@ -411,21 +411,21 @@ class TestProgressDuel:
 
 
 # ---------------------------------------------------------------------------
-# Duel 6: school_session vs opencode.session_move
+# Duel 6: toolio_session vs opencode.session_move
 # ---------------------------------------------------------------------------
 
 
 class TestSessionDuel:
-    """School runs 5 lifecycle actions with focus tracking; move/rename relocates only."""
+    """Toolio runs 5 lifecycle actions with focus tracking; move/rename relocates only."""
 
-    def test_school_supports_5_actions_vs_2(self, worktree: str) -> None:
+    def test_toolio_supports_5_actions_vs_2(self, worktree: str) -> None:
         baseline_actions = {"move", "rename"}  # opencode session surface
         assert len(baseline_actions) < 5
         assert session(worktree, "create", session_id="s1", focus="routing").ok is True
         for action in ("resume", "summarize", "export", "list"):
             assert session(worktree, action, session_id="s1").ok is True, action
 
-    def test_school_tracks_focus(self, worktree: str) -> None:
+    def test_toolio_tracks_focus(self, worktree: str) -> None:
         session(worktree, "create", session_id="s1", focus="teaching loops")
         resumed = session(worktree, "resume", session_id="s1")
         assert resumed.focus == "teaching loops"
@@ -434,14 +434,14 @@ class TestSessionDuel:
         baseline = baseline_session_move("s1", "/tmp")
         assert "focus" not in baseline
 
-    def test_school_persists_sessions(self, worktree: str) -> None:
+    def test_toolio_persists_sessions(self, worktree: str) -> None:
         session(worktree, "create", session_id="s1", focus="a")
         assert _session_file(worktree).is_file()
         listed = session(worktree, "list")
         assert any(s["id"] == "s1" for s in listed.sessions)
         assert len(listed.sessions) == 1  # survives across calls
 
-    def test_school_summarizes_and_exports(self, worktree: str) -> None:
+    def test_toolio_summarizes_and_exports(self, worktree: str) -> None:
         session(worktree, "create", session_id="s1", focus="duels")
         summary = session(worktree, "summarize", session_id="s1")
         assert "focus=duels" in summary.summary
@@ -458,14 +458,14 @@ class TestSessionDuel:
 
 
 # ---------------------------------------------------------------------------
-# Duel 7: school_execute vs shell
+# Duel 7: toolio_execute vs shell
 # ---------------------------------------------------------------------------
 
 
 class TestExecuteDuel:
-    """School learns from command outcomes and enforces timeouts; shell is raw."""
+    """Toolio learns from command outcomes and enforces timeouts; shell is raw."""
 
-    def test_school_learns_from_execution(self, worktree: str) -> None:
+    def test_toolio_learns_from_execution(self, worktree: str) -> None:
         cmd = f'"{sys.executable}" -c "print(42)"'
         r = execute(worktree, cmd)
         assert r.ok is True
@@ -485,20 +485,20 @@ class TestExecuteDuel:
         baseline_shell(cmd)
         assert _snapshot(worktree) == before
 
-    def test_school_learns_from_failures_too(self, worktree: str) -> None:
+    def test_toolio_learns_from_failures_too(self, worktree: str) -> None:
         r = execute(worktree, f'"{sys.executable}" -c "raise SystemExit(3)"')
         assert r.ok is False
         assert r.exit_code == 3
         assert "command failure" in r.learned
 
-    def test_school_configurable_timeout(self, worktree: str) -> None:
+    def test_toolio_configurable_timeout(self, worktree: str) -> None:
         slow = f'"{sys.executable}" -c "import time; time.sleep(8)"'
         r = execute(worktree, slow, timeout_ms=1000)
         assert r.ok is False
         assert r.error == "timeout"
         assert "timeout_ms" not in baseline_shell(slow)  # baseline has no knob
 
-    def test_school_learn_flag_controls_learning(self, worktree: str) -> None:
+    def test_toolio_learn_flag_controls_learning(self, worktree: str) -> None:
         cmd = f'"{sys.executable}" -c "print(7)"'
         r = execute(worktree, cmd, learn=False)
         assert r.ok is True
@@ -506,10 +506,10 @@ class TestExecuteDuel:
         assert not _obs_file(worktree).exists()
 
     def test_result_surface_dominates_baseline(self) -> None:
-        school_fields = {f.name for f in fields(ExecuteResult)}
+        toolio_fields = {f.name for f in fields(ExecuteResult)}
         baseline_fields = set(baseline_shell("echo hi"))
-        assert len(school_fields) > len(baseline_fields)
-        assert "duration_ms" in school_fields
+        assert len(toolio_fields) > len(baseline_fields)
+        assert "duration_ms" in toolio_fields
         assert "duration_ms" not in baseline_fields
 
     def test_fail_open_bad_input_returns_error_not_exception(self, worktree: str) -> None:
@@ -519,14 +519,14 @@ class TestExecuteDuel:
 
 
 # ---------------------------------------------------------------------------
-# Duel 8: school_navigate vs read/glob/grep
+# Duel 8: toolio_navigate vs read/glob/grep
 # ---------------------------------------------------------------------------
 
 
 class TestNavigateDuel:
-    """School unifies read/list/search/map with depth control on one entry point."""
+    """Toolio unifies read/list/search/map with depth control on one entry point."""
 
-    def test_school_unifies_four_actions(self, worktree: str) -> None:
+    def test_toolio_unifies_four_actions(self, worktree: str) -> None:
         _make_project(worktree)
         read = navigate(worktree, "read", path="main.py")
         assert read.ok is True and "needle" in read.content
@@ -542,7 +542,7 @@ class TestNavigateDuel:
         assert len(baseline_tools) < 4
         assert "map" not in baseline_tools
 
-    def test_school_depth_control(self, worktree: str) -> None:
+    def test_toolio_depth_control(self, worktree: str) -> None:
         _make_project(worktree)
         shallow = navigate(worktree, "map", depth=1)
         deep = navigate(worktree, "map", depth=3)
@@ -551,9 +551,9 @@ class TestNavigateDuel:
         assert "top.txt" in shallow.tree
 
     def test_result_surface_dominates_baseline(self) -> None:
-        school_fields = {f.name for f in fields(NavigateResult)}
+        toolio_fields = {f.name for f in fields(NavigateResult)}
         baseline_fields = set(baseline_read("main.py"))
-        assert len(school_fields) > len(baseline_fields)
+        assert len(toolio_fields) > len(baseline_fields)
 
     def test_fail_open_bad_input_returns_error_not_exception(self, worktree: str) -> None:
         _make_project(worktree)
@@ -570,9 +570,9 @@ class TestNavigateDuel:
 
 
 class TestOverallScoreboard:
-    """Aggregate check: School wins every duel on surface and action breadth."""
+    """Aggregate check: Toolio wins every duel on surface and action breadth."""
 
-    def test_school_wins_every_surface_duel(self) -> None:
+    def test_toolio_wins_every_surface_duel(self) -> None:
         duels = {
             "observe": (ObserveResult, baseline_browser_observe("tab_1")),
             "goal": (GoalResult, baseline_goal_set("obj")),
@@ -584,14 +584,14 @@ class TestOverallScoreboard:
             "navigate": (NavigateResult, baseline_read("f")),
         }
         wins = {name: len(fields(cls)) > len(base) for name, (cls, base) in duels.items()}
-        assert all(wins.values()), f"School lost a duel: {wins}"
+        assert all(wins.values()), f"Toolio lost a duel: {wins}"
 
-    def test_school_wins_every_action_duel(self) -> None:
-        # (school tool, school actions, baseline tool, baseline actions)
+    def test_toolio_wins_every_action_duel(self) -> None:
+        # (toolio tool, toolio actions, baseline tool, baseline actions)
         duels = [
-            ("school_goal", 8, "goal_set", 1),
-            ("school_session", 5, "session_move/rename", 2),
-            ("school_navigate", 4, "read/glob/grep", 3),
+            ("toolio_goal", 8, "goal_set", 1),
+            ("toolio_session", 5, "session_move/rename", 2),
+            ("toolio_navigate", 4, "read/glob/grep", 3),
         ]
-        for school_name, school_n, base_name, base_n in duels:
-            assert school_n > base_n, f"{school_name} lost to {base_name}"
+        for toolio_name, toolio_n, base_name, base_n in duels:
+            assert toolio_n > base_n, f"{toolio_name} lost to {base_name}"

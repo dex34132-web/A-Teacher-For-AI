@@ -1,4 +1,4 @@
-"""S7 tests: school_workflow."""
+"""S7 tests: toolio_workflow."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from core.agent.workflows import BUILTINS, workflow
 @pytest.fixture
 def worktree() -> Iterator[str]:
     """Isolated worktree via tempfile.mkdtemp (not tmp_path: OneDrive-safe)."""
-    wt = tempfile.mkdtemp(prefix="school_wf_")
+    wt = tempfile.mkdtemp(prefix="toolio_wf_")
     try:
         yield wt
     finally:
@@ -24,7 +24,7 @@ def worktree() -> Iterator[str]:
 
 
 def _state(wt: str) -> dict[str, object]:
-    path = Path(wt) / ".school" / "agent" / "workflows.json"
+    path = Path(wt) / ".toolio" / "agent" / "workflows.json"
     return json.loads(path.read_text(encoding="utf-8"))
 
 

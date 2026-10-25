@@ -1,4 +1,4 @@
-"""Base classes for School tools."""
+"""Base classes for Toolio tools."""
 from __future__ import annotations
 
 import functools
@@ -77,13 +77,35 @@ def fail_open(fn: _F) -> _F:
         try:
             result = fn(self, **kwargs)
         except Exception as exc:  # noqa: BLE001 - fail-open: never raise
+            # Record the invocation even on failure (ledger is best-effort).
+            try:
+                from core.agent.tool_usage import record as _record_usage
+
+                _record_usage(tool_name, useful=False, reason="exception")
+            except Exception:  # noqa: BLE001
+                pass
             return error_result(
                 tool_name, f"{fn.__name__} failed safely: {format_error(exc)}"
             )
         if not isinstance(result, ToolResult):
+            try:
+                from core.agent.tool_usage import record as _record_usage
+
+                _record_usage(tool_name, useful=False, reason="non-result")
+            except Exception:  # noqa: BLE001
+                pass
             return error_result(
                 tool_name, f"{fn.__name__} returned non-result: {type(result).__name__}"
             )
+        # Wire the usage ledger at the tool boundary: every successful
+        # invocation is recorded so coverage gaps are visible.
+        try:
+            from core.agent.tool_usage import record as _record_usage
+
+            useful = bool(getattr(result, "success", True))
+            _record_usage(tool_name, useful=useful)
+        except Exception:  # noqa: BLE001 - never break a tool over the ledger
+            pass
         return result
 
     return wrapper  # type: ignore[return-value]
@@ -112,7 +134,7 @@ def fail_open_validate(fn: _F) -> _F:
 
 
 class Tool(ABC):
-    """Base class for all School tools."""
+    """Base class for all Toolio tools."""
 
     @property
     @abstractmethod

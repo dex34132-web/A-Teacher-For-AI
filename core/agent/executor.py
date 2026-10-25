@@ -1,4 +1,4 @@
-"""S7: school_execute — run commands in managed processes, learn from outcomes.
+"""S7: toolio_execute — run commands in managed processes, learn from outcomes.
 
 PTY-grade process management: streaming capture with bounded retention,
 explicit working directory and environment control, process metadata (pid),

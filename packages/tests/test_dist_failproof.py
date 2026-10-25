@@ -1,4 +1,4 @@
-"""Adversarial fail-proof tests for the School MCP + Plugin distributions.
+"""Adversarial fail-proof tests for the Toolio MCP + Plugin distributions.
 
 DESIGNED TO FAIL the packages: every function is hammered with hostile, wrong-
 typed, and malformed input. The only pass condition is that nothing ever
@@ -21,16 +21,16 @@ for p in (str(ROOT / "packages" / "mcp"), str(ROOT / "packages" / "plugin"), str
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from school_mcp import compat as mcp_compat  # noqa: E402
-from school_mcp.server import available as sdk_available  # noqa: E402
-from school_mcp.tools import (  # noqa: E402
+from toolio_mcp import compat as mcp_compat  # noqa: E402
+from toolio_mcp.server import available as sdk_available  # noqa: E402
+from toolio_mcp.tools import (  # noqa: E402
     TOOL_NAMES,
     TOOLS,
     call_tool,
     describe,
 )
-from school_plugin import adapters as pg_adapters  # noqa: E402
-from school_plugin import compat as pg_compat  # noqa: E402
+from toolio_plugin import adapters as pg_adapters  # noqa: E402
+from toolio_plugin import compat as pg_compat  # noqa: E402
 
 
 class _Evil:
@@ -80,7 +80,7 @@ BULK = [None, "", 0, -1, float("nan"), [], {}, b"bytes", _Evil(), "\x00n"]
 
 
 def _wt():
-    return tempfile.mkdtemp(prefix="school-dist-")
+    return tempfile.mkdtemp(prefix="toolio-dist-")
 
 
 class TestMcpToolsFailProof:

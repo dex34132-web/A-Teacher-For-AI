@@ -1,1 +1,1 @@
-"""Stress/fuzz package for the School tool ecosystem."""
+"""Stress/fuzz package for the Toolio tool ecosystem."""

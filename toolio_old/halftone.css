@@ -1,0 +1,145 @@
+/* halftone.css — the vanilla port of components/ui/halftone-wordmark-footer.tsx.
+   The wordmark is printed enormous and cropped by the bottom edge as a field
+   of halftone dots; the pointer parts them, a click runs a shock ring through
+   the word, and a print grain sits over everything. Every rule is .hwf- scoped. */
+
+.hwf-root {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--hwf-bg, #0b0b0d);
+  color: var(--hwf-ink, #efeae0);
+  -webkit-font-smoothing: antialiased;
+  border-top: 1px solid rgba(23, 23, 28, 0.14);
+}
+.hwf-root canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  max-width: none;
+}
+.hwf-top {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding: clamp(22px, 3.4vw, 40px) clamp(20px, 3.4vw, 44px) 0;
+  font-family: var(--hwf-mono, "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.75;
+}
+.hwf-brand strong {
+  display: block;
+  font-weight: 500;
+  font-family: var(--serif, "Instrument Serif", Georgia, serif);
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.hwf-brand span {
+  opacity: 0.45;
+  display: block;
+  margin-top: 4px;
+}
+.hwf-col h3 {
+  margin: 0;
+  font: inherit;
+  opacity: 0.4;
+  font-weight: 500;
+}
+.hwf-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.hwf-col a,
+.hwf-up {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.78;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: opacity 0.25s ease, background-size 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+.hwf-col a:hover,
+.hwf-up:hover {
+  opacity: 1;
+  background-size: 100% 1px;
+}
+.hwf-col a:focus-visible,
+.hwf-up:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 3px;
+  opacity: 1;
+}
+.hwf-rule {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: clamp(18px, 2.6vw, 30px) clamp(20px, 3.4vw, 44px) 0;
+  padding-top: 12px;
+  border-top: 0.5px solid color-mix(in srgb, var(--hwf-ink, #efeae0) 16%, transparent);
+  font-family: var(--hwf-mono, "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.hwf-rule > span {
+  opacity: 0.45;
+}
+.hwf-rule code {
+  font: inherit;
+  opacity: 0.85;
+}
+.hwf-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .hwf-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    row-gap: 18px;
+  }
+  .hwf-brand {
+    grid-column: 1 / -1;
+  }
+  .hwf-root {
+    height: 440px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hwf-col a,
+  .hwf-up {
+    transition: none;
+  }
+}
+
+/* light.css forces every `footer` to paper with !important. The halftone
+   footer is the one dark band on the page: it closes the document in ink. */
+footer.hwf-root {
+  background: #0b0b0d !important;
+  color: #efeae0 !important;
+}

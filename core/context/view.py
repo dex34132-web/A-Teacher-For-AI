@@ -46,8 +46,8 @@ def build_view(messages: list[Any], blocks: list[Block]) -> ViewResult:
                 out.append(
                     {
                         "role": "system",
-                        "content": f"[school] compacted {block.id}: {block.summary}",
-                        "school_block": block.id,
+                        "content": f"[toolio] compacted {block.id}: {block.summary}",
+                        "toolio_block": block.id,
                     }
                 )
                 i = block.end
@@ -91,7 +91,7 @@ def view_segments(messages: list[Any], blocks: list[Block]) -> list[dict[str, An
                     {
                         "index": i,
                         "role": "system",
-                        "content": f"[school] compacted {block.id}: {block.summary}",
+                        "content": f"[toolio] compacted {block.id}: {block.summary}",
                     }
                 )
                 for j in range(i + 1, block.end):

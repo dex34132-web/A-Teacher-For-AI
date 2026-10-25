@@ -22,7 +22,7 @@ class TelemetryCollector:
 
     @property
     def _path(self) -> Path:
-        return Path(self.worktree) / ".school" / "context" / TELEMETRY_FILE
+        return Path(self.worktree) / ".toolio" / "context" / TELEMETRY_FILE
 
     def record(self, event: str, **kwargs: Any) -> None:
         """Buffer an event.  No-op when kill switch is set."""

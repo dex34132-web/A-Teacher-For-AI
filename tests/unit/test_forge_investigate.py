@@ -28,7 +28,7 @@ def case() -> Investigation:
 class TestEvidenceAndHypotheses:
     def test_add_evidence_assigns_stable_ids(self, case: Investigation) -> None:
         e1 = case.add_evidence("test", "tests/unit/test_x.py::test_y", "1 passed")
-        e2 = case.add_evidence("file", "school/cli.py:100", "line exists")
+        e2 = case.add_evidence("file", "toolio/cli.py:100", "line exists")
         assert e1.id == "E-001" and e2.id == "E-002"
         assert e1.kind == EvidenceKind.TEST
 

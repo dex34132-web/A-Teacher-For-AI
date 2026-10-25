@@ -156,9 +156,9 @@ diagnosis routed to `triage` (is it the offer or the channel?).
 - Never delete or soften a failing item to reach GO. The compass is the
   contract; the work serves it, not the reverse.
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-`clarion` (interview) → `school_clarion` · `blueprint` (spec) → `school_blueprint` · `edict` (commands) → `school_edict`
-`weave` (formation) → `school_weave` · `compass` (acceptance) → `school_compass` · `brainstorm` (ideas) → `school_brainstorm`
-CLI: `school <artifact>` — e.g. `school edict`, `school brainstorm` (legacy alias: `school prism`).
+`clarion` (interview) → `toolio_clarion` · `blueprint` (spec) → `toolio_blueprint` · `edict` (commands) → `toolio_edict`
+`weave` (formation) → `toolio_weave` · `compass` (acceptance) → `toolio_compass` · `brainstorm` (ideas) → `toolio_brainstorm`
+CLI: `toolio <artifact>` — e.g. `toolio edict`, `toolio brainstorm` (legacy alias: `toolio prism`).
 Bridge wire names: `clarion`, `blueprint`, `edict`, `weave`, `compass`, `prism` (`prism` = brainstorm, legacy wire name kept for compatibility).

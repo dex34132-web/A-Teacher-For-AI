@@ -304,7 +304,7 @@ class TestSearchAndDiscover:
         assert candidate["license_compatibility"] == "permissive"
         assert "filtered_out" in result
         assert result["filtered_out"].get("malformed_item", 0) >= 1
-        assert "school_skill_analyze_external" in report["next_step"]
+        assert "toolio_skill_analyze_external" in report["next_step"]
 
     def test_discover_repeat_served_from_cache(self) -> None:
         fake = default_fake()

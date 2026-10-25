@@ -1,4 +1,4 @@
-"""S7: school_workflow — SDD workflow engine with persisted state and phase timing."""
+"""S7: toolio_workflow — SDD workflow engine with persisted state and phase timing."""
 
 from __future__ import annotations
 
@@ -88,11 +88,11 @@ def register_workflow(name: str, phases: list[str]) -> bool:
 
 
 def _state_path(worktree: Path) -> Path:
-    return worktree / ".school" / "agent" / WORKFLOW_FILE
+    return worktree / ".toolio" / "agent" / WORKFLOW_FILE
 
 
 def _defs_path(worktree: Path) -> Path:
-    return worktree / ".school" / "agent" / WORKFLOW_DEFS_FILE
+    return worktree / ".toolio" / "agent" / WORKFLOW_DEFS_FILE
 
 
 def _load_json(path: Path, fallback: dict[str, Any]) -> dict[str, Any]:
@@ -510,7 +510,7 @@ def workflow(
 ) -> WorkflowResult:
     """Run an SDD workflow: start / advance / status / abort / list / define / block.
 
-    State persists in ``.school/agent/workflows.json`` so runs survive across
+    State persists in ``.toolio/agent/workflows.json`` so runs survive across
     calls and processes. Phase durations are recorded on every advance and
     finished runs feed the guidance of future runs ("run history").
     """

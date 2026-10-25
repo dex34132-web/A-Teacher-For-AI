@@ -6,7 +6,7 @@ NEVER raise at the boundary.  This suite hammers:
   A. all 101 render_* (direct) + the render_visual dispatcher  — 2000 iters each
   B. ContextEngine (compress/view/restore/should_compress) + BlockStore
   C. chip / progress / graph / cumulative
-  D. tool_guard (11 layers + school_tool_for + guard_banner + helpers)
+  D. tool_guard (11 layers + toolio_tool_for + guard_banner + helpers)
 
 Inputs are drawn from the shared fuzz_harness HOSTILE corpus plus targeted
 hostile shapes: None-in-sequences, NaN/inf, wrong-length tuples, empty, huge,
@@ -396,15 +396,15 @@ def test_guard_layers():
 
 def test_guard_core():
     reports = [
-        fuzz_fail_open(tg.school_tool_for, n=2000,
+        fuzz_fail_open(tg.toolio_tool_for, n=2000,
                        make_args=lambda i: ((_tool_name(i),), {}),
-                       label="guard.school_tool_for", check=_expect(tuple)),
+                       label="guard.toolio_tool_for", check=_expect(tuple)),
         fuzz_fail_open(tg.guard_banner, n=2000,
                        make_args=lambda i: ((_tool_name(i),), {}),
                        label="guard.guard_banner", check=_expect(str)),
-        fuzz_fail_open(tg.is_school_tool, n=2000,
+        fuzz_fail_open(tg.is_toolio_tool, n=2000,
                        make_args=lambda i: ((_tool_name(i),), {}),
-                       label="guard.is_school_tool", check=_expect(bool)),
+                       label="guard.is_toolio_tool", check=_expect(bool)),
         fuzz_fail_open(tg.run_all_layers, n=2000,
                        make_args=lambda i: ((_tool_name(i),), {}),
                        label="guard.run_all_layers", check=_expect(dict)),

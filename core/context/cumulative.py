@@ -40,9 +40,9 @@ class CumulativeStats:
     @property
     def _path(self) -> Path:
         try:
-            return Path(self.worktree) / ".school" / "context" / CUMULATIVE_FILE
+            return Path(self.worktree) / ".toolio" / "context" / CUMULATIVE_FILE
         except Exception:  # noqa: BLE001
-            return Path(tempfile.gettempdir()) / "school-context" / CUMULATIVE_FILE
+            return Path(tempfile.gettempdir()) / "toolio-context" / CUMULATIVE_FILE
 
     def refresh(self) -> None:
         """Reload stats from telemetry + block store."""

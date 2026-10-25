@@ -14,8 +14,8 @@ Domain-agnostic by construction: every artifact adapts to one of 11 domains
 data, life, general) — and to *any* domain via the universal fallback. This
 suite is for every type of AI/agent and every type of work, not just coding.
 
-Artifacts are stored at ``.school/forge/<slug>/`` and rendered to Markdown
-plus School visuals (via ``core.context.visuals``). Every module is fail-open.
+Artifacts are stored at ``.toolio/forge/<slug>/`` and rendered to Markdown
+plus Toolio visuals (via ``core.context.visuals``). Every module is fail-open.
 """
 
 from __future__ import annotations

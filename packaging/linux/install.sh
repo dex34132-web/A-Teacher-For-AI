@@ -4,7 +4,7 @@ set -e
 SCHOOL_VERSION="2.6.0"
 INSTALL_DIR="${HOME}/.local/bin"
 
-echo "School Installer"
+echo "Toolio Installer"
 echo "-----------------------------"
 
 # Detect OS
@@ -30,9 +30,9 @@ if ! command -v pip3 >/dev/null 2>&1; then
     exit 1
 fi
 
-# Install School
-echo "Installing School..."
-pip3 install --user school
+# Install Toolio
+echo "Installing Toolio..."
+pip3 install --user toolio
 
 # Ensure ~/.local/bin is on PATH (POSIX-compatible)
 case ":${PATH}:" in
@@ -50,12 +50,12 @@ case ":${PATH}:" in
 esac
 
 # Register with OpenCode
-if command -v school >/dev/null 2>&1; then
+if command -v toolio >/dev/null 2>&1; then
     echo "Registering with OpenCode..."
-    school install
+    toolio install
 else
-    echo "WARNING: school command not found on PATH."
-    echo "Please run 'school install' manually after ensuring ~/.local/bin is on PATH."
+    echo "WARNING: toolio command not found on PATH."
+    echo "Please run 'toolio install' manually after ensuring ~/.local/bin is on PATH."
 fi
 
 echo ""

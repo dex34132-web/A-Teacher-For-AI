@@ -1,11 +1,11 @@
 # ADR-025: V2.4.2 Knowledge Lifecycle Hardening
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *School*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 **Date:** 2026-09-10
 **Status:** Accepted
-**Deciders:** Lerev Team
+**Deciders:** Toolio Team
 
 ## Context
 

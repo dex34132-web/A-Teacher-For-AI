@@ -2,7 +2,7 @@
 
 Stores skills as one JSON document (skillgen_v1.json) next to the V2.6
 memory file in the resolved memory dir - same worktree scoping as the rest
-of School, atomic writes, reload on restart. Duplicate detection is a
+of Toolio, atomic writes, reload on restart. Duplicate detection is a
 deterministic lexical similarity over name/description/triggers/tags.
 """
 
@@ -299,14 +299,14 @@ def registry_for(worktree: str | Path) -> SkillRegistry:
     Fail-open: an unusable/hostile worktree value falls back to a per-process
     temp registry instead of raising, so tools always get a working registry.
     """
-    from school.config import resolve_memory_dir
+    from toolio.config import resolve_memory_dir
 
     # Resolve to an absolute path BEFORE keying: a relative worktree (CLI ".")
     # must not collide across directories in the process-level cache.
     try:
         base = resolve_memory_dir(worktree).resolve()
     except Exception:  # noqa: BLE001 - hostile/unusable worktree -> safe fallback
-        base = Path(tempfile.gettempdir()) / "school-skillgen-fallback"
+        base = Path(tempfile.gettempdir()) / "toolio-skillgen-fallback"
     key = os.path.normcase(str(base))
     with _registry_lock:
         reg = _registries.get(key)

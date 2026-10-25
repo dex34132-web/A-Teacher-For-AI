@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from core.context import build_chip
-from school import bridge
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio import bridge
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 
 def big_msgs(n: int = 8) -> list[dict]:
@@ -25,12 +25,12 @@ class TestChipVoice:
 
     def test_ctx_chip_matches_spec(self) -> None:
         assert build_chip(used_ratio=0.62, saved_tokens=18400) == (
-            "[school] ctx 62% · −18.4k tok"
+            "[toolio] ctx 62% · −18.4k tok"
         )
 
     def test_compacted_chip_matches_spec(self) -> None:
         assert build_chip(blocks_added=2, restores=1) == (
-            "[school] compacted 2 blocks · restorable · 1 restored"
+            "[toolio] compacted 2 blocks · restorable · 1 restored"
         )
 
     def test_silence_without_data(self) -> None:
@@ -57,11 +57,11 @@ class TestBridgeChip:
         resp = bridge._COMMANDS["context_compress"](
             {"worktree": wt, "session": "chip1", "messages": big_msgs()}
         )
-        assert resp["chip"].startswith("[school] compacted")
+        assert resp["chip"].startswith("[toolio] compacted")
         status = bridge._COMMANDS["context_status"](
             {"worktree": wt, "session": "chip1"}
         )
-        assert status["chip"].startswith("[school] compacted")
+        assert status["chip"].startswith("[toolio] compacted")
 
     def test_view_chip_is_ctx_voice(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -76,7 +76,7 @@ class TestBridgeChip:
         view = bridge._COMMANDS["context_view"](
             {"worktree": wt, "session": "chip2", "messages": big_msgs()}
         )
-        assert view["chip"].startswith("[school] ctx")
+        assert view["chip"].startswith("[toolio] ctx")
 
 
 class TestMcpChip:
@@ -86,17 +86,17 @@ class TestMcpChip:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         pytest.importorskip("mcp")
-        from school.mcp import server as mcp_server
+        from toolio.mcp import server as mcp_server
 
         monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
         monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         mcp_server._call_tool(
-            wt, "school_context_compress", {"messages": big_msgs()}
+            wt, "toolio_context_compress", {"messages": big_msgs()}
         )
-        result = mcp_server._call_tool(wt, "school_context_status", {})
+        result = mcp_server._call_tool(wt, "toolio_context_status", {})
         payload = json.loads(result.content[0].text)
-        assert payload["chip"].startswith("[school] compacted")
+        assert payload["chip"].startswith("[toolio] compacted")
 
 
 class TestFooterChipWiring:
@@ -118,16 +118,16 @@ class TestFooterChipWiring:
         return match.group(0)
 
     def test_apply_view_persists_chip(self) -> None:
-        assert "schoolStatus.chip = String(" in self._apply_view_block()
+        assert "toolioStatus.chip = String(" in self._apply_view_block()
 
     def test_footer_appends_chip_after_status_line(self) -> None:
         block = self._complete_block()
         # Always-show bracket is built then the chip is appended after it.
-        assert "[school]" in block
-        assert "schoolFooter()" in block
-        assert "schoolStatus.chip" in block
+        assert "[toolio]" in block
+        assert "toolioFooter()" in block
+        assert "toolioStatus.chip" in block
 
     def test_footer_stays_idempotent(self) -> None:
         block = self._complete_block()
-        # Idempotency guard: skip if a [school] bracket is already present.
-        assert 'test(t)' in block or '[school]' in block
+        # Idempotency guard: skip if a [toolio] bracket is already present.
+        assert 'test(t)' in block or '[toolio]' in block

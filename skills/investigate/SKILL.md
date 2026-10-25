@@ -62,16 +62,16 @@ Not for: one known failure with a repro (use `triage`), building the work
 severities `must-fix / should-fix / note`. UNRESOLVED questions mark affected
 conclusions BLOCKED.
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-- `investigate` (case) → `school_investigate` · CLI: `school investigate`
+- `investigate` (case) → `toolio_investigate` · CLI: `toolio investigate`
   (actions: report | status | next | probe; the case dict round-trips, so
   every probe is persisted and resumable).
-- Deterministic checks inside a probe: `school_quantify` (see the `precision`
+- Deterministic checks inside a probe: `toolio_quantify` (see the `precision`
   skill). Discipline handoffs: `triage` for a single failure, `scrutinize` for
   adversarial review, `gate` for the verdict.
 - Ship the report as `reports/investigate-<subject>.md`; durable lessons go to
-  `school_remember`.
+  `toolio_remember`.
 
 Investigation is universal and resumable: the case file is the memory, evidence
 is the currency, and honesty is the product — any domain, not only coding.

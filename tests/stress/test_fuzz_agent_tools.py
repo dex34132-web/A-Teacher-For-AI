@@ -1,4 +1,4 @@
-"""Adversarial fail-open fuzz campaign for the School agent tool suite.
+"""Adversarial fail-open fuzz campaign for the Toolio agent tool suite.
 
 Invariant under test: every tool returns a result object for ANY input and
 never raises out of the tool boundary. Each tool feature runs 2000 iterations
@@ -53,7 +53,7 @@ from core.agent.sessions import SessionResult, session  # noqa: E402
 from core.agent.workflows import WorkflowResult, register_workflow, workflow  # noqa: E402
 
 N = 2000
-LEDGER_FILE = Path(tempfile.gettempdir()) / "opencode" / "school_fuzz_ledger.txt"
+LEDGER_FILE = Path(tempfile.gettempdir()) / "opencode" / "toolio_fuzz_ledger.txt"
 
 # --------------------------------------------------------------------------
 # shared hostile fixtures (pre-built so make_args can never raise)
@@ -417,14 +417,14 @@ def _fail(report: Any) -> None:
 def _corrupt(wt: Any, filename: str) -> None:
     """Occasionally poison on-disk state to fuzz the load paths."""
     with contextlib.suppress(Exception):
-        target = Path(wt) / ".school" / "agent"
+        target = Path(wt) / ".toolio" / "agent"
         target.mkdir(parents=True, exist_ok=True)
         garbage = ["{not json", "[1, 2,", '{"a": ', "\x00\xff", "null", "123"][len(filename) % 6]
         (target / filename).write_text(garbage, encoding="utf-8", errors="replace")
 
 
 # --------------------------------------------------------------------------
-# 1) school_observe
+# 1) toolio_observe
 # --------------------------------------------------------------------------
 
 
@@ -441,7 +441,7 @@ class TestObserveFuzz:
                 },
             )
 
-        _fail(fuzz_fail_open(observe, N, make_args, "school_observe", _check_observe))
+        _fail(fuzz_fail_open(observe, N, make_args, "toolio_observe", _check_observe))
 
     def test_observe_category(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -452,7 +452,7 @@ class TestObserveFuzz:
                 {"category": CAT_POOL[i % len(CAT_POOL)], "evidence": {"i": i}},
             )
 
-        _fail(fuzz_fail_open(observe, N, make_args, "school_observe.category", _check_observe))
+        _fail(fuzz_fail_open(observe, N, make_args, "toolio_observe.category", _check_observe))
 
     def test_observe_evidence(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -468,7 +468,7 @@ class TestObserveFuzz:
                 {"category": "pattern", "evidence": evidence},
             )
 
-        _fail(fuzz_fail_open(observe, N, make_args, "school_observe.evidence", _check_observe))
+        _fail(fuzz_fail_open(observe, N, make_args, "toolio_observe.evidence", _check_observe))
 
     def test_observe_worktree(self, sandbox: Path) -> None:
         wt = _wt_hostile(sandbox)
@@ -476,11 +476,11 @@ class TestObserveFuzz:
         def make_args(i: int) -> tuple[tuple, dict]:
             return ((wt[i % len(wt)], "worktree probe"), {"category": "pattern"})
 
-        _fail(fuzz_fail_open(observe, N, make_args, "school_observe.worktree", _check_observe))
+        _fail(fuzz_fail_open(observe, N, make_args, "toolio_observe.worktree", _check_observe))
 
 
 # --------------------------------------------------------------------------
-# 2) school_goal — 8 actions + hostile params
+# 2) toolio_goal — 8 actions + hostile params
 # --------------------------------------------------------------------------
 
 
@@ -512,28 +512,28 @@ class TestGoalFuzz:
         _fail(fuzz_fail_open(goal, N, make_args, label, _check_goal))
 
     def test_goal_set(self, sandbox: Path) -> None:
-        self._run(sandbox, "set", "school_goal.set")
+        self._run(sandbox, "set", "toolio_goal.set")
 
     def test_goal_status(self, sandbox: Path) -> None:
-        self._run(sandbox, "status", "school_goal.status")
+        self._run(sandbox, "status", "toolio_goal.status")
 
     def test_goal_complete(self, sandbox: Path) -> None:
-        self._run(sandbox, "complete", "school_goal.complete", seed=True)
+        self._run(sandbox, "complete", "toolio_goal.complete", seed=True)
 
     def test_goal_block(self, sandbox: Path) -> None:
-        self._run(sandbox, "block", "school_goal.block", seed=True)
+        self._run(sandbox, "block", "toolio_goal.block", seed=True)
 
     def test_goal_pause(self, sandbox: Path) -> None:
-        self._run(sandbox, "pause", "school_goal.pause", seed=True)
+        self._run(sandbox, "pause", "toolio_goal.pause", seed=True)
 
     def test_goal_resume(self, sandbox: Path) -> None:
-        self._run(sandbox, "resume", "school_goal.resume", seed=True)
+        self._run(sandbox, "resume", "toolio_goal.resume", seed=True)
 
     def test_goal_clear(self, sandbox: Path) -> None:
-        self._run(sandbox, "clear", "school_goal.clear")
+        self._run(sandbox, "clear", "toolio_goal.clear")
 
     def test_goal_history(self, sandbox: Path) -> None:
-        self._run(sandbox, "history", "school_goal.history")
+        self._run(sandbox, "history", "toolio_goal.history")
 
     def test_goal_params(self, sandbox: Path) -> None:
         wt = _mixed_wt(sandbox)
@@ -559,11 +559,11 @@ class TestGoalFuzz:
                 },
             )
 
-        _fail(fuzz_fail_open(goal, N, make_args, "school_goal.params", _check_goal))
+        _fail(fuzz_fail_open(goal, N, make_args, "toolio_goal.params", _check_goal))
 
 
 # --------------------------------------------------------------------------
-# 3) school_research
+# 3) toolio_research
 # --------------------------------------------------------------------------
 
 
@@ -581,7 +581,7 @@ class TestResearchFuzz:
                 },
             )
 
-        _fail(fuzz_fail_open(research, N, make_args, "school_research", _check_research_shape))
+        _fail(fuzz_fail_open(research, N, make_args, "toolio_research", _check_research_shape))
 
     def test_research_depth(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -594,7 +594,7 @@ class TestResearchFuzz:
 
         _fail(
             fuzz_fail_open(
-                research, N, make_args, "school_research.depth", _check_research_shape
+                research, N, make_args, "toolio_research.depth", _check_research_shape
             )
         )
 
@@ -608,7 +608,7 @@ class TestResearchFuzz:
             )
 
         _fail(
-            fuzz_fail_open(research, N, make_args, "school_research.fmt", _check_research_shape)
+            fuzz_fail_open(research, N, make_args, "toolio_research.fmt", _check_research_shape)
         )
 
     def test_research_cite(self, sandbox: Path) -> None:
@@ -621,12 +621,12 @@ class TestResearchFuzz:
             )
 
         _fail(
-            fuzz_fail_open(research, N, make_args, "school_research.cite", _check_research_shape)
+            fuzz_fail_open(research, N, make_args, "toolio_research.cite", _check_research_shape)
         )
 
 
 # --------------------------------------------------------------------------
-# 4) school_explore
+# 4) toolio_explore
 # --------------------------------------------------------------------------
 
 
@@ -641,7 +641,7 @@ class TestExploreFuzz:
                  "focus": FOCUS_POOL[(i // 3) % len(FOCUS_POOL)]},
             )
 
-        _fail(fuzz_fail_open(explore, N, make_args, "school_explore", _check_explore_shape))
+        _fail(fuzz_fail_open(explore, N, make_args, "toolio_explore", _check_explore_shape))
 
     def test_explore_depth(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -652,7 +652,7 @@ class TestExploreFuzz:
                 {"depth": DEPTH_E_POOL[i % len(DEPTH_E_POOL)], "focus": "structure"},
             )
 
-        _fail(fuzz_fail_open(explore, N, make_args, "school_explore.depth", _check_explore_shape))
+        _fail(fuzz_fail_open(explore, N, make_args, "toolio_explore.depth", _check_explore_shape))
 
     def test_explore_focus(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -663,7 +663,7 @@ class TestExploreFuzz:
                 {"depth": "file", "focus": FOCUS_POOL[i % len(FOCUS_POOL)]},
             )
 
-        _fail(fuzz_fail_open(explore, N, make_args, "school_explore.focus", _check_explore_shape))
+        _fail(fuzz_fail_open(explore, N, make_args, "toolio_explore.focus", _check_explore_shape))
 
     def test_explore_missing_target(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -677,13 +677,13 @@ class TestExploreFuzz:
 
         _fail(
             fuzz_fail_open(
-                explore, N, make_args, "school_explore.missing_target", _check_explore_shape
+                explore, N, make_args, "toolio_explore.missing_target", _check_explore_shape
             )
         )
 
 
 # --------------------------------------------------------------------------
-# 5) school_progress
+# 5) toolio_progress
 # --------------------------------------------------------------------------
 
 
@@ -707,7 +707,7 @@ class TestProgressFuzz:
             )
 
         report = fuzz_fail_open(
-            progress, N, make_args, "school_progress.write", _check_progress_shape
+            progress, N, make_args, "toolio_progress.write", _check_progress_shape
         )
         _fail(report)
 
@@ -722,7 +722,7 @@ class TestProgressFuzz:
                     )
             return ((wt[i % len(wt)], "read"), {"context": CONTEXT_POOL[i % len(CONTEXT_POOL)]})
 
-        _fail(fuzz_fail_open(progress, N, make_args, "school_progress.read", _check_progress_shape))
+        _fail(fuzz_fail_open(progress, N, make_args, "toolio_progress.read", _check_progress_shape))
 
     def test_progress_items(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -737,13 +737,13 @@ class TestProgressFuzz:
             return ((wt[i % len(wt)], action), {"items": items, "context": ""})
 
         report = fuzz_fail_open(
-            progress, N, make_args, "school_progress.items", _check_progress_shape
+            progress, N, make_args, "toolio_progress.items", _check_progress_shape
         )
         _fail(report)
 
 
 # --------------------------------------------------------------------------
-# 6) school_session
+# 6) toolio_session
 # --------------------------------------------------------------------------
 
 
@@ -772,19 +772,19 @@ class TestSessionFuzz:
         _fail(fuzz_fail_open(session, N, make_args, label, _check_session))
 
     def test_session_create(self, sandbox: Path) -> None:
-        self._run(sandbox, "create", "school_session.create")
+        self._run(sandbox, "create", "toolio_session.create")
 
     def test_session_resume(self, sandbox: Path) -> None:
-        self._run(sandbox, "resume", "school_session.resume", seed=True)
+        self._run(sandbox, "resume", "toolio_session.resume", seed=True)
 
     def test_session_summarize(self, sandbox: Path) -> None:
-        self._run(sandbox, "summarize", "school_session.summarize", seed=True)
+        self._run(sandbox, "summarize", "toolio_session.summarize", seed=True)
 
     def test_session_export(self, sandbox: Path) -> None:
-        self._run(sandbox, "export", "school_session.export", seed=True)
+        self._run(sandbox, "export", "toolio_session.export", seed=True)
 
     def test_session_list(self, sandbox: Path) -> None:
-        self._run(sandbox, "list", "school_session.list")
+        self._run(sandbox, "list", "toolio_session.list")
 
     def test_session_params(self, sandbox: Path) -> None:
         wt = _mixed_wt(sandbox)
@@ -799,11 +799,11 @@ class TestSessionFuzz:
                 },
             )
 
-        _fail(fuzz_fail_open(session, N, make_args, "school_session.params", _check_session))
+        _fail(fuzz_fail_open(session, N, make_args, "toolio_session.params", _check_session))
 
 
 # --------------------------------------------------------------------------
-# 7) school_execute
+# 7) toolio_execute
 # --------------------------------------------------------------------------
 
 
@@ -817,7 +817,7 @@ class TestExecuteFuzz:
                 {"timeout_ms": 5000, "learn": i % 2 == 0, "max_output": 500},
             )
 
-        _fail(fuzz_fail_open(execute, N, make_args, "school_execute", _check_execute))
+        _fail(fuzz_fail_open(execute, N, make_args, "toolio_execute", _check_execute))
 
     def test_execute_cwd(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -832,7 +832,7 @@ class TestExecuteFuzz:
                 {"cwd": cwd_pool[i % len(cwd_pool)], "timeout_ms": 5000, "learn": False},
             )
 
-        _fail(fuzz_fail_open(execute, N, make_args, "school_execute.cwd", _check_execute))
+        _fail(fuzz_fail_open(execute, N, make_args, "toolio_execute.cwd", _check_execute))
 
     def test_execute_env(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -843,7 +843,7 @@ class TestExecuteFuzz:
                 {"env": ENV_POOL[i % len(ENV_POOL)], "timeout_ms": 5000, "learn": False},
             )
 
-        _fail(fuzz_fail_open(execute, N, make_args, "school_execute.env", _check_execute))
+        _fail(fuzz_fail_open(execute, N, make_args, "toolio_execute.env", _check_execute))
 
     def test_execute_timeout_ms(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -855,7 +855,7 @@ class TestExecuteFuzz:
                 {"timeout_ms": TIMEOUT_POOL[i % len(TIMEOUT_POOL)], "learn": False},
             )
 
-        _fail(fuzz_fail_open(execute, N, make_args, "school_execute.timeout_ms", _check_execute))
+        _fail(fuzz_fail_open(execute, N, make_args, "toolio_execute.timeout_ms", _check_execute))
 
     def test_execute_learn(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -867,7 +867,7 @@ class TestExecuteFuzz:
                 {"learn": LEARN_POOL[i % len(LEARN_POOL)], "timeout_ms": 5000},
             )
 
-        _fail(fuzz_fail_open(execute, N, make_args, "school_execute.learn", _check_execute))
+        _fail(fuzz_fail_open(execute, N, make_args, "toolio_execute.learn", _check_execute))
 
     def test_execute_context(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -879,7 +879,7 @@ class TestExecuteFuzz:
                 {"context": CONTEXT_POOL[i % len(CONTEXT_POOL)], "timeout_ms": 5000, "learn": True},
             )
 
-        _fail(fuzz_fail_open(execute, N, make_args, "school_execute.context", _check_execute))
+        _fail(fuzz_fail_open(execute, N, make_args, "toolio_execute.context", _check_execute))
 
     def test_execute_max_output(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -895,11 +895,11 @@ class TestExecuteFuzz:
                 },
             )
 
-        _fail(fuzz_fail_open(execute, N, make_args, "school_execute.max_output", _check_execute))
+        _fail(fuzz_fail_open(execute, N, make_args, "toolio_execute.max_output", _check_execute))
 
 
 # --------------------------------------------------------------------------
-# 8) school_navigate
+# 8) toolio_navigate
 # --------------------------------------------------------------------------
 
 
@@ -910,7 +910,7 @@ class TestNavigateFuzz:
         def make_args(i: int) -> tuple[tuple, dict]:
             return ((wt[i % len(wt)], "read", PATH_POOL[i % len(PATH_POOL)]), {})
 
-        _fail(fuzz_fail_open(navigate, N, make_args, "school_navigate.read", _check_navigate_shape))
+        _fail(fuzz_fail_open(navigate, N, make_args, "toolio_navigate.read", _check_navigate_shape))
 
     def test_navigate_list(self, sandbox: Path) -> None:
         wt = _mixed_wt(sandbox)
@@ -918,7 +918,7 @@ class TestNavigateFuzz:
         def make_args(i: int) -> tuple[tuple, dict]:
             return ((wt[i % len(wt)], "list", PATH_POOL[i % len(PATH_POOL)]), {})
 
-        _fail(fuzz_fail_open(navigate, N, make_args, "school_navigate.list", _check_navigate_shape))
+        _fail(fuzz_fail_open(navigate, N, make_args, "toolio_navigate.list", _check_navigate_shape))
 
     def test_navigate_search(self, sandbox: Path) -> None:
         wt = _mixed_wt(sandbox)
@@ -930,7 +930,7 @@ class TestNavigateFuzz:
             )
 
         report = fuzz_fail_open(
-            navigate, N, make_args, "school_navigate.search", _check_navigate_shape
+            navigate, N, make_args, "toolio_navigate.search", _check_navigate_shape
         )
         _fail(report)
 
@@ -943,7 +943,7 @@ class TestNavigateFuzz:
                 {"depth": DEPTH_N_POOL[i % len(DEPTH_N_POOL)]},
             )
 
-        _fail(fuzz_fail_open(navigate, N, make_args, "school_navigate.map", _check_navigate_shape))
+        _fail(fuzz_fail_open(navigate, N, make_args, "toolio_navigate.map", _check_navigate_shape))
 
     def test_navigate_pattern(self, sandbox: Path) -> None:
         wt = _wt_valid(sandbox)
@@ -955,7 +955,7 @@ class TestNavigateFuzz:
             )
 
         _fail(
-            fuzz_fail_open(navigate, N, make_args, "school_navigate.pattern", _check_navigate_shape)
+            fuzz_fail_open(navigate, N, make_args, "toolio_navigate.pattern", _check_navigate_shape)
         )
 
     def test_navigate_depth(self, sandbox: Path) -> None:
@@ -969,7 +969,7 @@ class TestNavigateFuzz:
             )
 
         _fail(
-            fuzz_fail_open(navigate, N, make_args, "school_navigate.depth", _check_navigate_shape)
+            fuzz_fail_open(navigate, N, make_args, "toolio_navigate.depth", _check_navigate_shape)
         )
 
     def test_navigate_path(self, sandbox: Path) -> None:
@@ -982,11 +982,11 @@ class TestNavigateFuzz:
                 {"pattern": PATTERN_POOL[(i // 3) % len(PATTERN_POOL)], "depth": 2},
             )
 
-        _fail(fuzz_fail_open(navigate, N, make_args, "school_navigate.path", _check_navigate_shape))
+        _fail(fuzz_fail_open(navigate, N, make_args, "toolio_navigate.path", _check_navigate_shape))
 
 
 # --------------------------------------------------------------------------
-# 9) school_workflow
+# 9) toolio_workflow
 # --------------------------------------------------------------------------
 
 
@@ -1011,25 +1011,25 @@ class TestWorkflowFuzz:
         _fail(fuzz_fail_open(workflow, N, make_args, label, _check_workflow_shape))
 
     def test_workflow_start(self, sandbox: Path) -> None:
-        self._run(sandbox, "start", "school_workflow.start")
+        self._run(sandbox, "start", "toolio_workflow.start")
 
     def test_workflow_advance(self, sandbox: Path) -> None:
-        self._run(sandbox, "advance", "school_workflow.advance", seed=True)
+        self._run(sandbox, "advance", "toolio_workflow.advance", seed=True)
 
     def test_workflow_status(self, sandbox: Path) -> None:
-        self._run(sandbox, "status", "school_workflow.status")
+        self._run(sandbox, "status", "toolio_workflow.status")
 
     def test_workflow_abort(self, sandbox: Path) -> None:
-        self._run(sandbox, "abort", "school_workflow.abort", seed=True)
+        self._run(sandbox, "abort", "toolio_workflow.abort", seed=True)
 
     def test_workflow_list(self, sandbox: Path) -> None:
-        self._run(sandbox, "list", "school_workflow.list")
+        self._run(sandbox, "list", "toolio_workflow.list")
 
     def test_workflow_define(self, sandbox: Path) -> None:
-        self._run(sandbox, "define", "school_workflow.define")
+        self._run(sandbox, "define", "toolio_workflow.define")
 
     def test_workflow_block(self, sandbox: Path) -> None:
-        self._run(sandbox, "block", "school_workflow.block", seed=True)
+        self._run(sandbox, "block", "toolio_workflow.block", seed=True)
 
     def test_workflow_name(self, sandbox: Path) -> None:
         wt = _mixed_wt(sandbox)
@@ -1041,7 +1041,7 @@ class TestWorkflowFuzz:
                 {"phase": "one,two", "notes": "n"},
             )
 
-        _fail(fuzz_fail_open(workflow, N, make_args, "school_workflow.name", _check_workflow_shape))
+        _fail(fuzz_fail_open(workflow, N, make_args, "toolio_workflow.name", _check_workflow_shape))
 
     def test_workflow_params(self, sandbox: Path) -> None:
         wt = _mixed_wt(sandbox)
@@ -1067,7 +1067,7 @@ class TestWorkflowFuzz:
             )
 
         _fail(
-            fuzz_fail_open(workflow, N, make_args, "school_workflow.params", _check_workflow_shape)
+            fuzz_fail_open(workflow, N, make_args, "toolio_workflow.params", _check_workflow_shape)
         )
 
     def test_workflow_register(self) -> None:
@@ -1076,13 +1076,13 @@ class TestWorkflowFuzz:
             return ((WF_NAME_POOL[i % len(WF_NAME_POOL)], phases), {})
 
         report = fuzz_fail_open(
-            register_workflow, N, make_args, "school_workflow.register", _check_register
+            register_workflow, N, make_args, "toolio_workflow.register", _check_register
         )
         _fail(report)
 
 
 # --------------------------------------------------------------------------
-# 10) school_fetch_docs (network stubbed: deterministic, no real traffic)
+# 10) toolio_fetch_docs (network stubbed: deterministic, no real traffic)
 # --------------------------------------------------------------------------
 
 
@@ -1122,7 +1122,7 @@ class TestFetchDocsFuzz:
                 {"use_cache": i % 2 == 0},
             )
 
-        _fail(fuzz_fail_open(fetch_docs, N, make_args, "school_fetch_docs", _check_doc))
+        _fail(fuzz_fail_open(fetch_docs, N, make_args, "toolio_fetch_docs", _check_doc))
 
     def test_fetch_docs_library(self, sandbox: Path, no_network: None) -> None:
         wt = _wt_valid(sandbox)
@@ -1133,7 +1133,7 @@ class TestFetchDocsFuzz:
                 {"library": LIB_POOL[i % len(LIB_POOL)], "use_cache": True},
             )
 
-        _fail(fuzz_fail_open(fetch_docs, N, make_args, "school_fetch_docs.library", _check_doc))
+        _fail(fuzz_fail_open(fetch_docs, N, make_args, "toolio_fetch_docs.library", _check_doc))
 
     def test_fetch_docs_version(self, sandbox: Path, no_network: None) -> None:
         wt = _wt_valid(sandbox)
@@ -1148,7 +1148,7 @@ class TestFetchDocsFuzz:
                 },
             )
 
-        _fail(fuzz_fail_open(fetch_docs, N, make_args, "school_fetch_docs.version", _check_doc))
+        _fail(fuzz_fail_open(fetch_docs, N, make_args, "toolio_fetch_docs.version", _check_doc))
 
     def test_fetch_docs_use_cache(self, sandbox: Path, no_network: None) -> None:
         wt = _wt_valid(sandbox)
@@ -1160,7 +1160,7 @@ class TestFetchDocsFuzz:
             use = USE_CACHE_POOL[i % len(USE_CACHE_POOL)]
             return ((worktree, f"cache-q-{i % 40}"), {"use_cache": use})
 
-        _fail(fuzz_fail_open(fetch_docs, N, make_args, "school_fetch_docs.use_cache", _check_doc))
+        _fail(fuzz_fail_open(fetch_docs, N, make_args, "toolio_fetch_docs.use_cache", _check_doc))
 
 
 # --------------------------------------------------------------------------
@@ -1184,13 +1184,13 @@ class TestResultFieldSurfaces:
         _fail(fuzz_fail_open(lambda c, **kw: c(**kw), N, make_args, label, check))
 
     def test_workflow_result_fields(self) -> None:
-        self._surface(WorkflowResult, "school_result_fields.workflow")
+        self._surface(WorkflowResult, "toolio_result_fields.workflow")
 
     def test_doc_result_fields(self) -> None:
-        self._surface(DocResult, "school_result_fields.doc")
+        self._surface(DocResult, "toolio_result_fields.doc")
 
     def test_research_result_fields(self) -> None:
-        self._surface(ResearchResult, "school_result_fields.research")
+        self._surface(ResearchResult, "toolio_result_fields.research")
 
     def test_execute_result_fields(self) -> None:
-        self._surface(ExecuteResult, "school_result_fields.execute")
+        self._surface(ExecuteResult, "toolio_result_fields.execute")

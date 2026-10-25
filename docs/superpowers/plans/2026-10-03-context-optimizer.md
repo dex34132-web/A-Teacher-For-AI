@@ -2,23 +2,23 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Skeletonize oversized tool results (MCP reads/greps + all native OpenCode tool outputs) to a contract-tested structural skeleton with a single `[school ctx: in→out tokens]` footer, keeping everything below the 1000-token threshold byte-identical.
+**Goal:** Skeletonize oversized tool results (MCP reads/greps + all native OpenCode tool outputs) to a contract-tested structural skeleton with a single `[toolio ctx: in→out tokens]` footer, keeping everything below the 1000-token threshold byte-identical.
 
-**Architecture:** A pure-Python core (`school/skeleton.py`) owns thresholding, footer rules, heuristic line-based code skeletonization, JSON/payload shape-collapsing, grep-match elision, and (via optional tree-sitter extra) AST skeletonization for big-6 languages. Three surfaces consume it: the bridge (`skeleton` command), the MCP server (`school_read`/`school_grep` tools implemented in-process), and the OpenCode plugin (TypeScript hook that calls the bridge with a 2000ms cap and falls back to a TS twin heuristic). Every failure path fails open: raw text, no footer.
+**Architecture:** A pure-Python core (`toolio/skeleton.py`) owns thresholding, footer rules, heuristic line-based code skeletonization, JSON/payload shape-collapsing, grep-match elision, and (via optional tree-sitter extra) AST skeletonization for big-6 languages. Three surfaces consume it: the bridge (`skeleton` command), the MCP server (`toolio_read`/`toolio_grep` tools implemented in-process), and the OpenCode plugin (TypeScript hook that calls the bridge with a 2000ms cap and falls back to a TS twin heuristic). Every failure path fails open: raw text, no footer.
 
-**Tech Stack:** Python 3.11+ (venv at `.venv`), tree-sitter 0.26.0 + 8 grammar wheels (optional `ctx` extra), pytest 9.1.1, ruff 0.16.7, TypeScript plugin embedded as a string in `school/plugin_source.py`, Node 24 (native TS type-stripping) for live harness.
+**Tech Stack:** Python 3.11+ (venv at `.venv`), tree-sitter 0.26.0 + 8 grammar wheels (optional `ctx` extra), pytest 9.1.1, ruff 0.16.7, TypeScript plugin embedded as a string in `toolio/plugin_source.py`, Node 24 (native TS type-stripping) for live harness.
 
 **Spec:** docs/superpowers/specs/2026-10-03-context-optimizer-design.md
 
 ## Global Constraints
 
-- Threshold: `est = ceil(chars/4)`; `< 1000` tokens → pass raw untouched, NO marker/footer; `≥ 1000` → compress + append exactly ONE footer `[school ctx: <in>→<out> tokens]`.
+- Threshold: `est = ceil(chars/4)`; `< 1000` tokens → pass raw untouched, NO marker/footer; `≥ 1000` → compress + append exactly ONE footer `[toolio ctx: <in>→<out> tokens]`.
 - Footer excluded from downstream estimates (strip before re-estimating); never expand: if `tokens_out >= tokens_in` → fail open with original text.
 - Kill switch `SCHOOL_CTX=0` → passthrough raw (independent of `SCHOOL_HOOKS=0`).
 - Fail open everywhere: any exception → original text, no footer. Error messages pass raw. Never modify tool INPUTS. One footer max per result.
 - Heuristic path: no I/O, no network, target ~50ms (test bound <1.0s for 100KB).
 - Bridge AST attempt capped at `CTX_TIMEOUT_MS=2000` (separate from recall budget); total failure → TS fallback → fail open.
-- Naming: everything `school_*`; MCP tools snake_case. Plugin TS imports only `node:child_process|util|path|fs` (no npm deps) and plugin tool surface stays 13 (school_read/school_grep are MCP-only).
+- Naming: everything `toolio_*`; MCP tools snake_case. Plugin TS imports only `node:child_process|util|path|fs` (no npm deps) and plugin tool surface stays 13 (toolio_read/toolio_grep are MCP-only).
 - Python style: ruff line-length 100, select E,W,F,I,B,UP,SIM — NO new errors on touched files (plugin_source.py has pre-existing E501s inside the embedded TS template; keep NEW physical lines ≤100 chars).
 - Test battery must stay green (baseline ~2516 tests): `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider`.
 - Working directory: repo root `C:\Users\dex34\OneDrive\Documents\Teach` (Windows, PowerShell; no `rg` — use grep tool). Python: `& ".venv\Scripts\python.exe"`.
@@ -29,8 +29,8 @@
 ### Task 1: Core skeleton module (primitives, optimize dispatch, payload, matches, heuristic)
 
 **Files:**
-- Create: `school/skeleton.py`
-- Test: `tests/unit/test_school_skeleton.py`
+- Create: `toolio/skeleton.py`
+- Test: `tests/unit/test_toolio_skeleton.py`
 
 **Interfaces:**
 - Consumes: nothing (leaf module; only stdlib).
@@ -50,16 +50,16 @@
 
 - [ ] **Step 1: Write the failing tests**
 
-Create `tests/unit/test_school_skeleton.py`:
+Create `tests/unit/test_toolio_skeleton.py`:
 
 ```python
-"""Contract tests for the Context Optimizer core (school.skeleton)."""
+"""Contract tests for the Context Optimizer core (toolio.skeleton)."""
 
 import math
 import re
 import time
 
-from school.skeleton import (
+from toolio.skeleton import (
     CTX_THRESHOLD,
     CODE_EXTENSIONS,
     FOOTER_RE,
@@ -76,7 +76,7 @@ from school.skeleton import (
     strip_footer,
 )
 
-FOOTER_ONE = re.compile(r"\[school ctx: \d+→\d+ tokens\]")
+FOOTER_ONE = re.compile(r"\[toolio ctx: \d+→\d+ tokens\]")
 
 
 def _payload_lines(n: int) -> str:
@@ -95,7 +95,7 @@ class TestTokenEstimate:
 
 class TestFooter:
     def test_make_footer_format(self):
-        assert make_footer(1000, 250) == "[school ctx: 1000→250 tokens]"
+        assert make_footer(1000, 250) == "[toolio ctx: 1000→250 tokens]"
 
     def test_strip_footer(self):
         body = "def f():\n    pass"
@@ -108,7 +108,7 @@ class TestFooter:
 
     def test_footer_regex_shape(self):
         assert FOOTER_RE.fullmatch(make_footer(4321, 99)) is not None
-        assert FOOTER_RE.search("[school ctx: 1→1 tokens]") is not None
+        assert FOOTER_RE.search("[toolio ctx: 1→1 tokens]") is not None
 
 
 class TestBelowThreshold:
@@ -119,7 +119,7 @@ class TestBelowThreshold:
         assert res.compressed is False
         assert res.parser == "passthrough"
         assert res.text == text
-        assert "school ctx" not in res.text
+        assert "toolio ctx" not in res.text
 
     def test_1000_tokens_attempts_compression(self):
         text = _payload_lines(400)  # well over 1000 tokens
@@ -136,14 +136,14 @@ class TestBelowThreshold:
 
 
 class TestKillSwitch:
-    def test_school_ctx_zero_passthrough(self, monkeypatch):
+    def test_toolio_ctx_zero_passthrough(self, monkeypatch):
         monkeypatch.setenv("SCHOOL_CTX", "0")
         text = _payload_lines(400)
         res = optimize(text, filename="data.json")
         assert res.compressed is False
         assert res.parser == "passthrough"
         assert res.text == text
-        assert "school ctx" not in res.text
+        assert "toolio ctx" not in res.text
 
 
 class TestNeverExpand:
@@ -201,7 +201,7 @@ class TestMatchesElision:
         res = optimize("\n".join(lines), strategy="matches")
         assert res.compressed is True
         assert res.parser == "matches"
-        assert "school ctx" in res.text
+        assert "toolio ctx" in res.text
 
 
 class TestFailOpen:
@@ -357,19 +357,19 @@ class TestFilenameRouting:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_skeleton.py -q --no-header -p no:cacheprovider`
-Expected: FAIL with `ModuleNotFoundError: No module named 'school.skeleton'`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_skeleton.py -q --no-header -p no:cacheprovider`
+Expected: FAIL with `ModuleNotFoundError: No module named 'toolio.skeleton'`
 
 - [ ] **Step 3: Write minimal implementation**
 
-Create `school/skeleton.py`:
+Create `toolio/skeleton.py`:
 
 ```python
 """Context Optimizer: skeletonize oversized tool results.
 
 Contract: below CTX_THRESHOLD tokens the input is returned byte-identical
 with no marker. At or above it, a structural skeleton is produced and one
-``[school ctx: in->out tokens]`` footer is appended. Every failure path
+``[toolio ctx: in->out tokens]`` footer is appended. Every failure path
 fails open: original text, no footer.
 """
 
@@ -382,7 +382,7 @@ from dataclasses import dataclass
 
 CTX_THRESHOLD = 1000
 CTX_TIMEOUT_MS = 2000
-FOOTER_RE = re.compile(r"\[school ctx: \d+→\d+ tokens\]\s*$")
+FOOTER_RE = re.compile(r"\[toolio ctx: \d+→\d+ tokens\]\s*$")
 
 LANGUAGES: dict[str, str] = {
     ".py": "python",
@@ -489,7 +489,7 @@ def strip_footer(text: str) -> str:
 
 
 def make_footer(tokens_in: int, tokens_out: int) -> str:
-    return f"[school ctx: {tokens_in}→{tokens_out} tokens]"
+    return f"[toolio ctx: {tokens_in}→{tokens_out} tokens]"
 
 
 def suffix(filename: str) -> str:
@@ -895,16 +895,16 @@ def optimize(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_skeleton.py -q --no-header -p no:cacheprovider`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_skeleton.py -q --no-header -p no:cacheprovider`
 Expected: all PASS. If contract tests fail (marker wording, keep/drop rules), fix `heuristic_skeleton`/`skeletonize_payload` until they pass — the assertions are the spec.
 
 - [ ] **Step 5: Ruff + commit**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/skeleton.py tests/unit/test_school_skeleton.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/skeleton.py tests/unit/test_toolio_skeleton.py`
 Expected: no errors.
 
 ```bash
-git add school/skeleton.py tests/unit/test_school_skeleton.py
+git add toolio/skeleton.py tests/unit/test_toolio_skeleton.py
 git commit -m "feat: context optimizer core skeleton module"
 ```
 
@@ -913,13 +913,13 @@ git commit -m "feat: context optimizer core skeleton module"
 ### Task 2: tree-sitter AST skeleton + `ctx` extra + big-6 contract tests
 
 **Files:**
-- Modify: `school/skeleton.py` (replace `skeletonize_ast` stub, add AST tables + walker)
+- Modify: `toolio/skeleton.py` (replace `skeletonize_ast` stub, add AST tables + walker)
 - Modify: `pyproject.toml` (add `ctx` extra, extend `all`)
-- Test: `tests/unit/test_school_skeleton.py` (append AST classes)
+- Test: `tests/unit/test_toolio_skeleton.py` (append AST classes)
 
 **Interfaces:**
 - Consumes: Task 1's `OptimizeResult`, `optimize` already calls `skeletonize_ast(body, language)` before the heuristic — no signature change.
-- Produces: `skeletonize_ast(text: str, language: str) -> str | None` (None = unavailable/doubt → `optimize` falls back to heuristic); pyproject extra `school[ctx]`.
+- Produces: `skeletonize_ast(text: str, language: str) -> str | None` (None = unavailable/doubt → `optimize` falls back to heuristic); pyproject extra `toolio[ctx]`.
 
 - [ ] **Step 1: Add the pyproject `ctx` extra**
 
@@ -939,7 +939,7 @@ ctx = [
 ]
 ```
 
-And change `all = ["school[dev,web,semantic,mcp]"]` → `all = ["school[dev,web,semantic,mcp,ctx]"]`.
+And change `all = ["toolio[dev,web,semantic,mcp]"]` → `all = ["toolio[dev,web,semantic,mcp,ctx]"]`.
 
 - [ ] **Step 2: Install the wheels into the venv**
 
@@ -948,7 +948,7 @@ Expected: installs 9 wheels (dry-run previously verified all resolve as win amd6
 
 - [ ] **Step 3: Write the failing AST contract tests**
 
-Append to `tests/unit/test_school_skeleton.py`:
+Append to `tests/unit/test_toolio_skeleton.py`:
 
 ```python
 import pytest
@@ -1081,7 +1081,7 @@ export interface LoaderOptions {
 
 def _run_ast(sample: str, language: str, package: str) -> str:
     pytest.importorskip(package, reason=f"{package} not installed")
-    from school.skeleton import skeletonize_ast
+    from toolio.skeleton import skeletonize_ast
 
     out = skeletonize_ast(sample, language)
     assert out is not None, f"skeletonize_ast returned None for {language}"
@@ -1160,7 +1160,7 @@ class TestAstBigSix:
 
     def test_garbage_returns_none(self):
         pytest.importorskip("tree_sitter_python")
-        from school.skeleton import skeletonize_ast
+        from toolio.skeleton import skeletonize_ast
 
         out = skeletonize_ast("def broken(:\n    ???" * 50, "python")
         assert out is None
@@ -1180,12 +1180,12 @@ class TestAstBigSix:
 
 - [ ] **Step 4: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_skeleton.py -q --no-header -p no:cacheprovider -k "Ast or ast"`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_skeleton.py -q --no-header -p no:cacheprovider -k "Ast or ast"`
 Expected: FAIL (`skeletonize_ast returned None` — stub still returns None, or importorskip passes but asserts fail).
 
 - [ ] **Step 5: Implement `skeletonize_ast`**
 
-In `school/skeleton.py`, add imports at top (`import importlib`, `from tree_sitter import Language, Parser` must NOT be top-level — keep tree-sitter optional) and replace the stub with:
+In `toolio/skeleton.py`, add imports at top (`import importlib`, `from tree_sitter import Language, Parser` must NOT be top-level — keep tree-sitter optional) and replace the stub with:
 
 ```python
 _AST_PACKAGES = {
@@ -1621,16 +1621,16 @@ Notes for the implementer:
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_skeleton.py -q --no-header -p no:cacheprovider`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_skeleton.py -q --no-header -p no:cacheprovider`
 Expected: all PASS (AST + Task 1).
 
 - [ ] **Step 7: Ruff + commit**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/skeleton.py tests/unit/test_school_skeleton.py pyproject.toml`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/skeleton.py tests/unit/test_toolio_skeleton.py pyproject.toml`
 Expected: no new errors.
 
 ```bash
-git add school/skeleton.py pyproject.toml tests/unit/test_school_skeleton.py
+git add toolio/skeleton.py pyproject.toml tests/unit/test_toolio_skeleton.py
 git commit -m "feat: tree-sitter ast skeleton with ctx extra"
 ```
 
@@ -1639,27 +1639,27 @@ git commit -m "feat: tree-sitter ast skeleton with ctx extra"
 ### Task 3: Bridge `skeleton` command
 
 **Files:**
-- Modify: `school/bridge.py` (module docstring Commands list; import; `_handle_skeleton`; `_COMMANDS` registration)
-- Test: `tests/unit/test_school_plugin_bridge.py` (append class)
+- Modify: `toolio/bridge.py` (module docstring Commands list; import; `_handle_skeleton`; `_COMMANDS` registration)
+- Test: `tests/unit/test_toolio_plugin_bridge.py` (append class)
 
 **Interfaces:**
-- Consumes: `school.skeleton.optimize(text, filename=..., strategy=...) -> OptimizeResult` (Task 1).
+- Consumes: `toolio.skeleton.optimize(text, filename=..., strategy=...) -> OptimizeResult` (Task 1).
 - Produces: bridge command `"skeleton"` → JSON `{ok:true, content, tokens_in, tokens_out, compressed, parser}`; validation errors `{ok:false, error:{type:"validation", message}}`. The plugin (Task 5) invokes this via `invokeBridge(python, bridgePath, {command:"skeleton", text, filename}, 2000)`.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `tests/unit/test_school_plugin_bridge.py`:
+Append to `tests/unit/test_toolio_plugin_bridge.py`:
 
 ```python
 class TestSkeletonCommand:
     def test_registered_in_commands(self):
-        import school.bridge as bridge_mod
+        import toolio.bridge as bridge_mod
 
         assert "skeleton" in bridge_mod._COMMANDS
         assert bridge_mod._COMMANDS["skeleton"] is bridge_mod._handle_skeleton
 
     def test_payload_compressed_with_footer(self):
-        import school.bridge as bridge_mod
+        import toolio.bridge as bridge_mod
 
         text = "\n".join('{"k": "some value %d"}' % i for i in range(400))
         out = bridge_mod._handle_skeleton(
@@ -1669,27 +1669,27 @@ class TestSkeletonCommand:
         assert out["compressed"] is True
         assert out["tokens_in"] >= 1000
         assert out["tokens_out"] < out["tokens_in"]
-        assert "[school ctx:" in out["content"]
+        assert "[toolio ctx:" in out["content"]
         assert out["parser"] == "payload"
 
     def test_small_text_passthrough(self):
-        import school.bridge as bridge_mod
+        import toolio.bridge as bridge_mod
 
         out = bridge_mod._handle_skeleton({"text": "tiny", "filename": "a.txt"})
         assert out["ok"] is True
         assert out["compressed"] is False
         assert out["content"] == "tiny"
-        assert "school ctx" not in out["content"]
+        assert "toolio ctx" not in out["content"]
 
     def test_missing_text_validation(self):
-        import school.bridge as bridge_mod
+        import toolio.bridge as bridge_mod
 
         out = bridge_mod._handle_skeleton({})
         assert out["ok"] is False
         assert out["error"]["type"] == "validation"
 
     def test_invalid_strategy_validation(self):
-        import school.bridge as bridge_mod
+        import toolio.bridge as bridge_mod
 
         out = bridge_mod._handle_skeleton(
             {"text": "x" * 4000, "strategy": "nope"}
@@ -1698,7 +1698,7 @@ class TestSkeletonCommand:
         assert out["error"]["type"] == "validation"
 
     def test_kill_switch(self, monkeypatch):
-        import school.bridge as bridge_mod
+        import toolio.bridge as bridge_mod
 
         monkeypatch.setenv("SCHOOL_CTX", "0")
         text = "\n".join('{"k": "some value %d"}' % i for i in range(400))
@@ -1712,7 +1712,7 @@ class TestSkeletonCommand:
         from io import StringIO
         from unittest.mock import patch
 
-        import school.bridge as bridge_mod
+        import toolio.bridge as bridge_mod
 
         text = "\n".join('{"k": "some value %d"}' % i for i in range(400))
         payload = json_mod.dumps(
@@ -1728,17 +1728,17 @@ class TestSkeletonCommand:
         output = json_mod.loads(stdout.getvalue())
         assert output["ok"] is True
         assert output["compressed"] is True
-        assert "[school ctx:" in output["content"]
+        assert "[toolio ctx:" in output["content"]
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_plugin_bridge.py -q --no-header -p no:cacheprovider -k Skeleton`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_plugin_bridge.py -q --no-header -p no:cacheprovider -k Skeleton`
 Expected: FAIL (`AttributeError: ... has no attribute '_handle_skeleton'` or ImportError on `_COMMANDS["skeleton"]`).
 
-- [ ] **Step 3: Implement in `school/bridge.py`**
+- [ ] **Step 3: Implement in `toolio/bridge.py`**
 
-1. Add to the top-level imports (respect existing import block, alphabetical among `school.*`): `from school.skeleton import optimize`.
+1. Add to the top-level imports (respect existing import block, alphabetical among `toolio.*`): `from toolio.skeleton import optimize`.
 2. Extend the module docstring Commands list with a line: `  skeleton — Context Optimizer (skeletonize oversized text)`.
 3. Add the handler next to the other `_handle_*` functions:
 
@@ -1772,42 +1772,42 @@ def _handle_skeleton(req: dict) -> dict:
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_plugin_bridge.py -q --no-header -p no:cacheprovider`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_plugin_bridge.py -q --no-header -p no:cacheprovider`
 Expected: all PASS (including pre-existing bridge tests).
 
 - [ ] **Step 5: Ruff + commit**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/bridge.py tests/unit/test_school_plugin_bridge.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/bridge.py tests/unit/test_toolio_plugin_bridge.py`
 Expected: no new errors.
 
 ```bash
-git add school/bridge.py tests/unit/test_school_plugin_bridge.py
+git add toolio/bridge.py tests/unit/test_toolio_plugin_bridge.py
 git commit -m "feat: bridge skeleton command"
 ```
 
 ---
 
-### Task 4: MCP `school_read` + `school_grep` tools
+### Task 4: MCP `toolio_read` + `toolio_grep` tools
 
 **Files:**
-- Modify: `school/mcp/server.py` (imports; `_result`/`_error_result` helpers; `_SKIPPED_DIRS`, `_MAX_GREP_FILE`; `_call_read`, `_call_grep`; two `_TOOLS` entries after `school_route_stats`; `_call_tool` dispatch)
+- Modify: `toolio/mcp/server.py` (imports; `_result`/`_error_result` helpers; `_SKIPPED_DIRS`, `_MAX_GREP_FILE`; `_call_read`, `_call_grep`; two `_TOOLS` entries after `toolio_route_stats`; `_call_tool` dispatch)
 - Test: `tests/unit/test_mcp_server.py` (tool order, annotations, description parity, new classes)
 - Test: `tests/integration/test_mcp_stdio.py` (tool order + new class)
 
 **Interfaces:**
-- Consumes: `school.skeleton.optimize` (Task 1/2).
-- Produces (MCP-only — NOT added to plugin tool lists): tools `school_read` (schema: path req, offset ≥1, limit ≥1) and `school_grep` (schema: pattern req, path, ignore_case, limit 1–1000 default 200); both `read_only_hint`/`idempotent_hint` true; payloads `{ok, path, content, skeletonized, tokens_in, tokens_out, parser}` (read) and `{ok, path, matches, truncated, content, skeletonized, tokens_in, tokens_out, parser}` (grep); errors `{ok:false, error:{type: validation|not_found|io, message}}` with `is_error=True`.
+- Consumes: `toolio.skeleton.optimize` (Task 1/2).
+- Produces (MCP-only — NOT added to plugin tool lists): tools `toolio_read` (schema: path req, offset ≥1, limit ≥1) and `toolio_grep` (schema: pattern req, path, ignore_case, limit 1–1000 default 200); both `read_only_hint`/`idempotent_hint` true; payloads `{ok, path, content, skeletonized, tokens_in, tokens_out, parser}` (read) and `{ok, path, matches, truncated, content, skeletonized, tokens_in, tokens_out, parser}` (grep); errors `{ok:false, error:{type: validation|not_found|io, message}}` with `is_error=True`.
 
 - [ ] **Step 1: Write the failing unit tests**
 
 In `tests/unit/test_mcp_server.py`:
 
-1. In `EXPECTED_TOOL_ORDER`, append `"school_read", "school_grep"` after `"school_route_stats"`.
-2. In `test_read_only_annotations` exact set, add `"school_read"` and `"school_grep"`.
+1. In `EXPECTED_TOOL_ORDER`, append `"toolio_read", "toolio_grep"` after `"toolio_route_stats"`.
+2. In `test_read_only_annotations` exact set, add `"toolio_read"` and `"toolio_grep"`.
 3. In `test_mcp_descriptions_match_plugin_ts`, add at loop top:
 
 ```python
-        MCP_ONLY_TOOLS = frozenset({"school_read", "school_grep"})
+        MCP_ONLY_TOOLS = frozenset({"toolio_read", "toolio_grep"})
         for name, spec in mcp_server._TOOLS.items():
             if name in MCP_ONLY_TOOLS:
                 continue
@@ -1820,11 +1820,11 @@ and after the loop add:
         import re as re_mod
 
         plugin_tools = set(
-            re_mod.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re_mod.M)
+            re_mod.findall(r"^\s+(toolio_\w+): tool\(", TS_PLUGIN_SOURCE, re_mod.M)
         )
         assert set(mcp_server._TOOLS) - plugin_tools == {
-            "school_read",
-            "school_grep",
+            "toolio_read",
+            "toolio_grep",
         }
         assert plugin_tools - set(mcp_server._TOOLS) == set()
 ```
@@ -1838,13 +1838,13 @@ class TestReadToolMCP:
     def test_small_file_raw(self, tmp_path):
         f = tmp_path / "small.txt"
         f.write_text("hello world\nsecond line\n", encoding="utf-8")
-        result = mcp_server._call_tool(str(tmp_path), "school_read", {"path": "small.txt"})
+        result = mcp_server._call_tool(str(tmp_path), "toolio_read", {"path": "small.txt"})
         data = json.loads(result.content[0].text)
         assert result.is_error is False
         assert data["ok"] is True
         assert data["skeletonized"] is False
         assert data["content"] == "hello world\nsecond line"
-        assert "school ctx" not in data["content"]
+        assert "toolio ctx" not in data["content"]
 
     def test_oversized_python_skeletonized(self, tmp_path):
         lines = ["def compute(a: int) -> int:"]
@@ -1852,34 +1852,34 @@ class TestReadToolMCP:
             lines.append("    x = x + %d" % i)
         f = tmp_path / "big.py"
         f.write_text("\n".join(lines), encoding="utf-8")
-        result = mcp_server._call_tool(str(tmp_path), "school_read", {"path": "big.py"})
+        result = mcp_server._call_tool(str(tmp_path), "toolio_read", {"path": "big.py"})
         data = json.loads(result.content[0].text)
         assert data["ok"] is True
         assert data["skeletonized"] is True
         assert data["tokens_in"] >= 1000
         assert data["tokens_out"] < data["tokens_in"]
         assert "def compute(" in data["content"]
-        assert re.search(r"\[school ctx: \d+→\d+ tokens\]\s*$", data["content"])
+        assert re.search(r"\[toolio ctx: \d+→\d+ tokens\]\s*$", data["content"])
 
     def test_offset_limit_raw_window(self, tmp_path):
         f = tmp_path / "lines.txt"
         f.write_text("\n".join("line %d" % i for i in range(1, 21)), encoding="utf-8")
         result = mcp_server._call_tool(
-            str(tmp_path), "school_read", {"path": "lines.txt", "offset": 1, "limit": 3}
+            str(tmp_path), "toolio_read", {"path": "lines.txt", "offset": 1, "limit": 3}
         )
         data = json.loads(result.content[0].text)
         assert data["skeletonized"] is False
         assert data["content"] == "line 1\nline 2\nline 3"
 
     def test_missing_path_validation(self, tmp_path):
-        result = mcp_server._call_tool(str(tmp_path), "school_read", {})
+        result = mcp_server._call_tool(str(tmp_path), "toolio_read", {})
         data = json.loads(result.content[0].text)
         assert result.is_error is True
         assert data["error"]["type"] == "validation"
 
     def test_not_found(self, tmp_path):
         result = mcp_server._call_tool(
-            str(tmp_path), "school_read", {"path": "nope.txt"}
+            str(tmp_path), "toolio_read", {"path": "nope.txt"}
         )
         data = json.loads(result.content[0].text)
         assert result.is_error is True
@@ -1888,7 +1888,7 @@ class TestReadToolMCP:
     def test_directory_validation(self, tmp_path):
         (tmp_path / "adir").mkdir()
         result = mcp_server._call_tool(
-            str(tmp_path), "school_read", {"path": "adir"}
+            str(tmp_path), "toolio_read", {"path": "adir"}
         )
         data = json.loads(result.content[0].text)
         assert result.is_error is True
@@ -1897,7 +1897,7 @@ class TestReadToolMCP:
     def test_binary_io_error(self, tmp_path):
         f = tmp_path / "blob.bin"
         f.write_bytes(b"\x00\x01\x02abc")
-        result = mcp_server._call_tool(str(tmp_path), "school_read", {"path": "blob.bin"})
+        result = mcp_server._call_tool(str(tmp_path), "toolio_read", {"path": "blob.bin"})
         data = json.loads(result.content[0].text)
         assert result.is_error is True
         assert data["error"]["type"] == "io"
@@ -1912,7 +1912,7 @@ class TestGrepToolMCP:
             "def gamma():\n    pass\n", encoding="utf-8"
         )
         result = mcp_server._call_tool(
-            str(tmp_path), "school_grep", {"pattern": "^def "}
+            str(tmp_path), "toolio_grep", {"pattern": "^def "}
         )
         data = json.loads(result.content[0].text)
         assert data["ok"] is True
@@ -1926,7 +1926,7 @@ class TestGrepToolMCP:
             "\n".join("def f%d():" % i for i in range(20)), encoding="utf-8"
         )
         result = mcp_server._call_tool(
-            str(tmp_path), "school_grep", {"pattern": "^def ", "limit": 1}
+            str(tmp_path), "toolio_grep", {"pattern": "^def ", "limit": 1}
         )
         data = json.loads(result.content[0].text)
         assert data["matches"] == 1
@@ -1934,7 +1934,7 @@ class TestGrepToolMCP:
 
     def test_invalid_regex_validation(self, tmp_path):
         result = mcp_server._call_tool(
-            str(tmp_path), "school_grep", {"pattern": "["}
+            str(tmp_path), "toolio_grep", {"pattern": "["}
         )
         data = json.loads(result.content[0].text)
         assert result.is_error is True
@@ -1942,7 +1942,7 @@ class TestGrepToolMCP:
 
     def test_unknown_path_not_found(self, tmp_path):
         result = mcp_server._call_tool(
-            str(tmp_path), "school_grep",
+            str(tmp_path), "toolio_grep",
             {"pattern": "x", "path": "missing_dir"},
         )
         data = json.loads(result.content[0].text)
@@ -1957,13 +1957,13 @@ class TestGrepToolMCP:
             encoding="utf-8",
         )
         result = mcp_server._call_tool(
-            str(tmp_path), "school_grep",
+            str(tmp_path), "toolio_grep",
             {"pattern": "match_token", "limit": 500},
         )
         data = json.loads(result.content[0].text)
         assert data["matches"] == 150
         assert data["skeletonized"] is True
-        assert "[school ctx:" in data["content"]
+        assert "[toolio ctx:" in data["content"]
         assert "more matches in" in data["content"]
         kept = [ln for ln in data["content"].splitlines() if ln.startswith("c.txt:")]
         assert len(kept) == 10
@@ -1972,16 +1972,16 @@ class TestGrepToolMCP:
 - [ ] **Step 2: Run unit tests to verify they fail**
 
 Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_mcp_server.py -q --no-header -p no:cacheprovider`
-Expected: FAIL — order assertion (`school_read` missing), unknown tool `ValueError`/MCPError in new classes.
+Expected: FAIL — order assertion (`toolio_read` missing), unknown tool `ValueError`/MCPError in new classes.
 
-- [ ] **Step 3: Implement in `school/mcp/server.py`**
+- [ ] **Step 3: Implement in `toolio/mcp/server.py`**
 
-1. Imports: add `re` to the stdlib import block (order: json, os, re, sys, ...) and `from school.skeleton import optimize` after `from school import __version__, bridge`.
+1. Imports: add `re` to the stdlib import block (order: json, os, re, sys, ...) and `from toolio.skeleton import optimize` after `from toolio import __version__, bridge`.
 2. After `_route_result` (or near `_call_route`), add helpers:
 
 ```python
 _SKIPPED_DIRS = frozenset({
-    ".git", "node_modules", ".venv", "venv", "__pycache__", ".school",
+    ".git", "node_modules", ".venv", "venv", "__pycache__", ".toolio",
     ".evo", "dist", "build", ".mypy_cache", ".ruff_cache", ".pytest_tmp",
     ".pytest_cache", ".opencode", ".superpowers",
 })
@@ -2001,14 +2001,14 @@ def _error_result(err_type: str, message: str) -> types.CallToolResult:
     return _result({"ok": False, "error": {"type": err_type, "message": message}})
 ```
 
-3. Add the two tool entries in `_TOOLS` immediately after the `school_route_stats` entry (before the closing `}`):
+3. Add the two tool entries in `_TOOLS` immediately after the `toolio_route_stats` entry (before the closing `}`):
 
 ```python
-    "school_read": {
+    "toolio_read": {
         "description": (
             "Read a text file with the Context Optimizer: small files come back raw, "
             "oversized results are skeletonized (signatures, imports, control flow kept; "
-            "bodies elided) with a single [school ctx: in->out tokens] footer. "
+            "bodies elided) with a single [toolio ctx: in->out tokens] footer. "
             "Use for file contents; pass offset/limit to re-read a region raw after an elision."
         ),
         "annotations": {"read_only_hint": True, "idempotent_hint": True},
@@ -2034,7 +2034,7 @@ def _error_result(err_type: str, message: str) -> types.CallToolResult:
             "additionalProperties": False,
         },
     },
-    "school_grep": {
+    "toolio_grep": {
         "description": (
             "Search files under a path for a regular expression and return "
             "path:line:content matches (Context Optimizer footer when oversized). "
@@ -2183,12 +2183,12 @@ def _call_grep(worktree: str, arguments: dict) -> types.CallToolResult:
     })
 ```
 
-5. In `_call_tool`, after the `school_route_stats` special-case and before the generic `_build_request` path, add:
+5. In `_call_tool`, after the `toolio_route_stats` special-case and before the generic `_build_request` path, add:
 
 ```python
-    if name == "school_read":
+    if name == "toolio_read":
         return _call_read(worktree, arguments)
-    if name == "school_grep":
+    if name == "toolio_grep":
         return _call_grep(worktree, arguments)
 ```
 
@@ -2199,14 +2199,14 @@ Expected: all PASS (order, annotations, parity with MCP_ONLY skip, new classes, 
 
 - [ ] **Step 5: Write failing integration tests**
 
-In `tests/integration/test_mcp_stdio.py`: append `"school_read", "school_grep"` to `EXPECTED_TOOLS`, then append:
+In `tests/integration/test_mcp_stdio.py`: append `"toolio_read", "toolio_grep"` to `EXPECTED_TOOLS`, then append:
 
 ```python
 class TestContextOptimizerTools:
     async def test_small_read_raw(self, tmp_path):
         (tmp_path / "small.txt").write_text("hello world\n", encoding="utf-8")
         async with _server(tmp_path) as (session, _):
-            result = await session.call_tool("school_read", {"path": "small.txt"})
+            result = await session.call_tool("toolio_read", {"path": "small.txt"})
             assert not result.is_error
             data = json.loads(result.content[0].text)
             assert data["ok"] is True
@@ -2219,15 +2219,15 @@ class TestContextOptimizerTools:
             lines.append("    x = x + %d" % i)
         (tmp_path / "big.py").write_text("\n".join(lines), encoding="utf-8")
         async with _server(tmp_path) as (session, _):
-            result = await session.call_tool("school_read", {"path": "big.py"})
+            result = await session.call_tool("toolio_read", {"path": "big.py"})
             assert not result.is_error
             data = json.loads(result.content[0].text)
             assert data["skeletonized"] is True
-            assert "[school ctx:" in data["content"]
+            assert "[toolio ctx:" in data["content"]
 
     async def test_unknown_path_is_error(self, tmp_path):
         async with _server(tmp_path) as (session, _):
-            result = await session.call_tool("school_read", {"path": "missing.txt"})
+            result = await session.call_tool("toolio_read", {"path": "missing.txt"})
             assert result.is_error
             data = json.loads(result.content[0].text)
             assert data["error"]["type"] == "not_found"
@@ -2237,7 +2237,7 @@ class TestContextOptimizerTools:
             "def alpha():\n    pass\n", encoding="utf-8"
         )
         async with _server(tmp_path) as (session, _):
-            result = await session.call_tool("school_grep", {"pattern": "^def "})
+            result = await session.call_tool("toolio_grep", {"pattern": "^def "})
             assert not result.is_error
             data = json.loads(result.content[0].text)
             assert data["matches"] == 1
@@ -2251,12 +2251,12 @@ Expected: all PASS (order test now includes the two tools; new class passes).
 
 - [ ] **Step 7: Ruff + commit**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/mcp/server.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/mcp/server.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
 Expected: no new errors.
 
 ```bash
-git add school/mcp/server.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py
-git commit -m "feat: mcp school_read and school_grep tools"
+git add toolio/mcp/server.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py
+git commit -m "feat: mcp toolio_read and toolio_grep tools"
 ```
 
 ---
@@ -2264,20 +2264,20 @@ git commit -m "feat: mcp school_read and school_grep tools"
 ### Task 5: Plugin TS Context Optimizer (constants, helpers, `ctxOptimize`, hook wiring)
 
 **Files:**
-- Modify: `school/plugin_source.py` (inside `_TS_PLUGIN_TEMPLATE`: constants + helpers block after the knobs/route helpers, before `const School: Plugin`; wiring inserted in the `tool.execute.after` hook)
-- Test: `tests/unit/test_school_plugin_hooks.py` (append `class TestContextOptimizer`)
+- Modify: `toolio/plugin_source.py` (inside `_TS_PLUGIN_TEMPLATE`: constants + helpers block after the knobs/route helpers, before `const Toolio: Plugin`; wiring inserted in the `tool.execute.after` hook)
+- Test: `tests/unit/test_toolio_plugin_hooks.py` (append `class TestContextOptimizer`)
 
 **Interfaces:**
-- Consumes: bridge command `skeleton` (Task 3) via existing `invokeBridge(python, bridgePath, request, timeoutMs)`; `python`/`bridgePath` consts already in scope inside the `School` closure; `hooksEnabled()`; footer format from Task 1.
+- Consumes: bridge command `skeleton` (Task 3) via existing `invokeBridge(python, bridgePath, request, timeoutMs)`; `python`/`bridgePath` consts already in scope inside the `Toolio` closure; `hooksEnabled()`; footer format from Task 1.
 - Produces: TS functions `ctxEnabled()`, `ctxEstimate(s)`, `ctxStripFooter(t)`, `ctxFooter(i,o)`, `ctxCommentPrefix(filename)`, `ctxHeuristic(text, filename)`, `ctxPayload(text)`, `async ctxOptimize(text, filename): Promise<string | null>`; constants `CTX_THRESHOLD=1000`, `CTX_TIMEOUT_MS=2000`, `CTX_FOOTER_RE`, `CTX_CODE_RE`. Plugin tool surface stays 13; no new imports.
 
 Notes:
-- The helpers block goes at TOP LEVEL of the template (after the route helpers, before `const School: Plugin = async (ctx) => {`) because `python`/`bridgePath` are closure locals — therefore `ctxOptimize` must take them as parameters: signature `async function ctxOptimize(python: string, bridgePath: string, text: string, filename: string): Promise<string | null>`. The wiring inside the hook calls `await ctxOptimize(python, bridgePath, raw, filename)`.
+- The helpers block goes at TOP LEVEL of the template (after the route helpers, before `const Toolio: Plugin = async (ctx) => {`) because `python`/`bridgePath` are closure locals — therefore `ctxOptimize` must take them as parameters: signature `async function ctxOptimize(python: string, bridgePath: string, text: string, filename: string): Promise<string | null>`. The wiring inside the hook calls `await ctxOptimize(python, bridgePath, raw, filename)`.
 - Keep every new physical line ≤100 chars (ruff E501 on the Python file).
 
 - [ ] **Step 1: Write the failing source-contract tests**
 
-Append to `tests/unit/test_school_plugin_hooks.py` (reuse its `_hook_block` helper; add a module-level `_fn_block` if not present):
+Append to `tests/unit/test_toolio_plugin_hooks.py` (reuse its `_hook_block` helper; add a module-level `_fn_block` if not present):
 
 ```python
 def _fn_block(name: str) -> str:
@@ -2298,7 +2298,7 @@ class TestContextOptimizer:
         assert 'process.env.SCHOOL_CTX !== "0"' in TS_PLUGIN_SOURCE
 
     def test_footer_regex_literal(self):
-        assert r"\[school ctx: \d+→\d+ tokens\]" in TS_PLUGIN_SOURCE
+        assert r"\[toolio ctx: \d+→\d+ tokens\]" in TS_PLUGIN_SOURCE
 
     def test_ctx_optimize_uses_bridge_with_timeout(self):
         block = _fn_block("ctxOptimize")
@@ -2330,24 +2330,24 @@ class TestContextOptimizer:
 
     def test_tool_surface_still_13(self):
         assert (
-            len(re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.M))
+            len(re.findall(r"^\s+(toolio_\w+): tool\(", TS_PLUGIN_SOURCE, re.M))
             == 13
         )
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_plugin_hooks.py -q --no-header -p no:cacheprovider -k ContextOptimizer`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_plugin_hooks.py -q --no-header -p no:cacheprovider -k ContextOptimizer`
 Expected: FAIL (`const CTX_THRESHOLD = 1000` not found / function ctxOptimize not found).
 
-- [ ] **Step 3: Implement in `school/plugin_source.py`**
+- [ ] **Step 3: Implement in `toolio/plugin_source.py`**
 
-**3a. Helpers block** — insert immediately before `const School: Plugin = async (ctx) => {` (line ~390):
+**3a. Helpers block** — insert immediately before `const Toolio: Plugin = async (ctx) => {` (line ~390):
 
 ```typescript
   const CTX_THRESHOLD = 1000;
   const CTX_TIMEOUT_MS = 2000;
-  const CTX_FOOTER_RE = /\[school ctx: \d+→\d+ tokens\]\s*$/;
+  const CTX_FOOTER_RE = /\[toolio ctx: \d+→\d+ tokens\]\s*$/;
   const CTX_CODE_RE = /\.(py|pyi|js|jsx|mjs|cjs|ts|tsx|go|rs|java|c|h|cpp|cc|cxx|hpp|hh|hxx|sh|bash|rb|php|cs|kt|swift|sql|ya?ml|toml|ini|cfg|conf|lua|pl|r|scala|ex|exs|hs|clj|cljs|graphql|proto|tf)$/i;
   const CTX_NOISE = new Set([
     "import", "from", "as", "require", "const", "let", "var", "use",
@@ -2364,7 +2364,7 @@ Expected: FAIL (`const CTX_THRESHOLD = 1000` not found / function ctxOptimize no
     return t.replace(CTX_FOOTER_RE, "").replace(/\s+$/, "");
   }
   function ctxFooter(i: number, o: number): string {
-    return `[school ctx: ${i}→${o} tokens]`;
+    return `[toolio ctx: ${i}→${o} tokens]`;
   }
   function ctxSuffix(filename: string): string {
     const name = filename.toLowerCase();
@@ -2659,28 +2659,28 @@ Notes:
       }
 ```
 
-Keep the surrounding hook `try { ... } catch { /* never break execution */ }` unchanged; never mutate `input.`; the recall `[school context]` block still appends after this (footer sits before it, ≤1 footer per result).
+Keep the surrounding hook `try { ... } catch { /* never break execution */ }` unchanged; never mutate `input.`; the recall `[toolio context]` block still appends after this (footer sits before it, ≤1 footer per result).
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_school_plugin_hooks.py -q --no-header -p no:cacheprovider`
+Run: `& ".venv\Scripts\python.exe" -m pytest tests/unit/test_toolio_plugin_hooks.py -q --no-header -p no:cacheprovider`
 Expected: all PASS (new class + all pre-existing hook/tool-surface tests).
 
 - [ ] **Step 5: TS syntax check**
 
 ```powershell
-& ".venv\Scripts\python.exe" -c "from pathlib import Path; from school.plugin_source import TS_PLUGIN_SOURCE; Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\school-check.ts').write_text(TS_PLUGIN_SOURCE, encoding='utf-8')"
-node --check C:\Users\dex34\AppData\Local\Temp\opencode\school-check.ts
+& ".venv\Scripts\python.exe" -c "from pathlib import Path; from toolio.plugin_source import TS_PLUGIN_SOURCE; Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\toolio-check.ts').write_text(TS_PLUGIN_SOURCE, encoding='utf-8')"
+node --check C:\Users\dex34\AppData\Local\Temp\opencode\toolio-check.ts
 ```
 Expected: exit 0. If node rejects TypeScript syntax with `--check`, use `node --experimental-strip-types --check <path>` (Node 24: `node --check` on `.ts` works natively).
 
 - [ ] **Step 6: Ruff + commit**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py tests/unit/test_toolio_plugin_hooks.py`
 Expected: no NEW errors (pre-existing E501s inside the template are baseline; new physical lines ≤100 chars).
 
 ```bash
-git add school/plugin_source.py tests/unit/test_school_plugin_hooks.py
+git add toolio/plugin_source.py tests/unit/test_toolio_plugin_hooks.py
 git commit -m "feat: plugin context optimizer hook"
 ```
 
@@ -2692,7 +2692,7 @@ git commit -m "feat: plugin context optimizer hook"
 - Create: `tests/integration/test_plugin_live.py`
 
 **Interfaces:**
-- Consumes: `TS_PLUGIN_SOURCE` (Task 5), Node 24 native TS type-stripping, `School` default export with `tool.execute.after` hook.
+- Consumes: `TS_PLUGIN_SOURCE` (Task 5), Node 24 native TS type-stripping, `Toolio` default export with `tool.execute.after` hook.
 - Produces: three green integration tests proving live compression, TS fallback, and the `SCHOOL_CTX=0` kill switch through the real Node runtime.
 
 - [ ] **Step 1: Write the harness test file**
@@ -2710,16 +2710,16 @@ from pathlib import Path
 
 import pytest
 
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-FOOTER_ONE = re.compile(r"\[school ctx: \d+→\d+ tokens\]")
+FOOTER_ONE = re.compile(r"\[toolio ctx: \d+→\d+ tokens\]")
 
 HARNESS = """\
-import School from "./school.ts";
+import Toolio from "./toolio.ts";
 import { readFileSync } from "node:fs";
 const [worktree, bigPath] = process.argv.slice(2);
-const hooks = await School({ worktree, directory: worktree });
+const hooks = await Toolio({ worktree, directory: worktree });
 const text = readFileSync(bigPath, "utf8");
 const output = { title: "read", output: text, args: { filePath: "big.py" } };
 await hooks["tool.execute.after"](
@@ -2754,7 +2754,7 @@ def _big_py() -> str:
 def plugin_dir(tmp_path: Path) -> Path:
     d = tmp_path / "plugin"
     (d / "node_modules" / "@opencode-ai" / "plugin").mkdir(parents=True)
-    (d / "school.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
+    (d / "toolio.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
     (d / "package.json").write_text('{"type": "module"}', encoding="utf-8")
     stub = d / "node_modules" / "@opencode-ai" / "plugin"
     (stub / "package.json").write_text(STUB_PKG, encoding="utf-8")
@@ -2795,7 +2795,7 @@ class TestLiveContextOptimizer:
         assert len(out["output"]) < len(original)
         assert len(FOOTER_ONE.findall(out["output"])) == 1
         assert "def compute(a: int) -> int:" in out["output"]
-        assert "school" in out["title"]
+        assert "toolio" in out["title"]
 
     def test_bridge_path_preferred(self, plugin_dir: Path, tmp_path: Path):
         worktree = tmp_path / "wt"
@@ -2823,16 +2823,16 @@ class TestLiveContextOptimizer:
         out = _run(plugin_dir, worktree, big, env)
         original = big.read_text(encoding="utf-8")
         assert out["output"] == original
-        assert "school ctx" not in out["output"]
+        assert "toolio ctx" not in out["output"]
 ```
 
 - [ ] **Step 2: Run tests**
 
 Run: `& ".venv\Scripts\python.exe" -m pytest tests/integration/test_plugin_live.py -q --no-header -p no:cacheprovider`
 Expected: PASS. Debug notes:
-- If `School()` throws during discovery: PATH/SCHOOL_HOME games must stay try/caught — they are in the template; check stderr from the assert message.
+- If `Toolio()` throws during discovery: PATH/SCHOOL_HOME games must stay try/caught — they are in the template; check stderr from the assert message.
 - If node fails to import `.ts`: ensure Node ≥22.6/24 (env has v24.20.0) and `package.json {"type":"module"}` exists in plugin_dir.
-- If title lacks `school`: the after-hook marker logic should still run after compression — verify hook ordering.
+- If title lacks `toolio`: the after-hook marker logic should still run after compression — verify hook ordering.
 - Test 1 outcome must hold even with `SCHOOL_HOME` pointed nowhere (TS heuristic path); test 2 is outcome-based (bridge OR heuristic both acceptable — footer + shrink + signature).
 
 - [ ] **Step 3: Commit**
@@ -2856,28 +2856,28 @@ Expected: all green; total ≥ baseline (~2516 + new tests).
 
 - [ ] **Step 2: Ruff on every touched file**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/skeleton.py school/bridge.py school/mcp/server.py school/plugin_source.py tests/unit/test_school_skeleton.py tests/unit/test_school_plugin_bridge.py tests/unit/test_mcp_server.py tests/unit/test_school_plugin_hooks.py tests/integration/test_mcp_stdio.py tests/integration/test_plugin_live.py pyproject.toml`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/skeleton.py toolio/bridge.py toolio/mcp/server.py toolio/plugin_source.py tests/unit/test_toolio_skeleton.py tests/unit/test_toolio_plugin_bridge.py tests/unit/test_mcp_server.py tests/unit/test_toolio_plugin_hooks.py tests/integration/test_mcp_stdio.py tests/integration/test_plugin_live.py pyproject.toml`
 Expected: no errors (or only pre-existing plugin_source.py E501s already in baseline).
 
 - [ ] **Step 3: TS syntax check**
 
 ```powershell
-& ".venv\Scripts\python.exe" -c "from pathlib import Path; from school.plugin_source import TS_PLUGIN_SOURCE; Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\school-check.ts').write_text(TS_PLUGIN_SOURCE, encoding='utf-8')"
-node --check C:\Users\dex34\AppData\Local\Temp\opencode\school-check.ts
+& ".venv\Scripts\python.exe" -c "from pathlib import Path; from toolio.plugin_source import TS_PLUGIN_SOURCE; Path(r'C:\Users\dex34\AppData\Local\Temp\opencode\toolio-check.ts').write_text(TS_PLUGIN_SOURCE, encoding='utf-8')"
+node --check C:\Users\dex34\AppData\Local\Temp\opencode\toolio-check.ts
 ```
 Expected: exit 0.
 
 - [ ] **Step 4: Install parity**
 
 ```powershell
-& ".venv\Scripts\python.exe" -m school install --force
-& ".venv\Scripts\python.exe" -c "from pathlib import Path; from school.plugin_source import TS_PLUGIN_SOURCE; inst = Path.home() / '.config/opencode/plugins/school.ts'; print('MATCH' if inst.read_text(encoding='utf-8') == TS_PLUGIN_SOURCE else 'MISMATCH')"
+& ".venv\Scripts\python.exe" -m toolio install --force
+& ".venv\Scripts\python.exe" -c "from pathlib import Path; from toolio.plugin_source import TS_PLUGIN_SOURCE; inst = Path.home() / '.config/opencode/plugins/toolio.ts'; print('MATCH' if inst.read_text(encoding='utf-8') == TS_PLUGIN_SOURCE else 'MISMATCH')"
 ```
 Expected: `MATCH`.
 
 - [ ] **Step 5: Doctor**
 
-Run: `& ".venv\Scripts\python.exe" -m school doctor`
+Run: `& ".venv\Scripts\python.exe" -m toolio doctor`
 Expected: all PASS.
 
 - [ ] **Step 6: Commit any fixes (if steps 1–5 forced changes)**
@@ -2902,7 +2902,7 @@ If nothing changed, skip this commit.
 - 2 heuristic-only samples (.sql, .yaml) → T1 `TestHeuristicContract`.
 - Heuristic perf bound → T1 `test_perf_100kb_under_1s`.
 - Bridge skeleton command → T3.
-- MCP school_read/school_grep + offset/limit, validation/not_found/io, matches elision → T4.
+- MCP toolio_read/toolio_grep + offset/limit, validation/not_found/io, matches elision → T4.
 - MCP stdio integration (raw small, skeletonized, unknown-path error) → T4 Step 5–6.
 - Plugin source-contract (constants, footer, wiring order, kill switch, no new imports, 13 tools) → T5.
 - Live oversized read through real Node → T6.

@@ -38,7 +38,7 @@ def test_view_mode_off_when_compress_disabled(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("SCHOOL_COMPRESS", "0")
     assert view_mode(str(tmp_path), home=tmp_path / "home") == "off"
     monkeypatch.delenv("SCHOOL_COMPRESS", raising=False)
-    assert view_mode(str(tmp_path), home=tmp_path / "home") == "school"
+    assert view_mode(str(tmp_path), home=tmp_path / "home") == "toolio"
 
 
 def test_state_defaults_and_roundtrip(tmp_path) -> None:
@@ -55,7 +55,7 @@ def test_state_defaults_and_roundtrip(tmp_path) -> None:
     assert state["dcp_seen"] is True
     save_state(wt, {"decision": "switch"})
     assert load_state(wt)["decision"] == "switch"
-    expected = tmp_path / ".school" / "context" / "coexistence.json"
+    expected = tmp_path / ".toolio" / "context" / "coexistence.json"
     assert state_path(wt) == expected
 
 
@@ -161,13 +161,13 @@ def test_view_mode_switch_overrides_dcp(tmp_path) -> None:
     )
     assert view_mode(wt, home=home) == "dcp"
     save_state(wt, {"decision": "switch"})
-    assert view_mode(wt, home=home) == "school"
+    assert view_mode(wt, home=home) == "toolio"
 
 
 def test_view_mode_keep_and_dcp_hint(tmp_path, monkeypatch) -> None:
     wt = str(tmp_path)
     home = tmp_path / "home"
-    assert view_mode(wt, home=home) == "school"
+    assert view_mode(wt, home=home) == "toolio"
     assert view_mode(wt, dcp_hint=True, home=home) == "dcp"
     save_state(wt, {"decision": "keep"})
     assert view_mode(wt, home=home) == "dcp"
@@ -177,7 +177,7 @@ def test_view_mode_keep_and_dcp_hint(tmp_path, monkeypatch) -> None:
 
 def test_offer_text_matches_spec() -> None:
     assert OFFER_TEXT.startswith(
-        "School can now handle compression — with restore, budgets, and status."
+        "Toolio can now handle compression — with restore, budgets, and status."
     )
-    assert "school context switch" in OFFER_TEXT
-    assert "school context keep" in OFFER_TEXT
+    assert "toolio context switch" in OFFER_TEXT
+    assert "toolio context keep" in OFFER_TEXT

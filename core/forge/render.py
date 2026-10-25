@@ -1,11 +1,11 @@
-"""Forge renderer — Markdown + School visuals for every Forge artifact.
+"""Forge renderer — Markdown + Toolio visuals for every Forge artifact.
 
 Public surface:
 
 * ``render_artifact(kind, obj, interview=None, width=60) -> Artifact``
   dispatches on ``kind`` ("blueprint" | "edict" | "weave" | "compass" |
   "bundle") and returns a rendered ``Artifact``: clean GitHub Markdown body
-  plus a School visual (text-art via ``core.context.visuals``).
+  plus a Toolio visual (text-art via ``core.context.visuals``).
 * ``render_bundle(interview, width=60) -> dict[str, Artifact]`` builds all
   five artifacts at once (blueprint/edict/weave/compass + a ``bundle`` index).
 * ``to_markdown_blueprint / to_markdown_edict / to_markdown_weave /
@@ -146,7 +146,7 @@ def _interview_meta(interview: Any) -> dict[str, Any]:
 def _path(meta: dict[str, Any], kind: str) -> str:
     try:
         slug = _safe_str(meta.get("slug")) or _safe_str(meta.get("id")) or "draft"
-        return f".school/forge/{slug}/{_safe_str(kind)}.md"
+        return f".toolio/forge/{slug}/{_safe_str(kind)}.md"
     except Exception:  # noqa: BLE001
         return ""
 

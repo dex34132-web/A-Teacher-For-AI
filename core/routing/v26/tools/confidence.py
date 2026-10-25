@@ -1,8 +1,11 @@
-"""Confidence estimation tool for School V2.6."""
+"""Confidence estimation tool for Toolio V2.6."""
 
 from __future__ import annotations
 
+import re
+
 from core.learner.confidence import estimate_confidence
+from core.llm import llm_complete
 from core.routing.v26.identity import coerce_float, coerce_int, coerce_text
 from core.routing.v26.tools.base import (
     Tool,
@@ -16,7 +19,7 @@ class ConfidenceTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_confidence"
+        return "toolio_confidence"
 
     @property
     def description(self) -> str:
@@ -89,6 +92,7 @@ class ConfidenceTool(Tool):
         supporting_count = max(0, coerce_int(kwargs.get("supporting_count", 0), 0))
         total_count = max(0, coerce_int(kwargs.get("total_count", 0), 0))
         outputs = _coerce_outputs(kwargs.get("outputs", []))
+        prediction = coerce_text(kwargs.get("prediction", ""), "")
 
         result = estimate_confidence(
             similarity=similarity,
@@ -101,10 +105,31 @@ class ConfidenceTool(Tool):
             outputs=outputs,
         )
 
+        # LLM-in-the-loop: when a model is configured, ask it to sanity-check
+        # the heuristic score and blend. Falls back to the heuristic otherwise.
+        confidence = result.confidence
+        try:
+            reply = llm_complete(
+                "Heuristic confidence: {:.3f}. Prediction: {!r}. Outputs: {!r}. "
+                "Reply with a single number in [0,1] for the refined confidence, "
+                "nothing else.".format(result.confidence, prediction, outputs[:3]),
+                system="You are a calibration judge. Reply with one number in [0,1].",
+                temperature=0.0,
+                max_tokens=16,
+            )
+            if reply is not None:
+                m = re.search(r"([01](?:\.\d+)?)", reply)
+                if m:
+                    val = float(m.group(1))
+                    if 0.0 <= val <= 1.0:
+                        confidence = 0.5 * result.confidence + 0.5 * val
+        except Exception:  # noqa: BLE001 - never break the tool over LLM
+            pass
+
         return ToolResult(
             success=True,
             data={
-                "confidence": result.confidence,
+                "confidence": confidence,
                 "probability": result.probability,
                 "band": result.band,
                 "similarity": result.similarity,

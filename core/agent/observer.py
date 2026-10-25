@@ -1,4 +1,4 @@
-"""S7: school_observe — observe agent behavior and extract learnings."""
+"""S7: toolio_observe — observe agent behavior and extract learnings."""
 
 from __future__ import annotations
 
@@ -75,7 +75,7 @@ def json_safe(value: Any, _depth: int = 0, _seen: frozenset[int] = frozenset()) 
 
 
 def _observe_path(worktree: str) -> Path:
-    return Path(worktree) / ".school" / "agent" / OBSERVE_FILE
+    return Path(worktree) / ".toolio" / "agent" / OBSERVE_FILE
 
 
 def _append_line(path: Path, record: dict[str, Any]) -> None:

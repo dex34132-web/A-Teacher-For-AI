@@ -1,0 +1,188 @@
+/* tw.css — the Tailwind utilities the React islands use, hand-compiled.
+ *
+ * The live site is a hand-written static build with no Tailwind toolchain and
+ * no build step, so the utility classes the 21st.dev components rely on are
+ * shipped here as plain CSS. It is a SUBSET: exactly the classes
+ * components/ui/terminal.tsx and components/ui/contribution-skyline.tsx use.
+ *
+ * On a real shadcn + Tailwind v4 project you delete this file and install
+ * Tailwind instead — see schoolio/SETUP.md. The class names are identical.
+ */
+
+.tw-root {
+  --color-background: #141417;
+  --color-foreground: #efeae0;
+  --color-border: rgba(239, 234, 224, 0.16);
+  --color-muted-foreground: #9a9387;
+  --color-success: #7fd0c6;
+  --color-info: #ff8a4c;
+  font-family: var(--sans);
+  color: var(--color-foreground);
+}
+.tw-root *,
+.tw-root *::before,
+.tw-root *::after { box-sizing: border-box; }
+.tw-root svg { display: block; }
+
+/* --- display --- */
+.tw-root .block { display: block; }
+.tw-root .grid { display: grid; }
+.tw-root .flex { display: flex; }
+.tw-root .inline-flex { display: inline-flex; }
+.tw-root .flex-col { flex-direction: column; }
+.tw-root .flex-row { flex-direction: row; }
+.tw-root .flex-wrap { flex-wrap: wrap; }
+.tw-root .flex-1 { flex: 1 1 0%; }
+.tw-root .relative { position: relative; }
+.tw-root .absolute { position: absolute; }
+.tw-root .sticky { position: sticky; }
+
+/* --- flex / grid helpers --- */
+.tw-root .items-center { align-items: center; }
+.tw-root .items-end { align-items: flex-end; }
+.tw-root .items-start { align-items: flex-start; }
+.tw-root .items-baseline { align-items: baseline; }
+.tw-root .justify-between { justify-content: space-between; }
+.tw-root .place-items-center { place-items: center; }
+.tw-root .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tw-root .grid-cols-\[auto_auto\] { grid-template-columns: auto auto; }
+.tw-root .col-span-2 { grid-column: span 2 / span 2; }
+.tw-root .\[grid-area\:1\/1\] { grid-area: 1 / 1; }
+@media (min-width: 768px) { .tw-root .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* --- gaps --- */
+.tw-root .gap-1\.5 { gap: 0.375rem; }
+.tw-root .gap-5 { gap: 1.25rem; }
+.tw-root .gap-x-2 { column-gap: 0.5rem; }
+.tw-root .gap-x-4 { column-gap: 1rem; }
+.tw-root .gap-y-1 { row-gap: 0.25rem; }
+.tw-root .gap-y-2 { row-gap: 0.5rem; }
+.tw-root .gap-y-4 { row-gap: 1rem; }
+
+/* --- sizing --- */
+.tw-root .w-0 { width: 0px; }
+.tw-root .w-2 { width: 0.5rem; }
+.tw-root .w-8 { width: 2rem; }
+.tw-root .w-full { width: 100%; }
+.tw-root .w-\[11px\] { width: 11px; }
+.tw-root .h-0 { height: 0px; }
+.tw-root .h-2 { height: 0.5rem; }
+.tw-root .h-7 { height: 1.75rem; }
+.tw-root .h-full { height: 100%; }
+.tw-root .h-\[11px\] { height: 11px; }
+.tw-root .max-h-100 { max-height: 100%; }
+.tw-root .max-w-lg { max-width: 32rem; }
+.tw-root .min-w-0 { min-width: 0; }
+.tw-root .min-h-0 { min-height: 0; }
+
+/* --- spacing --- */
+.tw-root .m-0 { margin: 0px; }
+.tw-root .ml-0\.5 { margin-left: 0.125rem; }
+.tw-root .mr-0\.5 { margin-right: 0.125rem; }
+.tw-root .mt-0\.5 { margin-top: 0.125rem; }
+.tw-root .mt-1 { margin-top: 0.25rem; }
+.tw-root .p-0 { padding: 0px; }
+.tw-root .p-0\.5 { padding: 0.125rem; }
+.tw-root .p-4 { padding: 1rem; }
+.tw-root .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+.tw-root .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.tw-root .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+.tw-root .pt-3 { padding-top: 0.75rem; }
+.tw-root .pt-4 { padding-top: 1rem; }
+.tw-root .pb-1 { padding-bottom: 0.25rem; }
+.tw-root .pb-3 { padding-bottom: 0.75rem; }
+.tw-root .pb-\[0\.15em\] { padding-bottom: 0.15em; }
+@media (min-width: 640px) {
+  .tw-root .sm\:px-4 { padding-left: 1rem; padding-right: 1rem; }
+  .tw-root .sm\:pt-4 { padding-top: 1rem; }
+  .tw-root .sm\:left-4 { left: 1rem; }
+  .tw-root .sm\:top-4 { top: 1rem; }
+}
+
+/* --- typography --- */
+.tw-root .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.tw-root .text-\[12px\] { font-size: 12px; }
+.tw-root .text-\[13px\] { font-size: 13px; }
+.tw-root .text-\[14px\] { font-size: 14px; }
+.tw-root .text-\[15px\] { font-size: 15px; }
+.tw-root .font-normal { font-weight: 400; }
+.tw-root .font-semibold { font-weight: 600; }
+.tw-root .tracking-tight { letter-spacing: -0.025em; }
+.tw-root .leading-none { line-height: 1; }
+.tw-root .leading-tight { line-height: 1.25; }
+.tw-root .leading-snug { line-height: 1.375; }
+.tw-root .text-right { text-align: right; }
+.tw-root .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tw-root .whitespace-nowrap { white-space: nowrap; }
+.tw-root .tabular-nums { font-variant-numeric: tabular-nums; }
+.tw-root .text-green-500 { color: var(--color-success); }
+.tw-root .text-blue-500 { color: var(--color-info); }
+.tw-root .text-muted-foreground { color: var(--color-muted-foreground); }
+.tw-root .opacity-75 { opacity: 0.75; }
+
+/* --- surfaces --- */
+.tw-root .bg-background { background-color: var(--color-background); }
+.tw-root .bg-transparent { background-color: transparent; }
+.tw-root .bg-red-500 { background-color: #ef4444; }
+.tw-root .bg-yellow-500 { background-color: #eab308; }
+.tw-root .bg-green-500 { background-color: #22c55e; }
+.tw-root .border { border-width: 1px; border-style: solid; }
+.tw-root .border-0 { border-width: 0; }
+.tw-root .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+.tw-root .border-border { border-color: var(--color-border); }
+.tw-root .rounded { border-radius: 0.25rem; }
+.tw-root .rounded-\[2px\] { border-radius: 2px; }
+.tw-root .rounded-full { border-radius: 9999px; }
+.tw-root .rounded-lg { border-radius: 0.5rem; }
+.tw-root .rounded-md { border-radius: 0.375rem; }
+.tw-root .rounded-xl { border-radius: 0.75rem; }
+.tw-root .shadow-lg { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+
+/* --- position --- */
+.tw-root .top-0 { top: 0px; }
+.tw-root .top-0\.5 { top: 0.125rem; }
+.tw-root .top-1 { top: 0.25rem; }
+.tw-root .top-3 { top: 0.75rem; }
+.tw-root .top-full { top: 100%; }
+.tw-root .bottom-0\.5 { bottom: 0.125rem; }
+.tw-root .bottom-1 { bottom: 0.25rem; }
+.tw-root .left-0 { left: 0px; }
+.tw-root .left-0\.5 { left: 0.125rem; }
+.tw-root .left-1 { left: 0.25rem; }
+.tw-root .left-3 { left: 0.75rem; }
+.tw-root .right-1 { right: 0.25rem; }
+.tw-root .z-0 { z-index: 0; }
+.tw-root .z-10 { z-index: 10; }
+.tw-root .z-20 { z-index: 20; }
+
+/* --- interaction --- */
+.tw-root .cursor-pointer { cursor: pointer; }
+.tw-root .pointer-events-none { pointer-events: none; }
+.tw-root .overflow-auto { overflow: auto; }
+.tw-root .overflow-hidden { overflow: hidden; }
+.tw-root .outline-none { outline: 2px solid transparent; outline-offset: 2px; }
+.tw-root .outline-offset-4 { outline-offset: 4px; }
+.tw-root .focus-visible\:outline-2:focus-visible { outline: 2px solid var(--color-foreground); }
+.tw-root .focus-visible\:outline-offset-1:focus-visible { outline-offset: 1px; }
+.tw-root .focus-visible\:outline-offset-2:focus-visible { outline-offset: 2px; }
+.tw-root .has-\[\:focus-visible\]\:outline-2:has(:focus-visible) { outline: 2px solid var(--color-foreground); }
+.tw-root .hover\:scale-125:hover { transform: scale(1.25); }
+
+/* --- motion --- */
+.tw-root .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.tw-root .transition-opacity { transition-property: opacity; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.tw-root .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.tw-root .transition-\[background-color\,transform\] { transition-property: background-color, transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.tw-root .transition-\[grid-template-rows\,opacity\] { transition-property: grid-template-rows, opacity; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.tw-root .transition-\[opacity\,transform\] { transition-property: opacity, transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.tw-root .duration-150 { transition-duration: 150ms; }
+.tw-root .duration-500 { transition-duration: 500ms; }
+@media (prefers-reduced-motion: reduce) {
+  .tw-root .motion-reduce\:transition-none { transition-property: none; }
+}
+
+/* --- screen-reader only --- */
+.tw-root .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
+}

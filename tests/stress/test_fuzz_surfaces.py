@@ -1,18 +1,18 @@
-"""Adversarial fail-open fuzz campaign for the School SURFACE layer.
+"""Adversarial fail-open fuzz campaign for the Toolio SURFACE layer.
 
 Surfaces under attack
 --------------------
-A. ``school/bridge.py`` — the JSON bridge ``main()`` wire: every one of the 40
+A. ``toolio/bridge.py`` — the JSON bridge ``main()`` wire: every one of the 40
    ``_COMMANDS`` plus protocol-level hostile inputs (unknown/missing/unhashable
    command, non-JSON garbage, empty lines, non-object JSON, huge payloads),
    fed both in-process (monkeypatched stdin) and through real subprocess pipes.
 B. ``_dispatch_to_orchestrator`` + ``_safe_dump`` — hostile Python objects.
-C. ``school/mcp/server.py`` — ``_route_result``, ``_bridge_call``,
+C. ``toolio/mcp/server.py`` — ``_route_result``, ``_bridge_call``,
    ``_build_request``, ``_call_tool`` (42 tools) and the ``SCHOOL_PREFERRED``
    dominance suffix on every tool description.
-D. ``school/cli.py`` — argparse + every subcommand with hostile argv (including
+D. ``toolio/cli.py`` — argparse + every subcommand with hostile argv (including
    non-str entries), and ``_cmd_visualize`` with hostile visual types/data.
-E. ``school/plugin_source.py`` — TS_PLUGIN_SOURCE structural invariants,
+E. ``toolio/plugin_source.py`` — TS_PLUGIN_SOURCE structural invariants,
    hostile version rendering, and real ``node --check`` syntax validation.
 
 FAIL-OPEN INVARIANT: every surface, given ANY input, must emit a valid
@@ -66,14 +66,14 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import pytest  # noqa: E402
 
-from school import bridge, plugin_source  # noqa: E402
-from school import cli as school_cli  # noqa: E402
+from toolio import bridge, plugin_source  # noqa: E402
+from toolio import cli as toolio_cli  # noqa: E402
 
 N = 2000  # iterations per fuzz label
 NODE = shutil.which("node")
 
 try:  # the `mcp` package is optional; MCP labels run only when importable
-    from school.mcp import server as mcp_server
+    from toolio.mcp import server as mcp_server
 except Exception:  # noqa: BLE001
     mcp_server = None  # type: ignore[assignment]
 
@@ -123,9 +123,9 @@ JHOSTILE: list[Any] = [
 # Curated benign/garbage shell commands for the `execute` surface: hostile
 # enough to break parsers, never destructive.
 EXEC_CMDS = [
-    "", " ", "\t", "zzz_school_fuzz_nonexistent_12345", "echo school-fuzz",
+    "", " ", "\t", "zzz_toolio_fuzz_nonexistent_12345", "echo toolio-fuzz",
     "🔥 unicode cmd", "X" * 2000, "{}{}{x}", "a\x00b", "echo fuzz & echo fuzz2",
-    "exit 3", "cmd /c echo school-fuzz",
+    "exit 3", "cmd /c echo toolio-fuzz",
 ]
 
 
@@ -168,7 +168,7 @@ _RESTORE: dict[str, Any] = {}
 @pytest.fixture(scope="module", autouse=True)
 def sandbox() -> Any:
     global SANDBOX, WT_BASE, HOME_DIR
-    SANDBOX = tempfile.mkdtemp(prefix="school_fuzz_")
+    SANDBOX = tempfile.mkdtemp(prefix="toolio_fuzz_")
     wt = pathlib.Path(SANDBOX)
     for level in range(8):  # 8 nested levels: bounded `..` traversal stays in
         wt = wt / f"L{level}"
@@ -190,7 +190,7 @@ def sandbox() -> Any:
     os.environ["SCHOOL_DOCS"] = "0"
     os.environ["PYTHONIOENCODING"] = "utf-8"
 
-    # Bare `school mcp` must never enter the blocking stdio server loop when
+    # Bare `toolio mcp` must never enter the blocking stdio server loop when
     # fuzzing argv routing. The server internals are fuzzed in section C.
     _RESTORE["mcp_main"] = None
     if mcp_server is not None:
@@ -296,7 +296,7 @@ def valid_req(cmd: str) -> dict[str, Any]:
         "explore": {"worktree": wt, "target": ".", "depth": "file"},
         "progress": {"worktree": wt, "action": "read"},
         "session": {"worktree": wt, "action": "list"},
-        "execute": {"worktree": wt, "cmd": "echo school-fuzz", "timeout_ms": 5000},
+        "execute": {"worktree": wt, "cmd": "echo toolio-fuzz", "timeout_ms": 5000},
         "navigate": {"worktree": wt, "action": "list", "path": ""},
         "workflow": {"worktree": wt, "name": "tdd", "action": "status"},
         "docs": {"worktree": wt, "query": "fuzz"},
@@ -436,7 +436,7 @@ def test_a_bridge_oneshot_subprocess_smoke() -> None:
     cases += [PROTOCOL_RAW[k](i) for i, k in enumerate(sorted(PROTOCOL_RAW))]
     for raw in cases:
         proc = subprocess.run(
-            [sys.executable, "-c", "from school.bridge import main; main()"],
+            [sys.executable, "-c", "from toolio.bridge import main; main()"],
             input=raw, capture_output=True, text=True, encoding="utf-8",
             errors="replace", env=env, cwd=SANDBOX, timeout=120,
         )
@@ -463,7 +463,7 @@ def test_a_bridge_subprocess_roundtrip_fuzz() -> None:
         else:
             raw = PROTOCOL_RAW[cases[i % len(cases)]](i)
         proc = subprocess.run(
-            [sys.executable, "-c", "from school.bridge import main; main()"],
+            [sys.executable, "-c", "from toolio.bridge import main; main()"],
             input=raw, capture_output=True, text=True, encoding="utf-8",
             errors="replace", env=env, cwd=SANDBOX, timeout=120,
         )
@@ -491,7 +491,7 @@ def test_b_dispatch_to_orchestrator_fuzz() -> None:
     def one(i: int) -> None:
         rng = random.Random(i)
         tool = rng.choice(tools + ["zzz_tool", "", None, 5, ["x"], {"a": 1},
-                                   "school_remember", "x" * 1000])
+                                   "toolio_remember", "x" * 1000])
         if i % 4 == 0:
             req: Any = {"worktree": map_wt(WT_BASE, i), "content": "x", "query": "y"}
         elif i % 4 == 1:
@@ -631,7 +631,7 @@ def test_c_build_request_fuzz() -> None:
 
     def one(i: int) -> None:
         rng = random.Random(i)
-        tool = rng.choice(tools + ["school_bogus", "", "x" * 1000, None, ["x"], {}])
+        tool = rng.choice(tools + ["toolio_bogus", "", "x" * 1000, None, ["x"], {}])
         if i % 3 == 0:
             args: Any = {k: _jvalue(rng) for k in ("content", "query", "agent_id",
                                                    "project", "session", "limit")}
@@ -658,8 +658,8 @@ def test_c_call_tool_unknown_fuzz() -> None:
     """Unknown/hostile tool names: ValueError contract or result — never other."""
     def one(i: int) -> None:
         rng = random.Random(i)
-        name = rng.choice(["school_bogus", "", "status", "school_", "x" * 5000,
-                           "\x00", ["school_status"], {"a": 1}, None, 5, b"x",
+        name = rng.choice(["toolio_bogus", "", "status", "toolio_", "x" * 5000,
+                           "\x00", ["toolio_status"], {"a": 1}, None, 5, b"x",
                            HOSTILE[i % len(HOSTILE)]])
         try:
             res = mcp_server._call_tool(WT_BASE, name, {"content": "x"})
@@ -676,8 +676,8 @@ def test_c_call_tool_unknown_fuzz() -> None:
 
 
 @requires_mcp
-@pytest.mark.parametrize("tool", ["school_route", "school_route_stats",
-                                  "school_dashboard", "school_read", "school_grep"])
+@pytest.mark.parametrize("tool", ["toolio_route", "toolio_route_stats",
+                                  "toolio_dashboard", "toolio_read", "toolio_grep"])
 def test_c_call_tool_bespoke_fuzz(tool: str) -> None:
     """The bespoke MCP tools with hostile arguments (ValueError is contract)."""
     def one(i: int) -> None:
@@ -713,7 +713,7 @@ def test_c_call_tool_bespoke_fuzz(tool: str) -> None:
 
     report = fuzz_fail_open(
         one, n=N, make_args=lambda i: ((i,), {}),
-        label=f"mcp.call_tool.{tool.removeprefix('school_')}",
+        label=f"mcp.call_tool.{tool.removeprefix('toolio_')}",
     )
     assert report.ok, report.summary()
 
@@ -736,7 +736,7 @@ def test_c_call_tool_all_tools_fuzz() -> None:
             args = {}
         else:
             args = gen_json_safe(rng)
-        if tool == "school_execute":
+        if tool == "toolio_execute":
             args = {"command": rng.choice(EXEC_CMDS), "timeout_ms": 3000}
         try:
             res = mcp_server._call_tool(wt, tool, args)
@@ -755,7 +755,7 @@ def test_c_call_tool_all_tools_fuzz() -> None:
 def test_c_tools_dominance_fuzz() -> None:
     """SCHOOL_PREFERRED dominance suffix on ALL tool descriptions (2000x)."""
     def one(i: int) -> None:
-        assert len(mcp_server._TOOLS) == 48, f"tool count {len(mcp_server._TOOLS)}"
+        assert len(mcp_server._TOOLS) == 52, f"tool count {len(mcp_server._TOOLS)}"
         for t in mcp_server._list_tools().tools:
             name = t.name
             desc = t.description
@@ -775,15 +775,15 @@ def test_c_tools_dominance_fuzz() -> None:
 # ---------------------------------------------------------------------------
 
 def run_cli(argv: list[Any], stdin_text: str = "") -> tuple[int, str, str]:
-    """Run school.cli.main() on argv. SystemExit -> code; anything else escapes."""
+    """Run toolio.cli.main() on argv. SystemExit -> code; anything else escapes."""
     old = (sys.argv, sys.stdin, sys.stdout, sys.stderr)
     out, err = io.StringIO(), io.StringIO()
-    sys.argv = ["school", *argv]
+    sys.argv = ["toolio", *argv]
     sys.stdin = io.StringIO(stdin_text)
     sys.stdout, sys.stderr = out, err
     code = 0
     try:
-        school_cli.main()
+        toolio_cli.main()
     except SystemExit as exc:
         raw = exc.code
         code = raw if isinstance(raw, int) else (0 if raw is None else 1)
@@ -926,7 +926,7 @@ def test_d_cli_visualize_render_fuzz() -> None:
         sys.stderr = io.StringIO()
         try:
             try:
-                out = school_cli._cmd_visualize(args)
+                out = toolio_cli._cmd_visualize(args)
             except SystemExit as exc:
                 out = f"<graceful-exit:{exc.code}>"
             sys.stdout.write("")  # probe: stdout must still be writable
@@ -946,7 +946,7 @@ def test_d_cli_visualize_render_fuzz() -> None:
 # E. TS plugin source: invariants, hostile rendering, node --check
 # ---------------------------------------------------------------------------
 
-_TOOL_BLOCK_RE = re.compile(r"^\s+(school_[a-z_0-9]+):\s*tool\(\{", re.MULTILINE)
+_TOOL_BLOCK_RE = re.compile(r"^\s+(toolio_[a-z_0-9]+):\s*tool\(\{", re.MULTILINE)
 _CMD_KEY_RE = re.compile(r'command:\s*"([a-z_0-9]+)"')
 
 
@@ -957,17 +957,17 @@ def assert_plugin_invariants(src: str, version: Any = None) -> None:
     assert isinstance(src, str) and src, "plugin source empty"
     if "__SCHOOL_VERSION__" not in str(version):
         assert "__SCHOOL_VERSION__" not in src, "version placeholder not substituted"
-    assert "export default School" in src, "plugin default export missing"
+    assert "export default Toolio" in src, "plugin default export missing"
     assert "withVis" in src, "withVis wrapper missing"
     assert "invokeBridge" in src, "invokeBridge missing"
     assert "const SCHOOL_PREFERRED =" in src, "dominance constant missing"
     assert "[SCHOOL — PREFERRED]" in src, "dominance suffix literal missing"
     assert "const tool: any = ((opts: any) =>" in src, "dominance wrapper missing"
-    assert "school_visualize: tool({" in src, "school_visualize tool missing"
+    assert "toolio_visualize: tool({" in src, "toolio_visualize tool missing"
 
     blocks = _TOOL_BLOCK_RE.findall(src)
-    assert len(blocks) == 46, f"expected 46 tool blocks, found {len(blocks)}"
-    assert len(set(blocks)) == 46, f"duplicate tool block names: {blocks}"
+    assert len(blocks) == 52, f"expected 52 tool blocks, found {len(blocks)}"
+    assert len(set(blocks)) == 52, f"duplicate tool block names: {blocks}"
 
     # No tool block may register two `command:` keys (silent-override bug).
     starts = [m.start() for m in _TOOL_BLOCK_RE.finditer(src)]
@@ -1119,9 +1119,9 @@ def test_zz_fuzz_ledger_coverage() -> None:
         expected |= {"mcp.route_result.hostile", "mcp.bridge_call.unknown",
                      "mcp.build_request.hostile", "mcp.call_tool.unknown",
                      "mcp.call_tool.all_tools", "mcp.tools.dominance"}
-        expected |= {f"mcp.call_tool.{t.removeprefix('school_')}"
-                     for t in ("school_route", "school_route_stats",
-                               "school_dashboard", "school_read", "school_grep")}
+        expected |= {f"mcp.call_tool.{t.removeprefix('toolio_')}"
+                     for t in ("toolio_route", "toolio_route_stats",
+                               "toolio_dashboard", "toolio_read", "toolio_grep")}
     if NODE is not None:
         expected |= {"plugin.node_check"}
 

@@ -1,4 +1,4 @@
-"""S7: school_navigate — read, list, search, and map project files."""
+"""S7: toolio_navigate — read, list, search, and map project files."""
 
 from __future__ import annotations
 

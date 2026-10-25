@@ -1,8 +1,8 @@
-"""Adversarial fuzz harness for the whole School tool ecosystem.
+"""Adversarial fuzz harness for the whole Toolio tool ecosystem.
 
 CONTRACT (what "fail-open" means here)
 -------------------------------------
-Every School tool, given ANY input — hostile, malformed, or valid — must
+Every Toolio tool, given ANY input — hostile, malformed, or valid — must
 either (a) return a result object/dict/str, or (b) return a graceful error
 result. It must NEVER raise out of the tool boundary. This harness is
 *designed to make tools fail*: it generates adversarial inputs (wrong types,
@@ -18,7 +18,7 @@ Usage
             lambda a: remember(*a),
             n=2000,
             make_args=lambda i: ((gen_worktree(i), HOSTILE[i % len(HOSTILE)]), {}),
-            label="school_remember",
+            label="toolio_remember",
         )
         assert report.ok, report.summary()
 
@@ -179,7 +179,7 @@ def gen_value(depth: int = 0, rng: random.Random | None = None) -> Any:
 
 def gen_str(rng: random.Random | None = None) -> str:
     rng = rng or random.Random(0)
-    pool = [h for h in HOSTILE if isinstance(h, str)] + ["", "tool", "school_x"]
+    pool = [h for h in HOSTILE if isinstance(h, str)] + ["", "tool", "toolio_x"]
     return str(rng.choice(pool))
 
 

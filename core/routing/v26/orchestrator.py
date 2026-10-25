@@ -116,7 +116,7 @@ class Orchestrator:
                                 project: str = "", session: str = "", **kwargs) -> PipelineResult:
         steps = [
             (
-                "school_remember",
+                "toolio_remember",
                 {
                     "content": content,
                     "outcome": outcome,
@@ -125,8 +125,8 @@ class Orchestrator:
                     **kwargs,
                 },
             ),
-            ("school_conflict", {"content": content, "project": project}),
-            ("school_deduplicate", {"content": content, "project": project}),
+            ("toolio_conflict", {"content": content, "project": project}),
+            ("toolio_deduplicate", {"content": content, "project": project}),
         ]
         return self.pipeline(steps)
 

@@ -1,6 +1,6 @@
 # LEREV Orchestrator + Tool Interface Design
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *School*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 **Date:** 2026-09-13
@@ -23,7 +23,7 @@ LEREV has a complete learning pipeline (V2.2 conflict, V2.3 confidence, V2.4.2 l
 3. **Three modes**: On-demand (per-request), Background (continuous), Hybrid (default)
 4. **Bridge integration**: New bridge commands for each tool
 5. **No new engines**: All tools use existing learner/conflict/confidence/lifecycle systems
-6. **Backward compatible**: Existing `lerev_status`, `lerev_remember`, `lerev_recall` tools unchanged
+6. **Backward compatible**: Existing `toolio_status`, `toolio_remember`, `toolio_recall` tools unchanged
 7. **Deterministic**: Same input → same output (no LLM in execution path, only optional routing)
 
 ## 3. Architecture
@@ -104,20 +104,20 @@ class ToolResult:
 
 ```python
 class StatusTool(Tool):
-    name = "lerev_status"
+    name = "toolio_status"
     description = "Check LEREV runtime status including component availability"
     schema = {}  # no parameters
 
     def execute(self) -> ToolResult:
         # Reuses existing _handle_status logic from bridge.py
-        # Checks: lerev_core, v2_5_routing, v2_6_memory, persistence, security
+        # Checks: toolio_core, v2_5_routing, v2_6_memory, persistence, security
 ```
 
 #### Tool 2: `remember`
 
 ```python
 class RememberTool(Tool):
-    name = "lerev_remember"
+    name = "toolio_remember"
     description = "Store an experience or memory through LEREV V2.6"
     schema = {
         "content": {"type": "string", "description": "Memory content"},
@@ -138,7 +138,7 @@ class RememberTool(Tool):
 
 ```python
 class RecallTool(Tool):
-    name = "lerev_recall"
+    name = "toolio_recall"
     description = "Retrieve memories from LEREV V2.6 long-term memory"
     schema = {
         "query": {"type": "string"},
@@ -159,7 +159,7 @@ class RecallTool(Tool):
 
 ```python
 class ConflictDetectionTool(Tool):
-    name = "lerev_conflict"
+    name = "toolio_conflict"
     description = "Detect conflicts between incoming content and stored memories"
     schema = {
         "content": {"type": "string", "description": "New content to check"},
@@ -179,7 +179,7 @@ class ConflictDetectionTool(Tool):
 
 ```python
 class ConfidenceTool(Tool):
-    name = "lerev_confidence"
+    name = "toolio_confidence"
     description = "Compute confidence score for a prediction or memory"
     schema = {
         "content": {"type": "string"},
@@ -198,7 +198,7 @@ class ConfidenceTool(Tool):
 
 ```python
 class SemanticSearchTool(Tool):
-    name = "lerev_search"
+    name = "toolio_search"
     description = "Search memories by semantic similarity using TF-IDF ranking"
     schema = {
         "query": {"type": "string"},
@@ -215,7 +215,7 @@ class SemanticSearchTool(Tool):
 
 ```python
 class DeduplicateTool(Tool):
-    name = "lerev_deduplicate"
+    name = "toolio_deduplicate"
     description = "Find and optionally merge duplicate/similar memories"
     schema = {
         "content": {"type": "string", "description": "Content to check for duplicates"},
@@ -235,7 +235,7 @@ class DeduplicateTool(Tool):
 
 ```python
 class KnowledgeExtractionTool(Tool):
-    name = "lerev_knowledge"
+    name = "toolio_knowledge"
     description = "Extract learnings and knowledge patterns from consolidated memories"
     schema = {
         "project": {"type": "string"},
@@ -254,7 +254,7 @@ class KnowledgeExtractionTool(Tool):
 
 ```python
 class LifecycleTool(Tool):
-    name = "lerev_lifecycle"
+    name = "toolio_lifecycle"
     description = "Score memory entries for staleness, decay, and promotion eligibility"
     schema = {
         "memory_id": {"type": "string", "description": "Specific memory to score"},
@@ -275,7 +275,7 @@ class LifecycleTool(Tool):
 
 ```python
 class DiagnoseTool(Tool):
-    name = "lerev_diagnose"
+    name = "toolio_diagnose"
     description = "Full system diagnostics: health, stats, pipeline status"
     schema = {
         "detail": {"type": "string", "enum": ["summary", "full"], "default": "summary"},
@@ -368,10 +368,10 @@ class Orchestrator:
                                 **kwargs) -> PipelineResult:
         """Full learning pipeline: store → conflict check → deduplicate → confidence."""
         steps = [
-            ("lerev_remember", {"content": content, "outcome": outcome,
+            ("toolio_remember", {"content": content, "outcome": outcome,
                                 "project": project, "session": session, **kwargs}),
-            ("lerev_conflict", {"content": content, "project": project}),
-            ("lerev_deduplicate", {"content": content, "project": project}),
+            ("toolio_conflict", {"content": content, "project": project}),
+            ("toolio_deduplicate", {"content": content, "project": project}),
         ]
         return self.pipeline(steps)
 
@@ -501,7 +501,7 @@ class BackgroundWorker:
         """Called after each successful remember. Triggers consolidation if needed."""
         self._memory_count += 1
         if self._memory_count >= self._consolidation_threshold:
-            self._orchestrator.trigger_background("lerev_knowledge",
+            self._orchestrator.trigger_background("toolio_knowledge",
                                                    min_occurrences=3)
             self._memory_count = 0
 
@@ -561,7 +561,7 @@ The existing `V26Bridge` connects V2.6 memory to V2.5 routing. The orchestrator 
 - `V26Bridge` handles V2.5 routing integration (existing behavior preserved)
 - `Orchestrator` handles tool dispatch and pipeline execution (new capability)
 - Both share the same `MemoryManager` instance
-- Bridge commands delegate to the orchestrator: `bridge.handle("remember", ...) → orchestrator.dispatch("lerev_remember", ...)`
+- Bridge commands delegate to the orchestrator: `bridge.handle("remember", ...) → orchestrator.dispatch("toolio_remember", ...)`
 
 ### MemoryManager (`memory_manager.py`)
 All tools receive a `MemoryManager` reference at construction time. The orchestrator holds one `MemoryManager` and passes it to tools that need it. No tool creates its own `MemoryManager`.
@@ -581,4 +581,4 @@ These are stateless utility modules. Tools call their functions directly:
 - No LLM calls in execution path (only optional routing)
 - No persistent task queue (in-memory for now)
 - No remote tool execution (all in-process)
-- No changes to existing `lerev_status`, `lerev_remember`, `lerev_recall` behavior
+- No changes to existing `toolio_status`, `toolio_remember`, `toolio_recall` behavior

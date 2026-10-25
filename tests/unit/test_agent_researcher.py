@@ -1,4 +1,4 @@
-"""S7 tests: school_research."""
+"""S7 tests: toolio_research."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def worktree_factory() -> Iterator[Callable[[], str]]:
     created: list[str] = []
 
     def _make() -> str:
-        wt = tempfile.mkdtemp(prefix="school_research_")
+        wt = tempfile.mkdtemp(prefix="toolio_research_")
         created.append(wt)
         return wt
 
@@ -72,7 +72,7 @@ class TestResearch:
 
     def test_research_logs_to_observer(self, worktree: str) -> None:
         research(worktree, "test query")
-        obs_file = Path(worktree) / ".school" / "agent" / "observations.jsonl"
+        obs_file = Path(worktree) / ".toolio" / "agent" / "observations.jsonl"
         assert obs_file.exists()
 
 
@@ -174,7 +174,7 @@ class TestResearchFormats:
 class TestResearchObserver:
     def test_research_records_observation(self, worktree: str) -> None:
         research(worktree, "test query")
-        obs_file = Path(worktree) / ".school" / "agent" / "observations.jsonl"
+        obs_file = Path(worktree) / ".toolio" / "agent" / "observations.jsonl"
         assert obs_file.exists()
         record = json.loads(obs_file.read_text(encoding="utf-8").splitlines()[-1])
         assert record["category"] == "research"

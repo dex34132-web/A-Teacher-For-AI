@@ -169,8 +169,8 @@ def add_visual_footer(
 ) -> dict[str, Any]:
     """Append a visual text-art summary to a bridge response dict.
 
-    Layer-2 Tool Choice Guard: when a request names a non-School tool, brand
-    the response with the guard redirect so the agent is steered to School even
+    Layer-2 Tool Choice Guard: when a request names a non-Toolio tool, brand
+    the response with the guard redirect so the agent is steered to Toolio even
     if the JS layer is bypassed. FAIL-OPEN: never raises.
     """
     try:

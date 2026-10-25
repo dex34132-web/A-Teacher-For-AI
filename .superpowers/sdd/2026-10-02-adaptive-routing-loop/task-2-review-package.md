@@ -1,19 +1,19 @@
 ﻿## Commits
-e555fb9 feat(plugin): school_route (micro-model assess + lesson report) and school_route_stats tools
+e555fb9 feat(plugin): toolio_route (micro-model assess + lesson report) and toolio_route_stats tools
 
 ## Stat
- school/plugin_source.py                 | 330 +++++++++++++++++++++++++++++++
- tests/unit/test_school_plugin_bridge.py |  13 +-
- tests/unit/test_school_plugin_hooks.py  |   2 +-
- tests/unit/test_school_routing.py       |  65 ++++++
+ toolio/plugin_source.py                 | 330 +++++++++++++++++++++++++++++++
+ tests/unit/test_toolio_plugin_bridge.py |  13 +-
+ tests/unit/test_toolio_plugin_hooks.py  |   2 +-
+ tests/unit/test_toolio_routing.py       |  65 ++++++
  4 files changed, 403 insertions(+), 7 deletions(-)
 
 ## Diff (-U10)
-diff --git a/school/plugin_source.py b/school/plugin_source.py
+diff --git a/toolio/plugin_source.py b/toolio/plugin_source.py
 index ca4799a..a20133f 100644
---- a/school/plugin_source.py
-+++ b/school/plugin_source.py
-@@ -438,20 +438,109 @@ const School: Plugin = async (ctx) => {
+--- a/toolio/plugin_source.py
++++ b/toolio/plugin_source.py
+@@ -438,20 +438,109 @@ const Toolio: Plugin = async (ctx) => {
          knobs.hook_timeout_ms,
        )
        if (!resp.ok) return null
@@ -28,7 +28,7 @@ index ca4799a..a20133f 100644
 +
 +  function routePrompt(situation: string): string {
 +    return [
-+      "You are a routing classifier for school tools. Situation: " + situation,
++      "You are a routing classifier for toolio tools. Situation: " + situation,
 +      "severity: light (trivial) | medium (real task) | high (critical).",
 +      "engage: skill for light, both for medium/high (tool and skill together).",
 +      "Never choose engage none unless the situation is unrelated to tool routing.",
@@ -68,7 +68,7 @@ index ca4799a..a20133f 100644
 +      )
 +      const work = (async (): Promise<RouteDecision | null> => {
 +        const created = await c.session.create({
-+          body: { title: "school-route" },
++          body: { title: "toolio-route" },
 +          query: { directory },
 +        })
 +        const sessionID = created?.data?.id ?? created?.id
@@ -115,29 +115,29 @@ index ca4799a..a20133f 100644
 +
    return {
      tool: {
-       school_status: tool({
+       toolio_status: tool({
          description:
-           "Check School runtime status: versions and component health " +
+           "Check Toolio runtime status: versions and component health " +
            "(V2.5 routing, V2.6 memory, persistence, security). Use when " +
-           "School behaves unexpectedly or right after install/upgrade - " +
+           "Toolio behaves unexpectedly or right after install/upgrade - " +
            "start here, before deeper diagnostics.",
          args: {},
          async execute(_args, context) {
-@@ -1050,20 +1139,261 @@ const School: Plugin = async (ctx) => {
+@@ -1050,20 +1139,261 @@ const Toolio: Plugin = async (ctx) => {
            const result = (resp as any).result ?? resp
            const health = result.health ?? {}
            const lines = Object.entries(health).map(([k, v]) => `  ${k}: ${v}`)
            return {
-             title: "School Diagnose",
+             title: "Toolio Diagnose",
              output: `System Health:\n${lines.join("\n")}`,
              metadata: result,
            }
          },
        }),
 +
-+      school_route: tool({
++      toolio_route: tool({
 +        description:
-+          "Assess how much School routing machinery a situation needs " +
++          "Assess how much Toolio routing machinery a situation needs " +
 +          "(mode assess: tiny real model call -> engage skill or both) or " +
 +          "store a routing lesson (mode report: what worked where, tagged " +
 +          "and retrievable). Use when starting non-trivial work or after a " +
@@ -168,7 +168,7 @@ index ca4799a..a20133f 100644
 +          const situation = String(args.situation ?? "").slice(0, 500)
 +          if (!situation.trim()) {
 +            return {
-+              title: "School Route ΓÇö Failed",
++              title: "Toolio Route ΓÇö Failed",
 +              output: "Error: situation is required (max 500 chars).",
 +              metadata: { engagement: "failed" },
 +            }
@@ -177,15 +177,15 @@ index ca4799a..a20133f 100644
 +          if (mode === "report") {
 +            if (!bridge) {
 +              return {
-+                title: "School Route ΓÇö Failed",
-+                output: "School: unavailable ΓÇö no bridge found. Run `school install`.",
++                title: "Toolio Route ΓÇö Failed",
++                output: "Toolio: unavailable ΓÇö no bridge found. Run `toolio install`.",
 +                metadata: { engagement: "failed" },
 +              }
 +            }
 +            const lesson = String(args.lesson ?? "").trim().slice(0, 1000)
 +            if (!lesson) {
 +              return {
-+                title: "School Route ΓÇö Failed",
++                title: "Toolio Route ΓÇö Failed",
 +                output: "Error: lesson is required for mode=report.",
 +                metadata: { engagement: "failed" },
 +              }
@@ -213,7 +213,7 @@ index ca4799a..a20133f 100644
 +            if (hooksEnabled()) {
 +              appendEvidence(context.worktree, {
 +                kind: "report",
-+                tool: "school_route",
++                tool: "toolio_route",
 +                ms: 0,
 +                ok: Boolean(resp.ok),
 +                outcome,
@@ -222,13 +222,13 @@ index ca4799a..a20133f 100644
 +            if (!resp.ok) {
 +              const err = (resp as any).error ?? {}
 +              return {
-+                title: "School Route ΓÇö Failed",
++                title: "Toolio Route ΓÇö Failed",
 +                output: `Error [${err.type}]: ${err.message}`,
 +                metadata: { engagement: "failed" },
 +              }
 +            }
 +            return {
-+              title: "School Route ΓÇö Reported",
++              title: "Toolio Route ΓÇö Reported",
 +              output:
 +                `Stored routing lesson (id ${(resp as any).id ?? "?"}, ` +
 +                `outcome ${outcome}).`,
@@ -238,7 +238,7 @@ index ca4799a..a20133f 100644
 +
 +          if (mode !== "assess") {
 +            return {
-+              title: "School Route ΓÇö Failed",
++              title: "Toolio Route ΓÇö Failed",
 +              output: 'Error: mode must be "assess" or "report".',
 +              metadata: { engagement: "failed" },
 +            }
@@ -264,7 +264,7 @@ index ca4799a..a20133f 100644
 +          if (hooksEnabled()) {
 +            appendEvidence(context.worktree, {
 +              kind: "assess",
-+              tool: "school_route",
++              tool: "toolio_route",
 +              ms: 0,
 +              ok: true,
 +              severity: decision.severity,
@@ -274,10 +274,10 @@ index ca4799a..a20133f 100644
 +          const nextStep =
 +            decision.engage === "none"
 +              ? "\nNo routing machinery needed for this situation."
-+              : "\nNext: load the `school-routing` skill (skill tool) " +
++              : "\nNext: load the `toolio-routing` skill (skill tool) " +
 +                "so the tool and skill work together."
 +          return {
-+            title: `School Route ΓÇö ${decision.severity}`,
++            title: `Toolio Route ΓÇö ${decision.severity}`,
 +            output:
 +              JSON.stringify({ source, ...decision }, null, 2) + nextStep,
 +            metadata: { engagement: decision.engage },
@@ -285,11 +285,11 @@ index ca4799a..a20133f 100644
 +        },
 +      }),
 +
-+      school_route_stats: tool({
++      toolio_route_stats: tool({
 +        description:
 +          "Aggregated routing evidence: per-tool call counts and average " +
 +          "durations, recent assess/report entries, current knobs, and " +
-+          "recent routing lessons. Use before adjusting how School routes, " +
++          "recent routing lessons. Use before adjusting how Toolio routes, " +
 +          "or when the routing skill asks for current numbers - for " +
 +          "anything, not only coding.",
 +        args: {
@@ -356,7 +356,7 @@ index ca4799a..a20133f 100644
 +          const knobs = readKnobs(context.worktree)
 +          const last = entries.length ? entries[entries.length - 1] : null
 +          return {
-+            title: "School Routing Stats",
++            title: "Toolio Routing Stats",
 +            output: JSON.stringify(
 +              {
 +                last_activity: last ? last.ts : null,
@@ -385,12 +385,12 @@ index ca4799a..a20133f 100644
            executionRecalls.set(input.callID, null)
            return
          }
-diff --git a/tests/unit/test_school_plugin_bridge.py b/tests/unit/test_school_plugin_bridge.py
+diff --git a/tests/unit/test_toolio_plugin_bridge.py b/tests/unit/test_toolio_plugin_bridge.py
 index 81be17a..3adf659 100644
---- a/tests/unit/test_school_plugin_bridge.py
-+++ b/tests/unit/test_school_plugin_bridge.py
+--- a/tests/unit/test_toolio_plugin_bridge.py
++++ b/tests/unit/test_toolio_plugin_bridge.py
 @@ -1,36 +1,36 @@
- """Tests for School plugin source and bridge protocol."""
+ """Tests for Toolio plugin source and bridge protocol."""
  
  from __future__ import annotations
  
@@ -401,29 +401,29 @@ index 81be17a..3adf659 100644
  
 -import pytest
 -
- from school.plugin_source import TS_PLUGIN_SOURCE
+ from toolio.plugin_source import TS_PLUGIN_SOURCE
  
  #: The approved agent-facing OpenCode tool surface (order matters).
  EXPECTED_OPENCODE_TOOLS = [
-     "school_status",
-     "school_remember",
-     "school_recall",
-     "school_learn",
-     "school_conflict",
-     "school_confidence",
-     "school_search",
-     "school_deduplicate",
-     "school_knowledge",
-     "school_lifecycle",
-     "school_diagnose",
-+    "school_route",
-+    "school_route_stats",
+     "toolio_status",
+     "toolio_remember",
+     "toolio_recall",
+     "toolio_learn",
+     "toolio_conflict",
+     "toolio_confidence",
+     "toolio_search",
+     "toolio_deduplicate",
+     "toolio_knowledge",
+     "toolio_lifecycle",
+     "toolio_diagnose",
++    "toolio_route",
++    "toolio_route_stats",
  ]
  
  
  def _tool_names() -> list[str]:
      """Return the tool names registered by the TypeScript plugin, in order."""
-     return re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+     return re.findall(r"^\s+(toolio_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
  
  
  def _tool_block(name: str) -> str:
@@ -438,9 +438,9 @@ index 81be17a..3adf659 100644
      """Test the bridge JSON protocol."""
  
      def test_bridge_module_importable(self) -> None:
-         """school.bridge module is importable."""
--        from school.bridge import main, _COMMANDS
-+        from school.bridge import _COMMANDS
+         """toolio.bridge module is importable."""
+-        from toolio.bridge import main, _COMMANDS
++        from toolio.bridge import _COMMANDS
 +
          assert "status" in _COMMANDS
          assert "remember" in _COMMANDS
@@ -455,7 +455,7 @@ index 81be17a..3adf659 100644
 @@ -164,25 +165,25 @@ class TestBridgeProtocol:
      def test_bridge_recall_requires_query(self) -> None:
          """Bridge recall command requires query."""
-         from school.bridge import _handle_recall
+         from toolio.bridge import _handle_recall
  
          result = _handle_recall({"worktree": ".", "query": ""})
          assert result["ok"] is False
@@ -478,13 +478,13 @@ index 81be17a..3adf659 100644
  
      def test_learn_registered_after_recall(self) -> None:
          names = _tool_names()
-         assert "school_learn" in names
-         assert names.index("school_learn") == names.index("school_recall") + 1
+         assert "toolio_learn" in names
+         assert names.index("toolio_learn") == names.index("toolio_recall") + 1
  
-diff --git a/tests/unit/test_school_plugin_hooks.py b/tests/unit/test_school_plugin_hooks.py
+diff --git a/tests/unit/test_toolio_plugin_hooks.py b/tests/unit/test_toolio_plugin_hooks.py
 index eb97c90..84b6d3c 100644
---- a/tests/unit/test_school_plugin_hooks.py
-+++ b/tests/unit/test_school_plugin_hooks.py
+--- a/tests/unit/test_toolio_plugin_hooks.py
++++ b/tests/unit/test_toolio_plugin_hooks.py
 @@ -33,21 +33,21 @@ def _hook_block(name: str) -> str:
  class TestExecutionHooksRegistered:
      """The plugin registers every execution/prompt hook."""
@@ -495,7 +495,7 @@ index eb97c90..84b6d3c 100644
  
      def test_tool_surface_unchanged(self) -> None:
          """Hooks add visibility, not new tools."""
-         names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+         names = re.findall(r"^\s+(toolio_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
 -        assert len(names) == 11, f"tool surface changed: {names}"
 +        assert len(names) == 13, f"tool surface changed: {names}"
  
@@ -508,10 +508,10 @@ index eb97c90..84b6d3c 100644
          assert "executionRecalls.set(input.callID" in block
  
      def test_query_is_built_from_tool_and_args(self) -> None:
-diff --git a/tests/unit/test_school_routing.py b/tests/unit/test_school_routing.py
+diff --git a/tests/unit/test_toolio_routing.py b/tests/unit/test_toolio_routing.py
 index 4dd49d1..7557cc0 100644
---- a/tests/unit/test_school_routing.py
-+++ b/tests/unit/test_school_routing.py
+--- a/tests/unit/test_toolio_routing.py
++++ b/tests/unit/test_toolio_routing.py
 @@ -86,10 +86,75 @@ class TestRoutingCoreHelpers:
          block = TS_PLUGIN_SOURCE[idx:end]
          assert "routing: " in block
@@ -527,12 +527,12 @@ index 4dd49d1..7557cc0 100644
 +
 +class TestRouteTools:
 +    def test_tools_registered(self):
-+        names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
-+        assert "school_route" in names
-+        assert "school_route_stats" in names
++        names = re.findall(r"^\s+(toolio_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
++        assert "toolio_route" in names
++        assert "toolio_route_stats" in names
 +
 +    def test_descriptions_are_routing_guided(self):
-+        for name in ("school_route", "school_route_stats"):
++        for name in ("toolio_route", "toolio_route_stats"):
 +            match = re.search(
 +                rf"{name}: tool\(.*?description:\s*\n(.*?),\n\s*args:",
 +                TS_PLUGIN_SOURCE,
@@ -567,21 +567,21 @@ index 4dd49d1..7557cc0 100644
 +        assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
 +
 +    def test_report_stores_tagged_lesson(self):
-+        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
-+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
++        idx = TS_PLUGIN_SOURCE.index("toolio_route: tool(")
++        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("toolio_route_stats: tool(")]
 +        assert '"routing"' in block
 +        assert '"helpful"' in block and '"useless"' in block and '"neutral"' in block
 +        assert '"SUCCESS"' in block and '"FAILURE"' in block and '"NEUTRAL"' in block
 +        assert 'command: "remember"' in block
 +
 +    def test_assess_appends_evidence_and_metadata(self):
-+        idx = TS_PLUGIN_SOURCE.index("school_route: tool(")
-+        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("school_route_stats: tool(")]
++        idx = TS_PLUGIN_SOURCE.index("toolio_route: tool(")
++        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index("toolio_route_stats: tool(")]
 +        assert 'kind: "assess"' in block
 +        assert "engagement:" in block
 +
 +    def test_stats_aggregates(self):
-+        idx = TS_PLUGIN_SOURCE.index("school_route_stats: tool(")
++        idx = TS_PLUGIN_SOURCE.index("toolio_route_stats: tool(")
 +        block = TS_PLUGIN_SOURCE[idx : TS_PLUGIN_SOURCE.index('"tool.execute.before"')]
 +        assert "aggregates" in block
 +        assert "avg_ms" in block

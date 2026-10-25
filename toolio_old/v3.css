@@ -1,0 +1,682 @@
+/* =====================================================================
+   v3.css — wide-layout repair layer (1900px desktop)
+   Fixes: reveal-gated invisible content, dark-on-dark cards, unstyled
+   side columns, chapter grid splitting the body in half, rail overlap,
+   tide reading as a black curtain, install/terminal contrast.
+   ===================================================================== */
+
+/* --- 1. Section frame ------------------------------------------------ */
+.chapter {
+  display: block;                 /* head + body stack; body keeps its own grid */
+  padding-top: 54px;
+  padding-bottom: 54px;
+}
+.chapter__head {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: 20px;
+  align-items: end;
+  margin-bottom: 34px;
+}
+.chapter__num { grid-row: 1 / 3; }
+.chapter__title { grid-column: 2; }
+.chapter__sub { grid-column: 2; max-width: 74ch; }
+
+/* --- 2. Card tokens per surface -------------------------------------- */
+#forgetting, #pipeline, #anatomy, #mcp {
+  --card-bg: rgba(239, 234, 224, 0.045);
+  --card-fg: #efeae0;
+  --card-line: rgba(239, 234, 224, 0.18);
+  --card-muted: #a8a196;
+  --card-hi: rgba(255, 61, 0, 0.14);
+}
+#tools, #numbers, #install {
+  --card-bg: #0d0d0f;
+  --card-fg: #efeae0;
+  --card-line: rgba(10, 10, 11, 0.22);
+  --card-muted: #8d877a;
+  --card-hi: rgba(255, 61, 0, 0.12);
+}
+.mono {
+  font: 11px/1.55 var(--mono);
+  letter-spacing: 0.03em;
+  color: var(--card-muted, var(--muted));
+}
+
+/* --- 3. Reveal safety net ---------------------------------------------
+   .v2-rv used to sit at opacity 0 until an IntersectionObserver fired.
+   In a background/throttled tab (and for anything inside the clipped
+   tool rail) that callback never arrives, so whole sections rendered
+   empty. Now content is visible by default and `is-in` plays the
+   reveal as an animation instead of gating visibility.
+   ------------------------------------------------------------------- */
+/* The reveal must NEVER be able to hide content. A renderer that does not
+   advance animations (a throttled background tab, a headless capture) would
+   freeze every element in its FROM state — which used to mean blur(8px) and
+   a 14px offset, i.e. an unreadable page. The base state is now the final
+   state; `is-in` only adds the rise on top of it. */
+.v2-rv { opacity: 1 !important; }
+.v2-rv.is-in { animation: v3In 0.85s var(--ease-soft) forwards; }
+.v2-astep.v2-rv { opacity: 1 !important; }
+.v2-astep.v2-rv.is-in { animation: v3In 0.7s var(--ease-soft) forwards; }
+@keyframes v3In {
+  from { transform: translateY(14px); }
+  to { transform: none; }
+}
+
+/* --- 4. Tool rail ----------------------------------------------------- */
+.tools__filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font: 10px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--card-muted);
+  background: var(--card-bg);
+  border: 1px solid var(--card-line);
+  padding: 8px 11px;
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+.chip:hover { border-color: var(--signal); color: var(--card-fg); }
+.chip.is-on, .chip[aria-pressed="true"] {
+  border-color: var(--signal);
+  color: var(--signal);
+  background: var(--card-hi);
+}
+.chip__n { color: inherit; opacity: 0.6; font-size: 9px; }
+.tools__viewport { overflow: hidden; padding: 6px 0 14px; }
+.tools__track { display: flex; gap: 14px; align-items: stretch; }
+.tool {
+  flex: 0 0 320px;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 210px;
+  padding: 16px 16px 18px;
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border: 1px solid var(--card-line);
+  opacity: 1 !important;
+  transform: none;
+  transition: transform 0.45s var(--ease-soft), border-color 0.35s ease,
+              box-shadow 0.45s var(--ease-soft), background 0.35s ease;
+}
+.tool:hover {
+  border-color: var(--signal);
+  transform: translateY(-6px) !important;
+  box-shadow: 0 30px 60px -40px var(--signal);
+  background: color-mix(in srgb, var(--card-bg) 80%, var(--signal) 6%);
+}
+.tool__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tool__i { font: 12px/1 var(--mono); color: var(--card-fg); letter-spacing: 0.02em; }
+.tool__cat {
+  font: 9px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--signal); border: 1px solid var(--card-line); padding: 4px 7px;
+}
+.tool__mcp, .tool__d, .tool__use {
+  font: 9px/1.5 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--card-muted);
+}
+.tool__d { color: var(--card-muted); opacity: 0.85; }
+.tool__use { color: var(--ice, #a9d8d1); opacity: 0.8; }
+.tools__hint {
+  display: flex; justify-content: space-between; align-items: center;
+  font: 10px/1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--card-muted); margin-top: 6px;
+}
+
+/* --- 5. Forgetting ---------------------------------------------------- */
+.v2-forget {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+.v2-forget__stage { position: relative; }
+.win {
+  background: #0b0b0d;
+  border: 1px solid var(--card-line);
+  color: var(--card-fg);
+}
+.win__bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid var(--card-line);
+  font: 10px/1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--card-muted);
+}
+.win__dots { display: inline-flex; gap: 5px; }
+.win__dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--card-line); }
+.win__body { padding: 16px 16px 8px; }
+.win__lines { list-style: none; margin: 0; padding: 0; min-height: 210px; }
+.win__lines li {
+  font: 11.5px/1.65 var(--mono); color: var(--card-fg);
+  opacity: 0.28; transition: opacity 0.5s linear, color 0.5s linear;
+}
+.win__lines li.typed { opacity: 1; }
+.win__meter { padding: 10px 16px 4px; }
+.win__track { height: 4px; background: var(--card-line); position: relative; overflow: hidden; }
+.win__fill {
+  position: absolute; inset: 0 auto 0 0; width: 100%;
+  background: var(--signal); transform-origin: left center;
+  transition: transform 1.4s var(--ease-soft);
+}
+.win__cut {
+  position: absolute; top: -3px; bottom: -3px; width: 1px; left: 34%;
+  background: var(--signal); opacity: 0; transition: opacity 0.6s ease;
+}
+.win__cut.is-cut { opacity: 1; }
+.win__legend {
+  display: flex; flex-wrap: wrap; gap: 14px; padding: 10px 16px 14px;
+  font: 10px/1.5 var(--mono); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--card-muted);
+}
+.stamp {
+  position: absolute; right: 22px; bottom: 18px;
+  padding: 12px 16px; display: flex; flex-direction: column; gap: 4px;
+  background: #0a0a0b; border: 1px solid var(--signal);
+  box-shadow: 0 24px 60px -30px var(--signal);
+  opacity: 0; transform: rotate(-4deg) scale(1.3);
+  transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+  z-index: 3;
+}
+.stamp.is-on, .stamp.land { opacity: 1; transform: rotate(-4deg) scale(1); }
+.stamp__word { font: 700 13px/1 var(--mono); letter-spacing: 0.2em; color: var(--signal); }
+.stamp__why { font: 10px/1.5 var(--mono); color: var(--card-muted); }
+.beats { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.beats > li {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px;
+  padding: 14px 16px; border: 1px solid var(--card-line); background: var(--card-bg);
+  opacity: 1 !important; transform: none;
+  transition: border-color 0.4s ease, background 0.4s ease, transform 0.5s var(--ease-soft);
+}
+.beats > li.is-on {
+  border-color: var(--signal); background: var(--card-hi); transform: translateX(6px);
+}
+.beat__num { font: 10px/1.4 var(--mono); color: var(--signal); letter-spacing: 0.1em; }
+.beats__progress { height: 2px; background: var(--card-line); margin-top: 12px; }
+
+/* --- 6. Pipeline ------------------------------------------------------ */
+.v2-pipe { display: grid; gap: 24px; }
+.v2-pipe__rail { position: relative; height: 92px; }
+.v2-pipe__base { fill: none; stroke: var(--card-line); stroke-width: 1; }
+.v2-pipe__flow {
+  fill: none; stroke: var(--signal); stroke-width: 1.5;
+  stroke-dasharray: 10 14; animation: v3Flow 1.6s linear infinite;
+}
+@keyframes v3Flow { to { stroke-dashoffset: -24; } }
+.v2-pipe__nodes {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;
+}
+.v2-pipe__nodes > li {
+  display: flex; flex-direction: column; gap: 6px; padding: 13px 14px;
+  background: var(--card-bg); border: 1px solid var(--card-line);
+  opacity: 1 !important; transform: none;
+  transition: border-color 0.4s ease, background 0.4s ease, transform 0.5s var(--ease-soft);
+}
+.v2-pipe__nodes > li.is-live {
+  border-color: var(--signal); background: var(--card-hi); transform: translateY(-4px);
+}
+.v2-pnode__idx { font: 10px/1 var(--mono); color: var(--signal); letter-spacing: 0.16em; }
+.v2-pnode__tag { font: 12px/1.3 var(--mono); color: var(--card-fg); }
+.v2-pipe__stations {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;
+}
+.v2-pipe__stations > li {
+  padding: 16px 16px 18px; min-height: 150px;
+  background: var(--card-bg); border: 1px solid var(--card-line);
+  color: var(--card-fg);
+  opacity: 1 !important; transform: none;
+  transition: border-color 0.4s ease, background 0.4s ease, transform 0.5s var(--ease-soft);
+}
+.v2-pipe__stations > li.is-live {
+  border-color: var(--signal); background: var(--card-hi); transform: translateY(-4px);
+}
+.v2-station__idx { font: 10px/1 var(--mono); color: var(--signal); letter-spacing: 0.18em; }
+.v2-pipe__stations h3 { font: 15px/1.25 var(--sans); color: var(--card-fg); margin: 10px 0 8px; }
+.v2-pipe__stations p { font: 12px/1.6 var(--sans); color: var(--card-muted); }
+
+/* --- 7. Anatomy ------------------------------------------------------- */
+.v2-anat {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 30px;
+  align-items: start;
+}
+.v2-anat__cells {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 5px;
+  align-content: start;
+}
+.v2-anat__cells i {
+  display: block; aspect-ratio: 1 / 1; background: rgba(239, 234, 224, 0.06);
+  border: 1px solid rgba(239, 234, 224, 0.08);
+  transition: background 0.5s ease, border-color 0.5s ease, transform 0.5s var(--ease-soft);
+}
+.v2-anat__cells i.lit {
+  background: color-mix(in srgb, var(--ice, #a9d8d1) 26%, transparent);
+  border-color: color-mix(in srgb, var(--ice, #a9d8d1) 55%, transparent);
+  transform: translateY(-2px);
+}
+.v2-anat__cells i.scan { background: var(--signal); border-color: var(--signal); }
+.v2-anat__side { min-width: 0; display: grid; gap: 16px; align-content: start; }
+.v2-anat__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.v2-anat__steps > li {
+  padding: 14px 16px; background: var(--card-bg); border: 1px solid var(--card-line);
+  color: var(--card-fg); opacity: 1 !important; transform: none;
+  transition: border-color 0.4s ease, background 0.4s ease, transform 0.5s var(--ease-soft);
+}
+.v2-anat__steps > li.is-on { border-color: var(--signal); background: var(--card-hi); }
+.v2-anat__steps h3 { font: 13px/1.3 var(--mono); color: var(--signal); margin: 0 0 6px; }
+.v2-anat__steps p { font: 12px/1.6 var(--sans); color: var(--card-muted); margin: 0; }
+
+/* --- 8. MCP ----------------------------------------------------------- */
+.v2-mcp {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 30px;
+  align-items: start;
+}
+.v2-mcp__code { min-width: 0; }
+.v2-mcp__tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.v2-mcp__tab {
+  font: 10px/1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--card-muted); background: transparent;
+  border: 1px solid var(--card-line); padding: 8px 12px; cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.v2-mcp__tab.is-on { color: var(--signal); border-color: var(--signal); background: var(--card-hi); }
+.v2-mcp__pre {
+  margin: 0; padding: 16px; max-height: 340px; overflow: auto;
+  background: #08080a; border: 1px solid var(--card-line); color: #cfe9e3;
+  font: 11.5px/1.7 var(--mono); opacity: 1 !important;
+}
+.v2-mcp__side { min-width: 0; display: grid; gap: 10px; align-content: start; }
+.v2-mcp__h { font: 10px/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--card-muted); margin: 0; }
+.v2-mcp__list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 3px 14px;
+  max-height: 320px; overflow: auto;
+}
+.v2-mcp__list > li {
+  font: 11px/1.6 var(--mono); color: var(--card-fg);
+  padding: 2px 0; border-bottom: 1px solid var(--card-line);
+  opacity: 1 !important; transform: none;
+}
+.v2-mcp__res { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.v2-mcp__res > li { font: 10.5px/1.6 var(--mono); color: var(--card-muted); }
+
+/* --- 9. Install ------------------------------------------------------- */
+.v2-inst {
+  display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 30px;
+  align-items: start;
+}
+.v2-os {
+  display: flex; flex-direction: column; gap: 6px; text-align: left;
+  padding: 16px 16px 18px; cursor: pointer;
+  background: var(--card-bg); color: var(--card-fg);
+  border: 1px solid var(--card-line);
+  opacity: 1 !important; transform: none;
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease,
+              transform 0.45s var(--ease-soft);
+}
+.v2-os b { font: 13px/1 var(--sans); color: var(--card-fg); }
+.v2-os span { font: 10px/1.4 var(--mono); color: var(--card-muted); }
+.v2-os:hover { border-color: var(--signal); transform: translateY(-4px); }
+.v2-os.is-on {
+  border-color: var(--signal); background: var(--card-hi); color: var(--signal);
+}
+.v2-os.is-on b, .v2-os.is-on span { color: var(--signal); }
+.terminal {
+  background: #08080a; border: 1px solid var(--card-line);
+  min-height: 0; max-height: 420px; display: flex; flex-direction: column;
+}
+.terminal__head {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border-bottom: 1px solid var(--card-line);
+  font: 10px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--card-muted);
+}
+.terminal__sp { flex: 1; }
+.terminal__copy {
+  font: 10px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase;
+  background: transparent; border: 1px solid var(--card-line); color: var(--card-muted);
+  padding: 6px 10px; cursor: pointer; transition: color 0.25s, border-color 0.25s;
+}
+.terminal__copy:hover { color: var(--signal); border-color: var(--signal); }
+.terminal__body {
+  margin: 0; padding: 16px; overflow: auto; max-height: 320px;
+  font: 12px/1.8 var(--mono); color: #d8e9e4;
+}
+.t-prompt { color: var(--signal); }
+
+/* --- 10. Tide: water, not a black curtain ------------------------------ */
+.v2-tide {
+  position: fixed; inset: 0; z-index: 400; pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 50% 120%, color-mix(in srgb, var(--ice, #a9d8d1) 55%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, #0a2a33 88%, transparent) 0%, color-mix(in srgb, #06181f 94%, transparent) 100%);
+  opacity: 0;
+}
+.v2-tide__wave { position: absolute; left: -5%; right: -5%; bottom: -2%; height: 46%; }
+.v2-tide__edge { position: absolute; inset: 0; }
+.v2-tide__label {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  font: 11px/1 var(--mono); letter-spacing: 0.9em; text-transform: uppercase;
+  color: var(--ice, #a9d8d1); text-indent: 0.9em;
+}
+
+/* --- 11. Rail: labels must not bleed over the content ------------------ */
+.rail {
+  width: 46px; padding: 22px 0 0 14px; z-index: 60;
+  background: linear-gradient(90deg, rgba(10, 10, 11, 0.92) 0%, rgba(10, 10, 11, 0) 100%);
+}
+.rail__list { gap: 14px; }
+.rail__label {
+  opacity: 0; transform: translateX(-6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+.rail:hover .rail__label, .rail:focus-within .rail__label {
+  opacity: 1; transform: none;
+}
+.rail__num { opacity: 0.5; }
+.rail__item.is-active .rail__num, .rail__item.is-active .rail__label { opacity: 1; color: var(--signal); }
+
+/* --- 12. Hero core panel ---------------------------------------------- */
+.hero__core { min-width: 0; }
+#core {
+  width: 100%; height: 520px; display: block;
+  border: 1px solid var(--line-strong, rgba(239, 234, 224, 0.2));
+  background: rgba(255, 255, 255, 0.015);
+}
+.hero__scale { color: var(--muted); }
+
+/* --- 13. Figures on the light section ---------------------------------- */
+.figure { background: #0d0d0f; color: #efeae0; border: 1px solid var(--card-line); }
+.figure__k { color: var(--card-muted); }
+.figure__d { color: var(--card-muted); }
+.figure__n { --num: #efeae0; }
+.tables .table { border-color: var(--card-line); }
+.table__rows--plain > li { color: var(--card-muted); }
+
+/* --- 14. Reduced motion ------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .v2-rv.is-in { animation: none; }
+  .v2-pipe__flow { animation: none; }
+}
+
+
+/* --- 15. Anatomy meter rows ----------------------------------------- */
+.v2-anat__side dl { margin: 0 0 20px; padding: 0; }
+.v2-anat__meter__row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  padding: 9px 0; border-bottom: 1px solid var(--card-line);
+}
+.v2-anat__meter__row dt {
+  margin: 0; font: 10px/1.4 var(--mono); letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--card-muted);
+}
+.v2-anat__meter__row dd { margin: 0; font: 14px/1.3 var(--mono); color: var(--card-fg); }
+.v2-anat__meter__row--hi dd { color: var(--signal); }
+
+/* --- 16. The stamp must never sit on the legend --------------------- */
+.stamp { top: 62px; bottom: auto; right: 22px; }
+
+
+/* --- 17. Chapter frame (wide) ---------------------------------------
+   A chapter is a vertical stack: a full-width heading, then the section
+   body. The body container owns its own column split.
+   ------------------------------------------------------------------- */
+section.chapter {
+  display: block !important;
+  grid-template-columns: none !important;
+}
+section.chapter > .chapter__head {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  column-gap: 20px;
+  align-items: end;
+  width: 100%;
+  margin-bottom: 34px;
+}
+section.chapter > .chapter__num { grid-row: 1 / 3; }
+section.chapter > .chapter__title { grid-column: 2; }
+section.chapter > .chapter__sub { grid-column: 2; max-width: 78ch; }
+.v2-forget, .v2-pipe, .v2-anat, .v2-mcp, .v2-inst, .installer { width: 100%; }
+
+/* --- 18. Pipeline: no overlap between the rail, the nodes and the cards */
+.v2-pipe { display: grid; gap: 22px; }
+.v2-pipe > * { position: static; margin: 0; }
+.v2-pipe__rail { position: relative; height: 118px; }
+.v2-pipe__stations { position: relative; z-index: 2; }
+.v2-pipe__nodes { position: relative; z-index: 2; }
+
+/* --- 19. Install: platform matrix beside the terminal --------------- */
+section#install {
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 26px 30px;
+  align-items: start;
+}
+section#install > .chapter__head { grid-column: 1 / -1; }
+#inst-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+  width: 100%;
+}
+.terminal { width: 100%; }
+
+/* --- 20. Tools + MCP: full-width bodies ----------------------------- */
+section#tools > .tools__filters,
+section#tools > .tools__viewport,
+section#tools > .tools__hint { width: 100%; }
+.v2-mcp__list { max-height: 360px; }
+
+
+/* --- 21. Pipeline: strict order, nothing absolutely placed ---------- */
+.v2-pipe > * { position: static !important; margin: 0 !important; }
+.v2-pipe__rail { order: 1; height: 118px; }
+.v2-pipe__nodes { order: 2; }
+.v2-pipe__stations { order: 3; }
+
+/* --- 22. Install: platform matrix left, terminal right -------------- */
+section#install {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 26px 30px;
+  align-items: start;
+}
+section#install > .chapter__head { grid-column: 1 / -1; grid-row: 1; }
+section#install > #inst-grid { grid-column: 1; grid-row: 2; width: 100%; }
+section#install > .terminal { grid-column: 2; grid-row: 2; width: 100%; }
+#inst-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+/* --- 23. Anatomy meter must use the full column --------------------- */
+.v2-anat__side dl { width: 100%; }
+.v2-anat__meter__row { width: 100%; min-width: 360px; }
+
+/* --- 24. Rail labels stay out of the way until the pointer is near -- */
+.rail .rail__label { opacity: 0; transform: translateX(-8px); }
+.rail:hover .rail__label, .rail:focus-within .rail__label { opacity: 1; transform: none; }
+
+/* --- 25. Pipeline rows: explicit placement so nothing can overlap --- */
+.v2-pipe__rail { grid-row: 1 !important; grid-column: 1 / -1 !important; }
+.v2-pipe__nodes { grid-row: 2 !important; grid-column: 1 / -1 !important; }
+.v2-pipe__stations { grid-row: 3 !important; grid-column: 1 / -1 !important; }
+
+/* --- 26. Pipeline: overlap-proof flow layout ------------------------ */
+.v2-pipe { display: flex !important; flex-direction: column; gap: 26px; position: relative !important; }
+.v2-pipe > *,
+.v2-pipe__rail,
+.v2-pipe__nodes,
+.v2-pipe__stations {
+  position: static !important;
+  float: none !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+.v2-pipe__rail { order: 1 !important; height: 118px; }
+.v2-pipe__nodes { order: 2 !important; }
+.v2-pipe__stations { order: 3 !important; }
+
+/* --- 27. The node row belongs on the rail, above the station cards --- */
+.v2-pipe { position: relative !important; }
+.v2-pipe__nodes {
+  position: absolute !important;
+  top: -102px !important; left: 0 !important; right: 0 !important;
+  width: 100% !important; z-index: 4;
+}
+
+/* --- 28. Anatomy side column must not overflow ----------------------- */
+.v2-anat__side { grid-template-columns: minmax(0, 1fr) !important; }
+.v2-astep, .v2-anat__steps > li { width: 100% !important; min-width: 0 !important; }
+.v2-anat__side dl, .v2-anat__meter { width: 100% !important; }
+
+/* --- 12. Self-starting reveal ------------------------------------------
+   The base layer's wipe sheet (.rv::after) is an opaque orange panel.
+   It only slid away when the IntersectionObserver added `is-in` -- and in
+   a background tab, a throttled renderer or a headless screenshot pass
+   that callback never arrives, so the sheet stayed on top and covered
+   the chapter headings.
+
+   Now the wipe plays on its own clock: the sheet always leaves, the
+   content always rises, and `is-in` only adds an extra flourish on top.
+   ---------------------------------------------------------------------- */
+.rv::after {
+  animation: v3wipe 0.95s cubic-bezier(0.19, 1, 0.22, 1) 0.3s forwards !important;
+  transform-origin: left center;
+}
+.rv.is-in::after { transform: scaleX(0); }
+@keyframes v3wipe {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+/* `forwards`, not `both`: `both` applies the FROM state before the animation
+   starts, and the FROM state of v3rise is `blur(8px)`. If the renderer never
+   advances the animation (a throttled background tab, a headless capture),
+   every revealed block would stay stranded blurred. `forwards` leaves the
+   element at its own, readable style until the animation actually runs. */
+/* The base layer parks `.rv__i` 102% below its box and slides it back in when
+   `is-in` lands. If the observer never fires, that content is simply GONE —
+   so the lower half pins it open and lets the sheet (already disabled) do
+   the talking instead. */
+.rv > .rv__i { transform: none !important; filter: none !important; }
+@keyframes v3rise {
+  from { transform: translateY(16px); }
+  to { transform: none; }
+}
+
+/* --- 13. Quiet gutters --------------------------------------------------
+   The rail is an index, not a headline. It stays dim until hovered so it
+   can never compete with a chapter number. */
+.rail { opacity: 0.4; transition: opacity 0.25s ease; }
+.rail:hover { opacity: 1; }
+.rail__label { opacity: 0; transition: opacity 0.2s ease; }
+.rail:hover .rail__label,
+.rail__item.is-active .rail__label,
+.rail a.is-active .rail__label { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rv::after { animation: none !important; transform: scaleX(0) !important; }
+  .rv > .rv__i,
+  .v2-rv { animation: none !important; filter: none !important; }
+}
+
+/* ---- v3.1 ---------------------------------------------------------
+   The base layer draws an opaque orange sheet as .rv::after and only
+   retracts it when .rv.is-in lands, which requires an Intersection
+   Observer callback. That never fires in a throttled, background or
+   headless renderer, so the sheet stayed parked over every chapter
+   heading. The reveal is now carried entirely by the rise animation.
+   ---------------------------------------------------------------- */
+.rv::after { content: none !important; display: none !important; }
+.rv { overflow: visible !important; }
+section.chapter { scroll-margin-top: 96px; }
+
+/* ---- v3.2 ---------------------------------------------------------
+   The light sections (#tools, #numbers, #install) paint DARK cards, so
+   their border and muted values have to be LIGHT as well. With ink-on-
+   ink borders and a dark muted on a near-black card the sub-labels
+   vanished. The selected platform card keeps the dark surface and gets
+   an orange edge, because orange text on a pale orange wash was
+   unreadable. ------------------------------------------------------ */
+#tools, #numbers, #install {
+  --card-line: rgba(239, 234, 224, 0.24);
+  --card-muted: #b3aca0;
+  --card-hi: rgba(255, 61, 0, 0.16);
+}
+.v2-os.is-on {
+  background: var(--card-bg) !important;
+  border-color: var(--signal) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--signal) 40%, transparent),
+              0 18px 44px -26px color-mix(in srgb, var(--signal) 80%, transparent) !important;
+}
+.v2-os.is-on b { color: var(--card-fg) !important; }
+.v2-os.is-on span { color: var(--signal) !important; }
+.v2-os span { color: var(--card-muted) !important; }
+
+/* ---- v3.3 ---------------------------------------------------------
+   Section 01 (forgetting): the beats inherited the base .beat rule
+   (opacity .32) and a narrow measure, so the copy collapsed to one
+   word per line on a dark red card. They are forced back to a block
+   layout with a readable measure, light ink and a proper surface.
+   Section 02 (pipeline): the stations were at opacity .17, i.e.
+   invisible grey-on-black, so they get a floor of .72 and go to 1.0
+   when live. ------------------------------------------------------ */
+.v2-forget .beats { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 14px !important; }
+.v2-forget .beat {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  padding: 16px 20px 16px 22px !important;
+  opacity: 0.62 !important;
+  transform: none !important;
+  background: var(--card-bg) !important;
+  border-left: 1px solid var(--card-line) !important;
+  color: var(--card-fg) !important;
+}
+.v2-forget .beat.is-on { opacity: 1 !important; border-left-color: var(--signal) !important; }
+.v2-forget .beat h3 {
+  color: var(--card-fg) !important;
+  max-width: none !important;
+  width: 100% !important;
+  font-size: 21px !important;
+  line-height: 1.15 !important;
+}
+.v2-forget .beat p {
+  color: var(--card-muted) !important;
+  max-width: 64ch !important;
+  width: 100% !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+.v2-station { opacity: 0.72 !important; }
+.v2-station.is-live { opacity: 1 !important; }
+.v2-station h3 { color: var(--card-fg) !important; }
+.v2-station p { color: var(--card-muted) !important; }
+.v2-pnode { opacity: 0.72 !important; }
+.v2-pnode.is-live { opacity: 1 !important; }
+.v2-pnode b { color: var(--card-fg) !important; }
+.v2-pnode span { color: var(--card-muted) !important; }
+
+/* ---- v3.4 ---------------------------------------------------------
+   Section 02 (pipeline): three generations of rules had left the
+   stack fighting itself, so the node labels landed on top of the
+   intro paragraph. The section is re-laid-out as an explicit flex
+   column: lede, rail, node row (absolutely placed inside the rail,
+   above the line), then the five station cards on a 5-column grid
+   that the node row mirrors so every hop lines up.
+   --------------------------------------------------------------- */
+.v2-pipe { display: flex !important; flex-direction: column !important; gap: 26px !important; }
+.v2-pipe > * { position: static !important; margin: 0 !important; order: 0 !important; }
+.v2-pipe__rail { position: relative !important; height: 158px !important; flex: none !important; }
+.v2-pipe__nodes {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 3 !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+}
+.v2-pipe__stations {
+  position: relative !important;
+  z-index: 2 !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+}

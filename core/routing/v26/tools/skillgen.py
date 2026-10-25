@@ -1,4 +1,4 @@
-"""1A-2Z skill generation tools (school_skill_*).
+"""1A-2Z skill generation tools (toolio_skill_*).
 
 Thin adapters over core.skillgen: each tool reads its worktree, builds a
 SkillPipeline on the scoped registry, and returns the pipeline report.
@@ -103,13 +103,13 @@ class SkillListTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_list"
+        return "toolio_skill_list"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_list to list skills in the 1A-2Z registry with "
-            "state, scope, confidence, and counters. Use after school_status "
+            "Use toolio_skill_list to list skills in the 1A-2Z registry with "
+            "state, scope, confidence, and counters. Use after toolio_status "
             "when you need the full inventory rather than ranked matches."
         )
 
@@ -173,12 +173,12 @@ class SkillSearchTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_search"
+        return "toolio_skill_search"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_search to find reusable skills for a task query "
+            "Use toolio_skill_search to find reusable skills for a task query "
             "with scope-aware ranked matches. Use before solving a problem so "
             "proven techniques are reused first."
         )
@@ -234,12 +234,12 @@ class SkillCreateTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_create"
+        return "toolio_skill_create"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_create to save a validated agent-authored skill: "
+            "Use toolio_skill_create to save a validated agent-authored skill: "
             "it is duplicate-checked, security-validated, and self-tested "
             "before activation. Use only when 1A-2Z has not already created a "
             "skill for this pattern."
@@ -335,12 +335,12 @@ class SkillUseTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_use"
+        return "toolio_skill_use"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_use to retrieve one skill by name (or search by "
+            "Use toolio_skill_use to retrieve one skill by name (or search by "
             "query) and record the reuse. Returns scope-checked SKILL.md "
             "content ready to follow."
         )
@@ -386,12 +386,12 @@ class SkillFeedbackTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_feedback"
+        return "toolio_skill_feedback"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_feedback to report whether reusing a skill "
+            "Use toolio_skill_feedback to report whether reusing a skill "
             "succeeded or failed, updating confidence and lifecycle. Call "
             "after applying a skill so it evolves."
         )
@@ -438,12 +438,12 @@ class SkillStatusTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_status"
+        return "toolio_skill_status"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_status for 1A-2Z counters: skills by state, "
+            "Use toolio_skill_status for 1A-2Z counters: skills by state, "
             "model calls used versus budget, recent events, and registry "
             "health. Use when auditing the self-growing loop."
         )
@@ -462,12 +462,12 @@ class SkillEvolveTool(Tool):
 
     @property
     def name(self) -> str:
-        return "school_skill_evolve"
+        return "toolio_skill_evolve"
 
     @property
     def description(self) -> str:
         return (
-            "Use school_skill_evolve to consolidate duplicate skills, revise a "
+            "Use toolio_skill_evolve to consolidate duplicate skills, revise a "
             "skill's fields with versioning, or recompute lifecycle states. "
             "Use for maintenance instead of creating near-duplicates."
         )

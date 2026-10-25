@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 # Unregister from OpenCode
-school uninstall
+toolio uninstall
 
 # Uninstall via pip
-pip uninstall school -y
+pip uninstall toolio -y

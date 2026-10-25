@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the runtime-agnostic School context engine core: block store, layered compression (deterministic → model → emergency), prompt-side view builder, restore, circuit breaker, and Apple-grade chip text — fail-open everywhere.
+**Goal:** Build the runtime-agnostic Toolio context engine core: block store, layered compression (deterministic → model → emergency), prompt-side view builder, restore, circuit breaker, and Apple-grade chip text — fail-open everywhere.
 
 **Architecture:** New isolated package `core/context/` with no dependency on the OpenCode plugin. Originals are never mutated: compression records verbatim message ranges into a per-session block file and a *view* is assembled on demand. Layer 1 (model) is optional and budgeted; every layer failure falls through to the next cheaper one, ending at "pass through raw". Skeletonization stays in the TS plugin; Layer 0 recognizes its elision markers as the integration seam.
 
 **Tech Stack:** Python 3.14, stdlib only (dataclasses, json, threading, os, re, subprocess for Layer 1). No new dependencies.
 
-**Spec:** `docs/superpowers/specs/2026-10-06-school-context-engine-design.md` (authoritative — re-read §4, §5, §6 chip voice, §10 S1 exit criteria when in doubt)
+**Spec:** `docs/superpowers/specs/2026-10-06-toolio-context-engine-design.md` (authoritative — re-read §4, §5, §6 chip voice, §10 S1 exit criteria when in doubt)
 
 ## Global Constraints
 
@@ -25,8 +25,8 @@
 - Model budget: reuse `core.skillgen.budget.ModelCallBudget`; cap from `SCHOOL_COMPRESS_MAX_CALLS_PER_TASK` (default 4).
 - Token estimates: `max(1, len(text) // 4)` — existing repo convention.
 - Battery baseline before this plan: **2972 passed**. All tasks end with full-suite green (or at minimum the new test file green + full suite at plan end).
-- Ruff rules E,W,F,I,B,UP,SIM line-length 100 on all touched files. `school/plugin_source.py` must stay exactly 16 E501 (untouched by S1 anyway).
-- Apple-grade chip voice (spec §6): `[school] ctx 62% · −18.4k tok` / `[school] compacted 2 blocks · restorable` — calm, no noise, middle-dot separators.
+- Ruff rules E,W,F,I,B,UP,SIM line-length 100 on all touched files. `toolio/plugin_source.py` must stay exactly 16 E501 (untouched by S1 anyway).
+- Apple-grade chip voice (spec §6): `[toolio] ctx 62% · −18.4k tok` / `[toolio] compacted 2 blocks · restorable` — calm, no noise, middle-dot separators.
 - Testing: mock the model (Layer 1 judge is injected); never call a real model or network in tests.
 
 ## File Structure
@@ -48,7 +48,7 @@
 
 Consumed existing code (do not modify):
 - `core/skillgen/budget.py` — `ModelCallBudget(stats, max_per_task=None)` with `.allow(task_key)`, `.record(task_key)`, `.report(task_key)`.
-- `school/config.py` — `resolve_memory_dir(worktree) -> Path`; context dir = `resolve_memory_dir(worktree).parent / "context"`.
+- `toolio/config.py` — `resolve_memory_dir(worktree) -> Path`; context dir = `resolve_memory_dir(worktree).parent / "context"`.
 
 ---
 
@@ -289,7 +289,7 @@ Expected: All checks passed!
 - Test: `tests/unit/test_context_store.py`
 
 **Interfaces:**
-- Consumes: `Block` from Task 1, `school.config.resolve_memory_dir`.
+- Consumes: `Block` from Task 1, `toolio.config.resolve_memory_dir`.
 - Produces: `context_dir(worktree: str) -> Path`; `session_file(worktree, session_id) -> Path`; `class BlockStore(worktree: str, session_id: str)` with `load() -> list[Block]`, `save(blocks) -> None`, `add(block) -> None`, `get(block_id) -> Block | None`, `update(block) -> None`, `path` property. Later tasks (engine, restore) call only these.
 
 - [ ] **Step 1: Write the failing tests**
@@ -310,7 +310,7 @@ def _block(i: int) -> Block:
 def test_context_dir_is_sibling_of_memory(tmp_path) -> None:
     d = context_dir(str(tmp_path))
     assert d.name == "context"
-    assert d.parent.name in {".school", ".teacher", ".lerev", ".evo"}
+    assert d.parent.name in {".toolio", ".teacher", ".toolio", ".evo"}
 
 
 def test_session_file_sanitizes_id(tmp_path) -> None:
@@ -388,7 +388,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from school.config import resolve_memory_dir
+from toolio.config import resolve_memory_dir
 
 from core.context.types import Block
 
@@ -1408,7 +1408,7 @@ Expected: All checks passed!
 
 **Interfaces:**
 - Consumes: `Block` (Task 1).
-- Produces: `build_view(messages: list[dict], blocks: list[Block]) -> ViewResult` where `ViewResult.messages` is a NEW list of NEW dicts (deep-copied), block ranges replaced by one synthetic `{"role": "system", "content": "[school] compacted <id>: <summary>", "school_block": <id>}` message, and skeletonized tool bodies collapsed to their elision-marker lines. Overlapping/invalid blocks are skipped, never crash. `ViewResult.blocks_included` lists applied ids in order. Engine and restore both call only this.
+- Produces: `build_view(messages: list[dict], blocks: list[Block]) -> ViewResult` where `ViewResult.messages` is a NEW list of NEW dicts (deep-copied), block ranges replaced by one synthetic `{"role": "system", "content": "[toolio] compacted <id>: <summary>", "toolio_block": <id>}` message, and skeletonized tool bodies collapsed to their elision-marker lines. Overlapping/invalid blocks are skipped, never crash. `ViewResult.blocks_included` lists applied ids in order. Engine and restore both call only this.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1432,7 +1432,7 @@ def test_range_replaced_by_compaction_marker() -> None:
     assert len(view.messages) == 2
     marker = view.messages[0]
     assert marker["role"] == "system"
-    assert marker["school_block"] == "b1"
+    assert marker["toolio_block"] == "b1"
     assert "User asked a" in marker["content"]
     assert view.messages[1]["content"] == "c"
     assert view.blocks_included == ["b1"]
@@ -1543,8 +1543,8 @@ def build_view(messages: list[Any], blocks: list[Block]) -> ViewResult:
                 out.append(
                     {
                         "role": "system",
-                        "content": f"[school] compacted {block.id}: {block.summary}",
-                        "school_block": block.id,
+                        "content": f"[toolio] compacted {block.id}: {block.summary}",
+                        "toolio_block": block.id,
                     }
                 )
                 i = block.end
@@ -1664,7 +1664,7 @@ def test_layer0_creates_blocks_and_view(tmp_path, monkeypatch) -> None:
     assert msgs == before
     assert len(engine.store.load()) == report.blocks_added
     view = engine.view(msgs)
-    assert any(m.get("school_block") for m in view.messages)
+    assert any(m.get("toolio_block") for m in view.messages)
 
 
 def test_layer1_used_when_no_layer0_spans(tmp_path, monkeypatch) -> None:
@@ -2077,7 +2077,7 @@ Expected: All checks passed!
 
 **Interfaces:**
 - Consumes: `CompressionReport` (Task 1).
-- Produces: `build_chip(*, blocks_added=0, restores=0, saved_tokens=0, used_ratio=None, spend_usd=None) -> str`. Forms (spec §6): compaction chip `[school] compacted 2 blocks · restorable` (+ ` · 1 restored` when restores>0); usage chip `[school] ctx 62% · −18.4k tok · $0.07` (segments omitted when absent); `fmt_tokens(18400) == "18.4k"`. S3 later appends spend; S1 supports the optional field. S2 wires these strings to surfaces.
+- Produces: `build_chip(*, blocks_added=0, restores=0, saved_tokens=0, used_ratio=None, spend_usd=None) -> str`. Forms (spec §6): compaction chip `[toolio] compacted 2 blocks · restorable` (+ ` · 1 restored` when restores>0); usage chip `[toolio] ctx 62% · −18.4k tok · $0.07` (segments omitted when absent); `fmt_tokens(18400) == "18.4k"`. S3 later appends spend; S1 supports the optional field. S2 wires these strings to surfaces.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2095,32 +2095,32 @@ def test_fmt_tokens() -> None:
 
 
 def test_compaction_chip() -> None:
-    assert build_chip(blocks_added=2) == "[school] compacted 2 blocks · restorable"
+    assert build_chip(blocks_added=2) == "[toolio] compacted 2 blocks · restorable"
 
 
 def test_compaction_chip_single_and_restored() -> None:
-    assert build_chip(blocks_added=1) == "[school] compacted 1 block · restorable"
+    assert build_chip(blocks_added=1) == "[toolio] compacted 1 block · restorable"
     assert (
         build_chip(blocks_added=2, restores=1)
-        == "[school] compacted 2 blocks · restorable · 1 restored"
+        == "[toolio] compacted 2 blocks · restorable · 1 restored"
     )
 
 
 def test_usage_chip_with_savings_and_spend() -> None:
     assert (
         build_chip(used_ratio=0.62, saved_tokens=18400, spend_usd=0.07)
-        == "[school] ctx 62% · −18.4k tok · $0.07"
+        == "[toolio] ctx 62% · −18.4k tok · $0.07"
     )
 
 
 def test_usage_chip_minimal() -> None:
-    assert build_chip(used_ratio=0.31) == "[school] ctx 31%"
-    assert build_chip(used_ratio=0.31, saved_tokens=900) == "[school] ctx 31% · 900 tok"
+    assert build_chip(used_ratio=0.31) == "[toolio] ctx 31%"
+    assert build_chip(used_ratio=0.31, saved_tokens=900) == "[toolio] ctx 31% · 900 tok"
 
 
 def test_compaction_wins_when_both_given() -> None:
     out = build_chip(blocks_added=3, used_ratio=0.9)
-    assert out.startswith("[school] compacted 3 blocks")
+    assert out.startswith("[toolio] compacted 3 blocks")
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -2154,13 +2154,13 @@ def build_chip(
     """Apple-grade status chip. Calm, sparse, middle-dot segments."""
     if blocks_added > 0:
         noun = "block" if blocks_added == 1 else "blocks"
-        parts = [f"[school] compacted {blocks_added} {noun}", "restorable"]
+        parts = [f"[toolio] compacted {blocks_added} {noun}", "restorable"]
         if restores > 0:
             parts.append(f"{restores} restored")
         return " · ".join(parts)
     if used_ratio is None:
         return ""
-    parts = [f"[school] ctx {round(used_ratio * 100)}%"]
+    parts = [f"[toolio] ctx {round(used_ratio * 100)}%"]
     if saved_tokens > 0:
         sign = "−" if saved_tokens > 0 else ""
         parts.append(f"{sign}{fmt_tokens(saved_tokens)} tok")
@@ -2234,11 +2234,11 @@ def test_full_ladder_end_to_end(tmp_path, monkeypatch) -> None:
     view = engine.view(msgs)
     assert view.mutated is False
     assert len(view.messages) <= len(msgs)
-    markers = [m for m in view.messages if m.get("school_block")]
+    markers = [m for m in view.messages if m.get("toolio_block")]
     assert markers
 
     chip = chip_fn(blocks_added=report.blocks_added)
-    assert chip.startswith("[school] compacted")
+    assert chip.startswith("[toolio] compacted")
 
 
 def test_fail_open_matrix(tmp_path, monkeypatch) -> None:
@@ -2323,12 +2323,12 @@ Expected: all passed; baseline 2972 + new context tests (expect ≥3020), **0 fa
 
 - [ ] **Step 2: Ruff conventions check**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check core/context tests/unit/test_context_*.py school/cli.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check core/context tests/unit/test_context_*.py toolio/cli.py`
 Expected: All checks passed!
 
 - [ ] **Step 3: Confirm no plugin/TS regression**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py`
 Expected: 16 errors (exactly the baseline E501 — S1 must not touch this file; if the count changed, revert accidental edits).
 
 - [ ] **Step 4: Confirm no accidental commits**

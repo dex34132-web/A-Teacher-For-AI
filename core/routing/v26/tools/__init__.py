@@ -1,4 +1,4 @@
-"""School V2.6 tool interface for the learning pipeline."""
+"""Toolio V2.6 tool interface for the learning pipeline."""
 from core.routing.v26.tools.base import (
     BackgroundTask,
     PipelineResult,

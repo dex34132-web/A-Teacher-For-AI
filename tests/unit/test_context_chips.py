@@ -11,29 +11,29 @@ def test_fmt_tokens() -> None:
 
 
 def test_compaction_chip() -> None:
-    assert build_chip(blocks_added=2) == "[school] compacted 2 blocks · restorable"
+    assert build_chip(blocks_added=2) == "[toolio] compacted 2 blocks · restorable"
 
 
 def test_compaction_chip_single_and_restored() -> None:
-    assert build_chip(blocks_added=1) == "[school] compacted 1 block · restorable"
+    assert build_chip(blocks_added=1) == "[toolio] compacted 1 block · restorable"
     assert (
         build_chip(blocks_added=2, restores=1)
-        == "[school] compacted 2 blocks · restorable · 1 restored"
+        == "[toolio] compacted 2 blocks · restorable · 1 restored"
     )
 
 
 def test_usage_chip_with_savings_and_spend() -> None:
     assert (
         build_chip(used_ratio=0.62, saved_tokens=18400, spend_usd=0.07)
-        == "[school] ctx 62% · −18.4k tok · $0.07"
+        == "[toolio] ctx 62% · −18.4k tok · $0.07"
     )
 
 
 def test_usage_chip_minimal() -> None:
-    assert build_chip(used_ratio=0.31) == "[school] ctx 31%"
-    assert build_chip(used_ratio=0.31, saved_tokens=900) == "[school] ctx 31% · −900 tok"
+    assert build_chip(used_ratio=0.31) == "[toolio] ctx 31%"
+    assert build_chip(used_ratio=0.31, saved_tokens=900) == "[toolio] ctx 31% · −900 tok"
 
 
 def test_compaction_wins_when_both_given() -> None:
     out = build_chip(blocks_added=3, used_ratio=0.9)
-    assert out.startswith("[school] compacted 3 blocks")
+    assert out.startswith("[toolio] compacted 3 blocks")

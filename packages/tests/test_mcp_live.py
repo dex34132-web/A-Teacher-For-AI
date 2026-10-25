@@ -1,6 +1,6 @@
 """Live end-to-end MCP tests — the real server over real transports.
 
-These spawn ``python -m school_mcp.server`` as a subprocess and speak the actual
+These spawn ``python -m toolio_mcp.server`` as a subprocess and speak the actual
 MCP JSON-RPC protocol over stdio and streamable-HTTP. They prove the packages
 are fail-proof at the TRANSPORT layer, not just the registry layer.
 
@@ -39,7 +39,7 @@ def _rpc(proc, obj) -> None:
 class TestLiveStdio:
     def _spawn(self):
         return subprocess.Popen(
-            [sys.executable, "-m", "school_mcp.server", "stdio"],
+            [sys.executable, "-m", "toolio_mcp.server", "stdio"],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, env=_server_env(), cwd=str(ROOT),
         )
@@ -92,7 +92,7 @@ class TestLiveStdio:
     def test_tool_call_real_result(self):
         msgs = self._session([
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
-             "params": {"name": "school_status", "arguments": {"worktree": "."}}},
+             "params": {"name": "toolio_status", "arguments": {"worktree": "."}}},
         ])
         call = self._by_id(msgs, 3)
         assert call and not call["result"].get("isError")
@@ -103,7 +103,7 @@ class TestLiveStdio:
     def test_tool_call_invalid_is_fail_open(self):
         msgs = self._session([
             {"jsonrpc": "2.0", "id": 4, "method": "tools/call",
-             "params": {"name": "school_recall", "arguments": {"worktree": ".", "query": None}}},
+             "params": {"name": "toolio_recall", "arguments": {"worktree": ".", "query": None}}},
         ])
         call = self._by_id(msgs, 4)
         assert call and not call["result"].get("isError")  # never a protocol crash
@@ -115,7 +115,7 @@ class TestLiveStdio:
         hostile = [None, {"self": "x"}, [1, 2], float("nan"), "x" * 5000, {"$": "\u0000"}]
         calls = [
             {"jsonrpc": "2.0", "id": 100 + i, "method": "tools/call",
-             "params": {"name": "school_research", "arguments": {"worktree": ".", "query": h}}}
+             "params": {"name": "toolio_research", "arguments": {"worktree": ".", "query": h}}}
             for i, h in enumerate(hostile)
         ]
         msgs = self._session(calls)
@@ -128,7 +128,7 @@ class TestLiveStdio:
     def test_unknown_tool_is_graceful(self):
         msgs = self._session([
             {"jsonrpc": "2.0", "id": 7, "method": "tools/call",
-             "params": {"name": "school_does_not_exist", "arguments": {}}},
+             "params": {"name": "toolio_does_not_exist", "arguments": {}}},
         ])
         call = self._by_id(msgs, 7)
         assert call is not None  # got a response, transport never died
@@ -145,7 +145,7 @@ class TestLiveHttp:
         import anyio
 
         proc = subprocess.Popen(
-            [sys.executable, "-m", "school_mcp.server", "http"],
+            [sys.executable, "-m", "toolio_mcp.server", "http"],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, env=_server_env(), cwd=str(ROOT),
         )

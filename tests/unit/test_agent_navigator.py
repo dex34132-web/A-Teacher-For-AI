@@ -1,4 +1,4 @@
-"""S7 tests: school_navigate."""
+"""S7 tests: toolio_navigate."""
 
 from __future__ import annotations
 

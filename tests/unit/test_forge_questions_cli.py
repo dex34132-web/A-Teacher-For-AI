@@ -1,6 +1,6 @@
 """CLI boundary tests for the budgeted adaptive questioning controller.
 
-`school elicit` controller mode (--question-budget / --session / --answers /
+`toolio elicit` controller mode (--question-budget / --session / --answers /
 --no-followups / --no-early-stop). The legacy invocation must stay untouched.
 
 ALL FIXTURES AND ANSWERS IN THIS FILE ARE SYNTHETIC.
@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-CLI = REPO / "school" / "cli.py"
+CLI = REPO / "toolio" / "cli.py"
 
 
 def _run(*args: str) -> tuple[int, str, str]:

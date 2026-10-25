@@ -147,9 +147,9 @@ vendor says no?" finds no fallback. Verdict REWORK back to `chart`.
 - Never let "looks good to me" be your only pass. You are the first reviewer,
   not the last gate.
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-`clarion` (interview) → `school_clarion` · `blueprint` (spec) → `school_blueprint` · `edict` (commands) → `school_edict`
-`weave` (formation) → `school_weave` · `compass` (acceptance) → `school_compass` · `brainstorm` (ideas) → `school_brainstorm`
-CLI: `school <artifact>` — e.g. `school edict`, `school brainstorm` (legacy alias: `school prism`).
+`clarion` (interview) → `toolio_clarion` · `blueprint` (spec) → `toolio_blueprint` · `edict` (commands) → `toolio_edict`
+`weave` (formation) → `toolio_weave` · `compass` (acceptance) → `toolio_compass` · `brainstorm` (ideas) → `toolio_brainstorm`
+CLI: `toolio <artifact>` — e.g. `toolio edict`, `toolio brainstorm` (legacy alias: `toolio prism`).
 Bridge wire names: `clarion`, `blueprint`, `edict`, `weave`, `compass`, `prism` (`prism` = brainstorm, legacy wire name kept for compatibility).

@@ -75,8 +75,8 @@ Shape the steps with `weave` formations:
   is the whole-project delay, and put your best attention there.
 - **Dependencies** as explicit `step B needs step A` links, never "probably
   fine in parallel". In the plan this is `needs: S1`; it is the same link
-  `school_weave` renders from `Command.depends_on: ["S1"]` — one vocabulary
-  end to end, so hand the steps to `school_weave` for phases, lanes, and the
+  `toolio_weave` renders from `Command.depends_on: ["S1"]` — one vocabulary
+  end to end, so hand the steps to `toolio_weave` for phases, lanes, and the
   critical path instead of re-deriving formations by hand.
 
 ### 4. Name the checkpoints
@@ -144,9 +144,9 @@ Critical path: S3 → S4. Smallest-done: S1–S3 + existing sample.
 - Never treat estimates as promises; treat them as the cheapest experiment
   you can run against reality.
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-`clarion` (interview) → `school_clarion` · `blueprint` (spec) → `school_blueprint` · `edict` (commands) → `school_edict`
-`weave` (formation) → `school_weave` · `compass` (acceptance) → `school_compass` · `brainstorm` (ideas) → `school_brainstorm`
-CLI: `school <artifact>` — e.g. `school edict`, `school brainstorm` (legacy alias: `school prism`).
+`clarion` (interview) → `toolio_clarion` · `blueprint` (spec) → `toolio_blueprint` · `edict` (commands) → `toolio_edict`
+`weave` (formation) → `toolio_weave` · `compass` (acceptance) → `toolio_compass` · `brainstorm` (ideas) → `toolio_brainstorm`
+CLI: `toolio <artifact>` — e.g. `toolio edict`, `toolio brainstorm` (legacy alias: `toolio prism`).
 Bridge wire names: `clarion`, `blueprint`, `edict`, `weave`, `compass`, `prism` (`prism` = brainstorm, legacy wire name kept for compatibility).

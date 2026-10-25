@@ -1,4 +1,4 @@
-"""S7: school_progress — track learning progress with visual bars."""
+"""S7: toolio_progress — track learning progress with visual bars."""
 
 from __future__ import annotations
 

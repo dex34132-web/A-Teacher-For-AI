@@ -72,7 +72,7 @@ class TestAgentToolsEndToEnd:
 
     def test_bridge_agent_commands(self, tmp_path: Path) -> None:
         """Bridge now exposes observe/goal/research/etc. commands."""
-        bridge_path = Path(__file__).parent.parent.parent / "school" / "bridge.py"
+        bridge_path = Path(__file__).parent.parent.parent / "toolio" / "bridge.py"
         proc = subprocess.run(
             [sys.executable, str(bridge_path)],
             input=json.dumps({

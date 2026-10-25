@@ -2,15 +2,15 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Put the S1 context engine on every surface: OpenCode plugin apply-view (request-time compressed view), MCP mirror (`school_context_status|compress|restore`), `school context` CLI, DCP coexistence (detect → quiet offer → clean break), and Apple-grade chips on footer/CLI/MCP — fail-open everywhere.
+**Goal:** Put the S1 context engine on every surface: OpenCode plugin apply-view (request-time compressed view), MCP mirror (`toolio_context_status|compress|restore`), `toolio context` CLI, DCP coexistence (detect → quiet offer → clean break), and Apple-grade chips on footer/CLI/MCP — fail-open everywhere.
 
-**Architecture:** The engine stays in Python (`core/context/`, S1). The plugin asks the bridge for a *view* at request time via `experimental.chat.messages.transform` (verified spike: `output.messages: {info, parts}[]`, request-time only — session history never mutated). The bridge answers with **segments** (`{index, role, content|null}`) aligned to the original messages; the plugin rebuilds `output.messages` from the original wrappers (drop/replace only — never synthesizes messages). DCP coexistence is a tiny state machine in `core/context/coexist.py`: absent → School owns view; present → view off until the user picks `switch`/`keep`; the third-party plugin is never disabled, patched, or written to. All five bridge commands (`context_status|compress|restore|view|coexist`) are the single source of truth; MCP, CLI, and the plugin are thin clients over them.
+**Architecture:** The engine stays in Python (`core/context/`, S1). The plugin asks the bridge for a *view* at request time via `experimental.chat.messages.transform` (verified spike: `output.messages: {info, parts}[]`, request-time only — session history never mutated). The bridge answers with **segments** (`{index, role, content|null}`) aligned to the original messages; the plugin rebuilds `output.messages` from the original wrappers (drop/replace only — never synthesizes messages). DCP coexistence is a tiny state machine in `core/context/coexist.py`: absent → Toolio owns view; present → view off until the user picks `switch`/`keep`; the third-party plugin is never disabled, patched, or written to. All five bridge commands (`context_status|compress|restore|view|coexist`) are the single source of truth; MCP, CLI, and the plugin are thin clients over them.
 
 **Tech Stack:** Python 3.14 stdlib only; existing TS plugin (no new imports beyond the allowed set); zod via `tool.schema` for plugin args; node v24 (native TS type stripping) for the live harness. No new dependencies.
 
-**Spec:** `docs/superpowers/specs/2026-10-06-school-context-engine-design.md` (authoritative — re-read **§6**, §10 S2 exit criteria, §11 constraints when in doubt). Spike: `.superpowers/sdd/2026-10-06-s2-surfaces/spike-apply-view.md` (binding: apply-view = `experimental.chat.messages.transform`; supporting hooks `config`, `experimental.session.compacting`, `client.tui.showToast`).
+**Spec:** `docs/superpowers/specs/2026-10-06-toolio-context-engine-design.md` (authoritative — re-read **§6**, §10 S2 exit criteria, §11 constraints when in doubt). Spike: `.superpowers/sdd/2026-10-06-s2-surfaces/spike-apply-view.md` (binding: apply-view = `experimental.chat.messages.transform`; supporting hooks `config`, `experimental.session.compacting`, `client.tui.showToast`).
 
-**Baseline (verified 2026-10-07):** 3049 tests collected; `school/plugin_source.py` ruff = exactly 16 E501 (exit 1); HEAD `c62e3ce`; ruff line-length 100.
+**Baseline (verified 2026-10-07):** 3049 tests collected; `toolio/plugin_source.py` ruff = exactly 16 E501 (exit 1); HEAD `c62e3ce`; ruff line-length 100.
 
 ## Global Constraints
 
@@ -19,12 +19,12 @@
 - Kill switches: `SCHOOL_COMPRESS=0` (view/compress off), `SCHOOL_CTX=0` (all context surfaces report disabled/off), `SCHOOL_HOOKS=0` (plugin hooks off). Existing `SCHOOL_ROUTE`/ctx-optimizer behavior unchanged.
 - Model budget: only `ContextEngine.compress` may spend model calls (S1 ladder, `SCHOOL_COMPRESS_MAX_CALLS_PER_TASK`, default 4). **apply-view never calls a model** — `context_view` is prompt-side only.
 - Originals never mutated: `context_view`/`view_segments` must not modify the caller's `messages`; the plugin only rewrites `output.messages` (request-time view), never session history.
-- Never disable, patch, write, or delete the third-party DCP plugin or its files; all coexistence state lives in `<context_dir>/coexistence.json` (inside `.school/context/`). Clean break on `switch` (no state import).
+- Never disable, patch, write, or delete the third-party DCP plugin or its files; all coexistence state lives in `<context_dir>/coexistence.json` (inside `.toolio/context/`). Clean break on `switch` (no state import).
 - No secrets in logs/JSON responses; summaries stay redacted (S1 engine handles this).
-- Product name **School only** — the previous brand word must never appear anywhere in this plan's code, tests, or docs.
-- Apple-grade chip voice (spec §6): `[school] ctx 62% · −18.4k tok` / `[school] compacted 2 blocks · restorable` — one calm monospace line, middle-dot segments, same voice across footer, CLI, MCP. Token cost (`$0.07`) is S3 — omit `spend_usd` in S2.
+- Product name **Toolio only** — the previous brand word must never appear anywhere in this plan's code, tests, or docs.
+- Apple-grade chip voice (spec §6): `[toolio] ctx 62% · −18.4k tok` / `[toolio] compacted 2 blocks · restorable` — one calm monospace line, middle-dot segments, same voice across footer, CLI, MCP. Token cost (`$0.07`) is S3 — omit `spend_usd` in S2.
 - Backward compat: existing 7 Phase-1 skill tools, 5 Phase-2 GitHub tools, memory, routing, footer, MCP parity — all stay green. Existing hook/transform behavior (recall injection, footer idempotency) must keep its asserted substrings byte-for-byte.
-- Ruff `E,W,F,I,B,UP,SIM` line-length 100 on every touched Python file; **`school/plugin_source.py` must stay exactly 16 E501** — every new TS line (it lives in a Python string) must be ≤ 100 chars.
+- Ruff `E,W,F,I,B,UP,SIM` line-length 100 on every touched Python file; **`toolio/plugin_source.py` must stay exactly 16 E501** — every new TS line (it lives in a Python string) must be ≤ 100 chars.
 - Testing: no live network, no real opencode, no real LLM. Models mocked (`judge=None`); bridge/MCP talk through in-process handlers or local subprocesses only.
 - Verification commands (use verbatim):
   - unit: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/<file>`
@@ -38,14 +38,14 @@
 |---|---|
 | `core/context/coexist.py` (create) | `ctx_enabled`, `load/save_state`, `detect_dcp` (+ cache), `view_mode`, `OFFER_TEXT` |
 | `core/context/view.py` (extend) | `view_segments(messages, blocks)` + `apply_segments(messages, segments)` — the adapter-side contract of the view |
-| `school/bridge.py` (extend) | `context_status/compress/restore/view/coexist` handlers registered in `_COMMANDS` |
-| `school/mcp/server.py` (extend) | 3 tools appended to `_TOOLS` (byte-equal TS descriptions, annotations) |
-| `school/plugin_source.py` (extend) | apply-view transform, DCP detection + offer, footer chip, compacting nudge, 3 TS tools |
-| `school/cli.py` (extend) | `school context status\|compress\|restore\|switch\|keep` (`--json`, stdin messages) |
+| `toolio/bridge.py` (extend) | `context_status/compress/restore/view/coexist` handlers registered in `_COMMANDS` |
+| `toolio/mcp/server.py` (extend) | 3 tools appended to `_TOOLS` (byte-equal TS descriptions, annotations) |
+| `toolio/plugin_source.py` (extend) | apply-view transform, DCP detection + offer, footer chip, compacting nudge, 3 TS tools |
+| `toolio/cli.py` (extend) | `toolio context status\|compress\|restore\|switch\|keep` (`--json`, stdin messages) |
 | `tests/unit/test_context_coexist.py` (create) | Task 1 |
 | `tests/unit/test_bridge_context.py` (create) | Task 2 (segments + bridge ops) |
-| `tests/unit/test_school_plugin_hooks.py` (extend) | Tasks 3, 4, 8 (append classes at END) |
-| `tests/unit/test_mcp_server.py`, `tests/integration/test_mcp_stdio.py`, `tests/unit/test_school_plugin_bridge.py` (extend) | Task 5 list updates + new class at END |
+| `tests/unit/test_toolio_plugin_hooks.py` (extend) | Tasks 3, 4, 8 (append classes at END) |
+| `tests/unit/test_mcp_server.py`, `tests/integration/test_mcp_stdio.py`, `tests/unit/test_toolio_plugin_bridge.py` (extend) | Task 5 list updates + new class at END |
 | `tests/unit/test_cli.py` (extend) | Task 6 (append at END) |
 | `tests/unit/test_context_chip_wiring.py` (create) | Task 7 |
 | `tests/integration/test_context_surfaces.py` (create) | Task 9 (bridge subprocess + live node apply-view) |
@@ -55,16 +55,16 @@
 **Consumed existing code (do not modify beyond the noted additions):**
 - `core.context.ContextEngine(worktree, session_id, judge=_AUTO, budget=None, clock=...)` with `.compress(messages) -> CompressionReport`, `.view(messages) -> ViewResult`, `.restore(block_id="") -> dict`, `.store`, `.window`.
 - `core.context.build_chip(*, blocks_added=0, restores=0, saved_tokens=0, used_ratio=None, spend_usd=None) -> str`.
-- `core.context.layer0.total_tokens(messages)`; `core.context.store.context_dir(worktree)` = `resolve_memory_dir(worktree).parent / "context"` (creates `.school/memory` on demand; `.school/` is gitignored).
-- `school.bridge._COMMANDS` / `school.mcp.server._bridge_call` / `_build_request` (auto-dispatches `school_X` → bridge command `X`).
-- TS plugin: `invokeBridge(python, bridgePath, req, timeoutMs?)`, `hooksEnabled()`, `ctxEnabled()`, `ctxEstimate`, `schoolStatus`/`schoolStatusParts()`/`schoolFooter()`, `recordCtxSavings`.
-- Test helpers: `_hook_block(name)`, `_fn_block(name)` (`tests/unit/test_school_plugin_hooks.py`), `_tool_block(name)` (`tests/unit/test_school_plugin_bridge.py`), `plugin_dir` fixture pattern (`tests/integration/test_plugin_live.py`).
+- `core.context.layer0.total_tokens(messages)`; `core.context.store.context_dir(worktree)` = `resolve_memory_dir(worktree).parent / "context"` (creates `.toolio/memory` on demand; `.toolio/` is gitignored).
+- `toolio.bridge._COMMANDS` / `toolio.mcp.server._bridge_call` / `_build_request` (auto-dispatches `toolio_X` → bridge command `X`).
+- TS plugin: `invokeBridge(python, bridgePath, req, timeoutMs?)`, `hooksEnabled()`, `ctxEnabled()`, `ctxEstimate`, `toolioStatus`/`toolioStatusParts()`/`toolioFooter()`, `recordCtxSavings`.
+- Test helpers: `_hook_block(name)`, `_fn_block(name)` (`tests/unit/test_toolio_plugin_hooks.py`), `_tool_block(name)` (`tests/unit/test_toolio_plugin_bridge.py`), `plugin_dir` fixture pattern (`tests/integration/test_plugin_live.py`).
 
 ## Task Batches
 
 - **Batch 1** — Tasks 1–2: coexistence core + segment protocol + all five bridge commands.
 - **Batch 2** — Tasks 3–4: plugin apply-view, then DCP detection/offer/ownership gate.
-- **Batch 3** — Tasks 5–6: MCP 3-tool mirror + `school context` CLI.
+- **Batch 3** — Tasks 5–6: MCP 3-tool mirror + `toolio context` CLI.
 - **Batch 4** — Tasks 7–8: chip rendering across surfaces + compaction nudge.
 - **Batch 5** — Task 9: integration suite (subprocess bridge + live node) and full regression gates.
 
@@ -77,7 +77,7 @@
 - Test: `tests/unit/test_context_coexist.py`
 
 **Interfaces:**
-- Produces: `ctx_enabled() -> bool`, `state_path(worktree) -> Path`, `load_state(worktree) -> dict`, `save_state(worktree, patch) -> dict`, `detect_dcp(worktree, home=None) -> bool`, `detect_dcp_cached(worktree) -> bool`, `clear_cache()`, `view_mode(worktree, dcp_hint=False) -> "off"|"school"|"dcp"`, constants `STATE_FILE`, `DCP_TOKEN`, `MAX_READ_BYTES`, `OFFER_TEXT`. Later tasks import these exact names.
+- Produces: `ctx_enabled() -> bool`, `state_path(worktree) -> Path`, `load_state(worktree) -> dict`, `save_state(worktree, patch) -> dict`, `detect_dcp(worktree, home=None) -> bool`, `detect_dcp_cached(worktree) -> bool`, `clear_cache()`, `view_mode(worktree, dcp_hint=False) -> "off"|"toolio"|"dcp"`, constants `STATE_FILE`, `DCP_TOKEN`, `MAX_READ_BYTES`, `OFFER_TEXT`. Later tasks import these exact names.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -123,7 +123,7 @@ def test_view_mode_off_when_compress_disabled(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("SCHOOL_COMPRESS", "0")
     assert view_mode(str(tmp_path)) == "off"
     monkeypatch.delenv("SCHOOL_COMPRESS", raising=False)
-    assert view_mode(str(tmp_path)) == "school"
+    assert view_mode(str(tmp_path)) == "toolio"
 
 
 def test_state_defaults_and_roundtrip(tmp_path) -> None:
@@ -140,7 +140,7 @@ def test_state_defaults_and_roundtrip(tmp_path) -> None:
     assert state["dcp_seen"] is True
     save_state(wt, {"decision": "switch"})
     assert load_state(wt)["decision"] == "switch"
-    expected = tmp_path / ".school" / "context" / "coexistence.json"
+    expected = tmp_path / ".toolio" / "context" / "coexistence.json"
     assert state_path(wt) == expected
 
 
@@ -239,12 +239,12 @@ def test_view_mode_switch_overrides_dcp(tmp_path) -> None:
     )
     assert view_mode(wt) == "dcp"
     save_state(wt, {"decision": "switch"})
-    assert view_mode(wt) == "school"
+    assert view_mode(wt) == "toolio"
 
 
 def test_view_mode_keep_and_dcp_hint(tmp_path, monkeypatch) -> None:
     wt = str(tmp_path)
-    assert view_mode(wt) == "school"
+    assert view_mode(wt) == "toolio"
     assert view_mode(wt, dcp_hint=True) == "dcp"
     save_state(wt, {"decision": "keep"})
     assert view_mode(wt) == "dcp"
@@ -254,10 +254,10 @@ def test_view_mode_keep_and_dcp_hint(tmp_path, monkeypatch) -> None:
 
 def test_offer_text_matches_spec() -> None:
     assert OFFER_TEXT.startswith(
-        "School can now handle compression — with restore, budgets, and status."
+        "Toolio can now handle compression — with restore, budgets, and status."
     )
-    assert "school context switch" in OFFER_TEXT
-    assert "school context keep" in OFFER_TEXT
+    assert "toolio context switch" in OFFER_TEXT
+    assert "toolio context keep" in OFFER_TEXT
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -282,9 +282,9 @@ STATE_FILE = "coexistence.json"
 DCP_TOKEN = "@tarquinen/opencode-dcp"
 MAX_READ_BYTES = 1_048_576
 OFFER_TEXT = (
-    "School can now handle compression — with restore, budgets, and status. "
-    "Keep DCP, or switch? Run `school context switch` or "
-    "`school context keep` to decide."
+    "Toolio can now handle compression — with restore, budgets, and status. "
+    "Keep DCP, or switch? Run `toolio context switch` or "
+    "`toolio context keep` to decide."
 )
 
 _DCP_CACHE: dict[str, bool] = {}
@@ -388,12 +388,12 @@ def view_mode(worktree: str, dcp_hint: bool = False) -> str:
     state = load_state(worktree)
     decision = state.get("decision", "")
     if decision == "switch":
-        return "school"
+        return "toolio"
     if decision == "keep":
         return "dcp"
     if dcp_hint or detect_dcp_cached(worktree):
         return "dcp"
-    return "school"
+    return "toolio"
 
 
 __all__ = [
@@ -428,12 +428,12 @@ Expected: All checks passed!
 
 **Files:**
 - Edit: `core/context/view.py` (append `view_segments`, `apply_segments`)
-- Edit: `school/bridge.py` (five handlers + `_COMMANDS` registration)
+- Edit: `toolio/bridge.py` (five handlers + `_COMMANDS` registration)
 - Test: `tests/unit/test_bridge_context.py`
 
 **Interfaces:**
 - Produces: `view_segments(messages, blocks) -> list[dict]` where each dict is `{"index": int, "role": str, "content": str | None}` (`None` = drop the message; only changed indices are listed); `apply_segments(messages, segments) -> list` (never mutates input).
-- Bridge commands (all JSON over the existing protocol, all fail-open): `context_status`, `context_compress`, `context_restore`, `context_view`, `context_coexist`. MCP (`school_context_*`), CLI, and the plugin dispatch to these in Tasks 3/5/6.
+- Bridge commands (all JSON over the existing protocol, all fail-open): `context_status`, `context_compress`, `context_restore`, `context_view`, `context_coexist`. MCP (`toolio_context_*`), CLI, and the plugin dispatch to these in Tasks 3/5/6.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -449,7 +449,7 @@ import pytest
 
 from core.context import ContextEngine, build_chip, build_view
 from core.context.view import apply_segments, view_segments
-from school import bridge
+from toolio import bridge
 
 
 def big_msgs(n: int = 8) -> list[dict]:
@@ -524,12 +524,12 @@ class TestContextView:
             {"worktree": worktree, "session": "s1", "messages": messages},
         )
         assert resp["ok"] is True
-        assert resp["mode"] == "school"
+        assert resp["mode"] == "toolio"
         assert resp["segments"], "compressed session must yield segments"
         assert resp["segments"][0]["content"].startswith(
-            "[school] compacted b"
+            "[toolio] compacted b"
         )
-        assert resp["chip"].startswith("[school] ctx")
+        assert resp["chip"].startswith("[toolio] ctx")
         assert "tok" in resp["chip"]
 
     def test_kill_switch_returns_no_segments(self, compressed, monkeypatch) -> None:
@@ -541,7 +541,7 @@ class TestContextView:
         )
         assert resp == {"ok": True, "mode": "off", "segments": [], "chip": ""}
 
-    def test_disabled_by_school_ctx(self, compressed, monkeypatch) -> None:
+    def test_disabled_by_toolio_ctx(self, compressed, monkeypatch) -> None:
         worktree, messages, _ = compressed
         monkeypatch.setenv("SCHOOL_CTX", "0")
         resp = call(
@@ -581,10 +581,10 @@ class TestContextStatusCompressRestore:
             "context_status", {"worktree": worktree, "session": "s1"}
         )
         assert resp["ok"] is True
-        assert resp["mode"] == "school"
+        assert resp["mode"] == "toolio"
         assert resp["dcp"] is False
         assert resp["blocks"] >= 1
-        assert resp["chip"].startswith("[school] compacted")
+        assert resp["chip"].startswith("[toolio] compacted")
         assert resp["tokens_saved"] > 0
 
     def test_status_empty_session(self, tmp_path) -> None:
@@ -617,7 +617,7 @@ class TestContextStatusCompressRestore:
         assert resp["triggered"] is True
         assert resp["blocks_added"] >= 1
         assert resp["tokens_saved"] > 0
-        assert resp["chip"].startswith("[school] compacted")
+        assert resp["chip"].startswith("[toolio] compacted")
 
     def test_compress_empty_messages_skips(self, tmp_path) -> None:
         resp = call(
@@ -636,7 +636,7 @@ class TestContextStatusCompressRestore:
         )
         assert first["ok"] is True
         assert first["messages"]
-        assert first["chip"].startswith("[school] compacted")
+        assert first["chip"].startswith("[toolio] compacted")
         assert first["restores"] >= 1
         second = call(
             "context_restore", {"worktree": worktree, "session": "s1"}
@@ -674,8 +674,8 @@ class TestContextCoexist:
         assert resp["ok"] is True
         assert resp["dcp"] is False
         assert resp["decision"] == ""
-        assert resp["mode"] == "school"
-        assert resp["offer"].startswith("School can now handle compression")
+        assert resp["mode"] == "toolio"
+        assert resp["offer"].startswith("Toolio can now handle compression")
 
     def test_set_offer_and_decision(self, tmp_path) -> None:
         wt = str(tmp_path)
@@ -689,9 +689,9 @@ class TestContextCoexist:
             {"worktree": wt, "action": "set_decision", "decision": "switch"},
         )
         assert switch["ok"] is True
-        assert switch["mode"] == "school"
+        assert switch["mode"] == "toolio"
         state = json.loads(
-            Path(wt, ".school", "context", "coexistence.json").read_text(
+            Path(wt, ".toolio", "context", "coexistence.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -720,7 +720,7 @@ class TestContextCoexist:
         assert resp["dcp"] is True
         assert resp["mode"] == "dcp"
         state = json.loads(
-            Path(wt, ".school", "context", "coexistence.json").read_text(
+            Path(wt, ".toolio", "context", "coexistence.json").read_text(
                 encoding="utf-8"
             )
         )
@@ -745,9 +745,9 @@ class TestWiring:
             {"worktree": worktree, "session": "s1", "messages": messages},
         )
         assert build_chip(used_ratio=0.62, saved_tokens=18400) == (
-            "[school] ctx 62% · −18.4k tok"
+            "[toolio] ctx 62% · −18.4k tok"
         )
-        assert view["chip"].startswith("[school] ctx")
+        assert view["chip"].startswith("[toolio] ctx")
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -784,7 +784,7 @@ def view_segments(messages: list[Any], blocks: list[Block]) -> list[dict[str, An
                     {
                         "index": i,
                         "role": "system",
-                        "content": f"[school] compacted {block.id}: {block.summary}",
+                        "content": f"[toolio] compacted {block.id}: {block.summary}",
                     }
                 )
                 for j in range(i + 1, block.end):
@@ -844,7 +844,7 @@ Also replace the existing `__all__ = ["build_view"]` line (do not leave two).
 
 - [ ] **Step 4: Add the five bridge handlers**
 
-In `school/bridge.py`, insert after `_handle_skeleton` and before the `_COMMANDS` dict:
+In `toolio/bridge.py`, insert after `_handle_skeleton` and before the `_COMMANDS` dict:
 
 ```python
 # --- Context engine surfaces (S2) --------------------------------------
@@ -902,7 +902,7 @@ def _handle_context_view(req: dict[str, Any]) -> dict[str, Any]:
         return {"ok": True, "mode": "off", "segments": [], "chip": ""}
     mode = view_mode(worktree, dcp_hint=bool(req.get("dcp")))
     messages = _ctx_messages(req)
-    if mode != "school" or not messages:
+    if mode != "toolio" or not messages:
         return {"ok": True, "mode": mode, "segments": [], "chip": ""}
     engine = _engine_for(req)
     blocks = engine.store.load()
@@ -1029,10 +1029,10 @@ Expected: all passed (≈30)
 
 - [ ] **Step 6: Regression + ruff**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_context_view.py tests/unit/test_context_engine.py tests/unit/test_school_plugin_bridge.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_context_view.py tests/unit/test_context_engine.py tests/unit/test_toolio_plugin_bridge.py`
 Expected: all passed (view builder untouched except additions)
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check core/context/view.py school/bridge.py tests/unit/test_bridge_context.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check core/context/view.py toolio/bridge.py tests/unit/test_bridge_context.py`
 Expected: All checks passed!
 
 ---
@@ -1040,16 +1040,16 @@ Expected: All checks passed!
 ### Task 3: Plugin apply-view (`experimental.chat.messages.transform`)
 
 **Files:**
-- Edit: `school/plugin_source.py` (module consts, `viewTextOf`, `applyView`, transform hook restructure)
-- Test: append `class TestApplyView` to `tests/unit/test_school_plugin_hooks.py`
+- Edit: `toolio/plugin_source.py` (module consts, `viewTextOf`, `applyView`, transform hook restructure)
+- Test: append `class TestApplyView` to `tests/unit/test_toolio_plugin_hooks.py`
 
 **Interfaces:**
-- Produces (TS): `const VIEW_TIMEOUT_MS = 4000`, module fn `viewTextOf(m)`, School-closure `const applyView = async (output) => Promise<void>` sending `command: "context_view"` with `{worktree, session, messages}`, rebuilding `output.messages` from originals.
+- Produces (TS): `const VIEW_TIMEOUT_MS = 4000`, module fn `viewTextOf(m)`, Toolio-closure `const applyView = async (output) => Promise<void>` sending `command: "context_view"` with `{worktree, session, messages}`, rebuilding `output.messages` from originals.
 - Consumes: bridge `context_view` (Task 2). Kills itself on `SCHOOL_HOOKS=0`, `SCHOOL_CTX=0`, `SCHOOL_COMPRESS=0`, missing bridge, timeout, or any error — in all cases messages stay untouched.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append at the END of `tests/unit/test_school_plugin_hooks.py`:
+Append at the END of `tests/unit/test_toolio_plugin_hooks.py`:
 
 ```python
 class TestApplyView:
@@ -1069,7 +1069,7 @@ class TestApplyView:
             'info.role !== "user"'
         )
 
-    def test_apply_view_defined_in_school_scope(self) -> None:
+    def test_apply_view_defined_in_toolio_scope(self) -> None:
         source = TS_PLUGIN_SOURCE
         assert "const applyView = async" in source
         assert source.index("const recallForExecution = async") < source.index(
@@ -1109,7 +1109,7 @@ class TestApplyView:
 
     def test_apply_view_stores_footer_chip(self) -> None:
         block = self._block("applyView")
-        assert "schoolStatus.chip = chip" in block
+        assert "toolioStatus.chip = chip" in block
 
     def test_view_text_of_prefers_text_parts(self) -> None:
         match = re.search(
@@ -1119,17 +1119,17 @@ class TestApplyView:
         assert 'p.type === "text"' in match.group(0)
         assert "info?.content" in match.group(0)
 
-    def test_mode_gate_skips_when_not_school(self) -> None:
+    def test_mode_gate_skips_when_not_toolio(self) -> None:
         block = self._block("applyView")
-        assert 'if (mode !== "school") return' in block
+        assert 'if (mode !== "toolio") return' in block
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py`
 Expected: FAIL — new `TestApplyView` tests fail (`const applyView = async` not found); all pre-existing tests still pass.
 
-- [ ] **Step 3: Implement apply-view in `school/plugin_source.py`**
+- [ ] **Step 3: Implement apply-view in `toolio/plugin_source.py`**
 
 3a. Module scope — add right after the `HOOK_*` constants block (after `const HOOK_BUDGET = 400`):
 
@@ -1150,7 +1150,7 @@ function viewTextOf(m: any): string {
 }
 ```
 
-3c. School closure — insert `applyView` immediately after the `recallForExecution` definition (before `interface RouteDecision`):
+3c. Toolio closure — insert `applyView` immediately after the `recallForExecution` definition (before `interface RouteDecision`):
 
 ```ts
   const applyView = async (output: any): Promise<void> => {
@@ -1176,9 +1176,9 @@ function viewTextOf(m: any): string {
         VIEW_TIMEOUT_MS,
       )
       if (!resp.ok) return
-      schoolStatus.chip = String((resp as any).chip ?? "")
+      toolioStatus.chip = String((resp as any).chip ?? "")
       const mode = String((resp as any).mode ?? "")
-      if (mode !== "school") return
+      if (mode !== "toolio") return
       const raw = (resp as any).segments
       const segs = Array.isArray(raw) ? raw : []
       if (!segs.length) return
@@ -1201,7 +1201,7 @@ function viewTextOf(m: any): string {
         rebuilt.push({
           info,
           parts: [{
-            id: `school-view-${src?.info?.id ?? i}`,
+            id: `toolio-view-${src?.info?.id ?? i}`,
             sessionID: src?.info?.sessionID,
             messageID: src?.info?.id,
             type: "text",
@@ -1232,12 +1232,12 @@ function viewTextOf(m: any): string {
         if (!rec) return
         promptRecalls.delete(info.sessionID)
         last.parts.push({
-          id: `school-context-${info.id}`,
+          id: `toolio-context-${info.id}`,
           sessionID: info.sessionID,
           messageID: info.id,
           type: "text",
           synthetic: true,
-          text: `[school context]\n${rec.lines.join("\n")}\n[/school]`,
+          text: `[toolio context]\n${rec.lines.join("\n")}\n[/toolio]`,
         })
       } catch {
         // Context injection and apply-view are best-effort.
@@ -1247,7 +1247,7 @@ function viewTextOf(m: any): string {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py`
 Expected: all passed (old + new)
 
 - [ ] **Step 5: Live TS syntax/regression gate**
@@ -1257,7 +1257,7 @@ Expected: all passed — the harness compiles and runs the real TS through node 
 
 - [ ] **Step 6: Ruff (E501 budget!)**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py`
 Expected: **16 errors** (exactly the baseline — every new TS line must be ≤ 100 chars; if 17+, find the long line and wrap it).
 
 ---
@@ -1265,16 +1265,16 @@ Expected: **16 errors** (exactly the baseline — every new TS line must be ≤ 
 ### Task 4: Plugin DCP coexistence (detect → quiet offer → ownership gate)
 
 **Files:**
-- Edit: `school/plugin_source.py` (module `DCP_TOKEN`, School-closure coexist state + `checkCoexist`, `applyView` wiring)
-- Test: append `class TestDcpCoexist` to `tests/unit/test_school_plugin_hooks.py`
+- Edit: `toolio/plugin_source.py` (module `DCP_TOKEN`, Toolio-closure coexist state + `checkCoexist`, `applyView` wiring)
+- Test: append `class TestDcpCoexist` to `tests/unit/test_toolio_plugin_hooks.py`
 
 **Interfaces:**
-- Produces (TS, inside the School closure): module `const DCP_TOKEN = "@tarquinen/opencode-dcp"`; closure state `let coexistDone = false` / `let dcpHinted = false`; `const checkCoexist = async (): Promise<void>` which calls bridge `context_coexist` (`action: "get"`, then one-time `action: "set_offer"` + `client.tui.showToast` with the offer); `applyView` now awaits `checkCoexist()` before requesting `context_view` and forwards `dcp: dcpHinted` on that request.
+- Produces (TS, inside the Toolio closure): module `const DCP_TOKEN = "@tarquinen/opencode-dcp"`; closure state `let coexistDone = false` / `let dcpHinted = false`; `const checkCoexist = async (): Promise<void>` which calls bridge `context_coexist` (`action: "get"`, then one-time `action: "set_offer"` + `client.tui.showToast` with the offer); `applyView` now awaits `checkCoexist()` before requesting `context_view` and forwards `dcp: dcpHinted` on that request.
 - Consumes: bridge `context_coexist` + `OFFER_TEXT` (Task 2), `applyView` (Task 3). Fail-open: any coexist error leaves the view request and messages untouched; coexist runs at most once per process (`coexistDone`); `SCHOOL_HOOKS=0` / `SCHOOL_CTX=0` / `SCHOOL_COMPRESS=0` all disable it.
 
 - [ ] **Step 1: Write the failing tests**
 
-Append at the END of `tests/unit/test_school_plugin_hooks.py`:
+Append at the END of `tests/unit/test_toolio_plugin_hooks.py`:
 
 ```python
 class TestDcpCoexist:
@@ -1333,10 +1333,10 @@ class TestDcpCoexist:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py`
 Expected: FAIL — the new `TestDcpCoexist` tests fail (`const checkCoexist not found`); all pre-existing tests still pass.
 
-- [ ] **Step 3: Implement DCP coexistence in `school/plugin_source.py`**
+- [ ] **Step 3: Implement DCP coexistence in `toolio/plugin_source.py`**
 
 3a. Module scope — add right after the line `const VIEW_TIMEOUT_MS = 4000`:
 
@@ -1344,7 +1344,7 @@ Expected: FAIL — the new `TestDcpCoexist` tests fail (`const checkCoexist not 
 const DCP_TOKEN = "@tarquinen/opencode-dcp"
 ```
 
-3b. School closure — insert immediately before the line `const applyView = async (output: any): Promise<void> => {`:
+3b. Toolio closure — insert immediately before the line `const applyView = async (output: any): Promise<void> => {`:
 
 ```ts
   let coexistDone = false
@@ -1419,7 +1419,7 @@ const DCP_TOKEN = "@tarquinen/opencode-dcp"
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py`
 Expected: all passed (old + new)
 
 - [ ] **Step 5: Live TS syntax/regression gate**
@@ -1429,46 +1429,46 @@ Expected: all passed — the load-time config probe is optional-chained (`ctx.cl
 
 - [ ] **Step 6: Ruff (E501 budget!)**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py`
 Expected: **16 errors** (exactly the baseline — every new TS line must be ≤ 100 chars; if 17+, find the long line and wrap it).
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check tests/unit/test_toolio_plugin_hooks.py`
 Expected: All checks passed!
 
 ---
 
-### Task 5: MCP 3-tool mirror + TS tools (`school_context_*`)
+### Task 5: MCP 3-tool mirror + TS tools (`toolio_context_*`)
 
 **Files:**
-- Modify: `school/mcp/server.py` (append 3 entries to `_TOOLS`)
-- Modify: `school/plugin_source.py` (append 3 TS tool blocks)
-- Modify: `tests/unit/test_school_plugin_hooks.py` (tool count 26 → 29)
-- Modify: `tests/unit/test_school_plugin_bridge.py` (tool list + count 26 → 29)
+- Modify: `toolio/mcp/server.py` (append 3 entries to `_TOOLS`)
+- Modify: `toolio/plugin_source.py` (append 3 TS tool blocks)
+- Modify: `tests/unit/test_toolio_plugin_hooks.py` (tool count 26 → 29)
+- Modify: `tests/unit/test_toolio_plugin_bridge.py` (tool list + count 26 → 29)
 - Modify: `tests/unit/test_mcp_server.py` (`EXPECTED_TOOL_ORDER` + annotations set + new class at END)
 - Modify: `tests/integration/test_mcp_stdio.py` (`EXPECTED_TOOLS` + 3)
-- Test: new `class TestContextToolsMCP` at END of `tests/unit/test_mcp_server.py`; new `class TestContextToolsTS` at END of `tests/unit/test_school_plugin_bridge.py`
+- Test: new `class TestContextToolsMCP` at END of `tests/unit/test_mcp_server.py`; new `class TestContextToolsTS` at END of `tests/unit/test_toolio_plugin_bridge.py`
 
 **Interfaces:**
-- Produces MCP tools: `school_context_status` (annotations `read_only_hint` + `idempotent_hint`), `school_context_compress` (no annotations), `school_context_restore` (annotation `idempotent_hint` only). All three dispatch through `_call_tool` → `_build_request` → `_bridge_call(name.removeprefix("school_"))` → bridge commands from Task 2 — zero new dispatch code. Schemas: all take optional `session`; compress takes `messages` (array of `{role, content}`); restore takes `block_id`.
-- Produces TS tools: `school_context_status` / `school_context_compress` / `school_context_restore`, registered in the plugin `tool:` object right after `school_skill_import` (tool surface 26 → 29). Descriptions are **byte-identical** between `_TOOLS` and the TS blocks (existing parity test enforces this).
+- Produces MCP tools: `toolio_context_status` (annotations `read_only_hint` + `idempotent_hint`), `toolio_context_compress` (no annotations), `toolio_context_restore` (annotation `idempotent_hint` only). All three dispatch through `_call_tool` → `_build_request` → `_bridge_call(name.removeprefix("toolio_"))` → bridge commands from Task 2 — zero new dispatch code. Schemas: all take optional `session`; compress takes `messages` (array of `{role, content}`); restore takes `block_id`.
+- Produces TS tools: `toolio_context_status` / `toolio_context_compress` / `toolio_context_restore`, registered in the plugin `tool:` object right after `toolio_skill_import` (tool surface 26 → 29). Descriptions are **byte-identical** between `_TOOLS` and the TS blocks (existing parity test enforces this).
 
 - [ ] **Step 1: Write the failing tests (list updates + new classes)**
 
-1a. `tests/unit/test_school_plugin_hooks.py` — replace the `test_tool_surface_unchanged` body:
+1a. `tests/unit/test_toolio_plugin_hooks.py` — replace the `test_tool_surface_unchanged` body:
 
 ```python
     def test_tool_surface_unchanged(self) -> None:
         """The tool surface: 26 approved tools + three S2 context mirrors."""
-        names = re.findall(r"^\s+(school_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
+        names = re.findall(r"^\s+(toolio_\w+): tool\(", TS_PLUGIN_SOURCE, re.MULTILINE)
         assert len(names) == 29, f"tool surface changed: {names}"
 ```
 
-1b. `tests/unit/test_school_plugin_bridge.py` — append to `EXPECTED_OPENCODE_TOOLS` (after `"school_skill_import",`):
+1b. `tests/unit/test_toolio_plugin_bridge.py` — append to `EXPECTED_OPENCODE_TOOLS` (after `"toolio_skill_import",`):
 
 ```python
-    "school_context_status",
-    "school_context_compress",
-    "school_context_restore",
+    "toolio_context_status",
+    "toolio_context_compress",
+    "toolio_context_restore",
 ```
 
 and update the surface test (docstring, name, count):
@@ -1482,17 +1482,17 @@ and update the surface test (docstring, name, count):
         assert set(names) == set(EXPECTED_OPENCODE_TOOLS)
 ```
 
-1c. `tests/unit/test_mcp_server.py` — append to `EXPECTED_TOOL_ORDER` (after `"school_skill_import",`):
+1c. `tests/unit/test_mcp_server.py` — append to `EXPECTED_TOOL_ORDER` (after `"toolio_skill_import",`):
 
 ```python
-    "school_context_status",
-    "school_context_compress",
-    "school_context_restore",
+    "toolio_context_status",
+    "toolio_context_compress",
+    "toolio_context_restore",
 ```
 
-and add `"school_context_status",` to the `read_only` set in `test_read_only_annotations` (after `"school_skill_compare",`).
+and add `"toolio_context_status",` to the `read_only` set in `test_read_only_annotations` (after `"toolio_skill_compare",`).
 
-1d. `tests/integration/test_mcp_stdio.py` — append the same three names to `EXPECTED_TOOLS` (after `"school_skill_import",`).
+1d. `tests/integration/test_mcp_stdio.py` — append the same three names to `EXPECTED_TOOLS` (after `"toolio_skill_import",`).
 
 1e. Append at the END of `tests/unit/test_mcp_server.py`:
 
@@ -1501,11 +1501,11 @@ class TestContextToolsMCP:
     """The three context mirror tools over MCP (S2)."""
 
     def test_status_reports_mode_and_blocks(self, worktree: str) -> None:
-        result = mcp_server._call_tool(worktree, "school_context_status", {})
+        result = mcp_server._call_tool(worktree, "toolio_context_status", {})
         assert result.is_error is False
         payload = json.loads(result.content[0].text)
         assert payload["ok"] is True
-        assert payload["mode"] == "school"
+        assert payload["mode"] == "toolio"
         assert payload["blocks"] == 0
         assert "chip" in payload
         assert result.structured_content == payload
@@ -1520,13 +1520,13 @@ class TestContextToolsMCP:
             for i in range(8)
         ]
         done = mcp_server._call_tool(
-            worktree, "school_context_compress", {"messages": messages}
+            worktree, "toolio_context_compress", {"messages": messages}
         )
         assert json.loads(done.content[0].text)["blocks_added"] >= 1
-        status = mcp_server._call_tool(worktree, "school_context_status", {})
+        status = mcp_server._call_tool(worktree, "toolio_context_status", {})
         payload = json.loads(status.content[0].text)
         assert payload["blocks"] >= 1
-        assert payload["chip"].startswith("[school] compacted")
+        assert payload["chip"].startswith("[toolio] compacted")
 
     def test_restore_roundtrip_is_idempotent(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
@@ -1538,12 +1538,12 @@ class TestContextToolsMCP:
             for i in range(8)
         ]
         mcp_server._call_tool(
-            worktree, "school_context_compress", {"messages": messages}
+            worktree, "toolio_context_compress", {"messages": messages}
         )
         results = []
         for _ in range(2):
             result = mcp_server._call_tool(
-                worktree, "school_context_restore", {"block_id": ""}
+                worktree, "toolio_context_restore", {"block_id": ""}
             )
             results.append(json.loads(result.content[0].text))
         assert all(r["ok"] for r in results), results
@@ -1551,51 +1551,51 @@ class TestContextToolsMCP:
 
     def test_unknown_arguments_are_filtered(self, worktree: str) -> None:
         result = mcp_server._call_tool(
-            worktree, "school_context_status", {"bogus": 1}
+            worktree, "toolio_context_status", {"bogus": 1}
         )
         assert result.is_error is False
         assert json.loads(result.content[0].text)["ok"] is True
 
     def test_annotations_match_surface(self) -> None:
         tools = {t.name: t for t in mcp_server._list_tools().tools}
-        status = tools["school_context_status"].annotations
+        status = tools["toolio_context_status"].annotations
         assert status.read_only_hint is True
         assert status.idempotent_hint is True
-        restore = tools["school_context_restore"].annotations
+        restore = tools["toolio_context_restore"].annotations
         assert restore.read_only_hint is None
         assert restore.idempotent_hint is True
-        assert tools["school_context_compress"].annotations is None
+        assert tools["toolio_context_compress"].annotations is None
 ```
 
-1f. Append at the END of `tests/unit/test_school_plugin_bridge.py`:
+1f. Append at the END of `tests/unit/test_toolio_plugin_bridge.py`:
 
 ```python
 class TestContextToolsTS:
     """The three context tools on the OpenCode plugin surface (S2)."""
 
     def test_status_sends_context_status(self) -> None:
-        block = _tool_block("school_context_status")
+        block = _tool_block("toolio_context_status")
         assert 'command: "context_status"' in block
-        assert "School Context Status" in block
+        assert "Toolio Context Status" in block
         assert "if (!bridge)" in block
 
     def test_compress_sends_context_compress(self) -> None:
-        block = _tool_block("school_context_compress")
+        block = _tool_block("toolio_context_compress")
         assert 'command: "context_compress"' in block
         assert "messages: args.messages ?? []" in block
 
     def test_restore_sends_context_restore(self) -> None:
-        block = _tool_block("school_context_restore")
+        block = _tool_block("toolio_context_restore")
         assert 'command: "context_restore"' in block
         assert 'block_id: args.block_id ?? ""' in block
 
     def test_context_descriptions_match_mcp(self) -> None:
-        from school.mcp import server as mcp_server
+        from toolio.mcp import server as mcp_server
 
         for name in (
-            "school_context_status",
-            "school_context_compress",
-            "school_context_restore",
+            "toolio_context_status",
+            "toolio_context_compress",
+            "toolio_context_restore",
         ):
             block = _tool_block(name)
             match = re.search(r"description:\s*\n(.*?),\n\s*args:", block, re.S)
@@ -1606,18 +1606,18 @@ class TestContextToolsTS:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py tests/unit/test_school_plugin_bridge.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
-Expected: FAIL — tool counts still 26/28, `no TS description block for 'school_context_status'`, `KeyError`/missing entries for the new MCP tools; all other tests still pass.
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py tests/unit/test_toolio_plugin_bridge.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
+Expected: FAIL — tool counts still 26/28, `no TS description block for 'toolio_context_status'`, `KeyError`/missing entries for the new MCP tools; all other tests still pass.
 
 - [ ] **Step 3: Add the three MCP entries**
 
-In `school/mcp/server.py`, append after the `school_skill_import` entry (before the closing `}` of `_TOOLS`):
+In `toolio/mcp/server.py`, append after the `toolio_skill_import` entry (before the closing `}` of `_TOOLS`):
 
 ```python
-    "school_context_status": {
+    "toolio_context_status": {
         "description": (
-            "Use school_context_status to report the School context engine: "
-            "blocks stored, restores, tokens saved, view mode (school|dcp|off), "
+            "Use toolio_context_status to report the Toolio context engine: "
+            "blocks stored, restores, tokens saved, view mode (toolio|dcp|off), "
             "DCP decision, and a chip one-liner. Read-only - call before "
             "compress or restore."
         ),
@@ -1632,10 +1632,10 @@ In `school/mcp/server.py`, append after the `school_skill_import` entry (before 
             },
         },
     },
-    "school_context_compress": {
+    "toolio_context_compress": {
         "description": (
-            "Use school_context_compress to compress session messages through "
-            "the School context engine, returning blocks added, tokens saved, "
+            "Use toolio_context_compress to compress session messages through "
+            "the Toolio context engine, returning blocks added, tokens saved, "
             "and a chip. Explicit action only - never automatic; "
             "SCHOOL_COMPRESS=0 disables it."
         ),
@@ -1654,11 +1654,11 @@ In `school/mcp/server.py`, append after the `school_skill_import` entry (before 
             },
         },
     },
-    "school_context_restore": {
+    "toolio_context_restore": {
         "description": (
-            "Use school_context_restore to restore compressed blocks by "
+            "Use toolio_context_restore to restore compressed blocks by "
             "block_id (empty id restores all) - idempotent, returning restores "
-            "count, store state, and a chip. Call school_context_status first "
+            "count, store state, and a chip. Call toolio_context_status first "
             "to list block ids."
         ),
         "annotations": {"idempotent_hint": True},
@@ -1680,13 +1680,13 @@ In `school/mcp/server.py`, append after the `school_skill_import` entry (before 
 
 - [ ] **Step 4: Add the three TS tool blocks**
 
-In `school/plugin_source.py`, insert after the `school_skill_import` block (still inside the `tool: { ... }` object, before its closing `    },`):
+In `toolio/plugin_source.py`, insert after the `toolio_skill_import` block (still inside the `tool: { ... }` object, before its closing `    },`):
 
 ```ts
-      school_context_status: tool({
+      toolio_context_status: tool({
         description:
-          "Use school_context_status to report the School context engine: " +
-          "blocks stored, restores, tokens saved, view mode (school|dcp|off), " +
+          "Use toolio_context_status to report the Toolio context engine: " +
+          "blocks stored, restores, tokens saved, view mode (toolio|dcp|off), " +
           "DCP decision, and a chip one-liner. Read-only - call before " +
           "compress or restore.",
         args: {
@@ -1698,8 +1698,8 @@ In `school/plugin_source.py`, insert after the `school_skill_import` block (stil
         async execute(args, context) {
           if (!bridge) {
             return {
-              title: "School Context Status",
-              output: "School: unavailable.",
+              title: "Toolio Context Status",
+              output: "Toolio: unavailable.",
             }
           }
           const resp = await invokeBridge(python, bridgePath, {
@@ -1710,22 +1710,22 @@ In `school/plugin_source.py`, insert after the `school_skill_import` block (stil
           if (!resp.ok) {
             const msg = (resp as any).error?.message ?? "failed"
             return {
-              title: "School Context Status - Failed",
+              title: "Toolio Context Status - Failed",
               output: `Error: ${msg}`,
             }
           }
           return {
-            title: "School Context Status",
+            title: "Toolio Context Status",
             output: JSON.stringify(resp, null, 2),
             metadata: resp,
           }
         },
       }),
 
-      school_context_compress: tool({
+      toolio_context_compress: tool({
         description:
-          "Use school_context_compress to compress session messages through " +
-          "the School context engine, returning blocks added, tokens saved, " +
+          "Use toolio_context_compress to compress session messages through " +
+          "the Toolio context engine, returning blocks added, tokens saved, " +
           "and a chip. Explicit action only - never automatic; " +
           "SCHOOL_COMPRESS=0 disables it.",
         args: {
@@ -1741,8 +1741,8 @@ In `school/plugin_source.py`, insert after the `school_skill_import` block (stil
         async execute(args, context) {
           if (!bridge) {
             return {
-              title: "School Context Compress",
-              output: "School: unavailable.",
+              title: "Toolio Context Compress",
+              output: "Toolio: unavailable.",
             }
           }
           const resp = await invokeBridge(python, bridgePath, {
@@ -1754,23 +1754,23 @@ In `school/plugin_source.py`, insert after the `school_skill_import` block (stil
           if (!resp.ok) {
             const msg = (resp as any).error?.message ?? "failed"
             return {
-              title: "School Context Compress - Failed",
+              title: "Toolio Context Compress - Failed",
               output: `Error: ${msg}`,
             }
           }
           return {
-            title: "School Context Compress",
+            title: "Toolio Context Compress",
             output: JSON.stringify(resp, null, 2),
             metadata: resp,
           }
         },
       }),
 
-      school_context_restore: tool({
+      toolio_context_restore: tool({
         description:
-          "Use school_context_restore to restore compressed blocks by " +
+          "Use toolio_context_restore to restore compressed blocks by " +
           "block_id (empty id restores all) - idempotent, returning restores " +
-          "count, store state, and a chip. Call school_context_status first " +
+          "count, store state, and a chip. Call toolio_context_status first " +
           "to list block ids.",
         args: {
           session: tool.schema
@@ -1785,8 +1785,8 @@ In `school/plugin_source.py`, insert after the `school_skill_import` block (stil
         async execute(args, context) {
           if (!bridge) {
             return {
-              title: "School Context Restore",
-              output: "School: unavailable.",
+              title: "Toolio Context Restore",
+              output: "Toolio: unavailable.",
             }
           }
           const resp = await invokeBridge(python, bridgePath, {
@@ -1798,13 +1798,13 @@ In `school/plugin_source.py`, insert after the `school_skill_import` block (stil
           if (!resp.ok) {
             const msg = (resp as any).error?.message ?? "failed"
             return {
-              title: "School Context Restore - Failed",
+              title: "Toolio Context Restore - Failed",
               output: `Error: ${msg}`,
             }
           }
           const result = (resp as any).result ?? resp
           return {
-            title: "School Context Restore",
+            title: "Toolio Context Restore",
             output: JSON.stringify(result, null, 2),
             metadata: result,
           }
@@ -1814,34 +1814,34 @@ In `school/plugin_source.py`, insert after the `school_skill_import` block (stil
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py tests/unit/test_school_plugin_bridge.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py tests/unit/test_toolio_plugin_bridge.py tests/unit/test_mcp_server.py tests/integration/test_mcp_stdio.py`
 Expected: all passed (old + new; this also runs the byte-equal TS/MCP description parity test)
 
 - [ ] **Step 6: Live TS registration gate**
 
 Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/integration/test_plugin_live.py`
-Expected: all passed — the three new tool blocks evaluate through the stubbed `tool.schema` proxy at `School()` load.
+Expected: all passed — the three new tool blocks evaluate through the stubbed `tool.schema` proxy at `Toolio()` load.
 
 - [ ] **Step 7: Ruff (E501 budget!)**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/mcp/server.py tests/unit/test_mcp_server.py tests/unit/test_school_plugin_bridge.py tests/unit/test_school_plugin_hooks.py tests/integration/test_mcp_stdio.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/mcp/server.py tests/unit/test_mcp_server.py tests/unit/test_toolio_plugin_bridge.py tests/unit/test_toolio_plugin_hooks.py tests/integration/test_mcp_stdio.py`
 Expected: All checks passed!
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py`
 Expected: **16 errors** (unchanged baseline)
 
 ---
 
-### Task 6: `school context` CLI
+### Task 6: `toolio context` CLI
 
 **Files:**
-- Modify: `school/cli.py` (`_read_messages`, `_cmd_context`, `context` subparsers, `commands` dict entry)
+- Modify: `toolio/cli.py` (`_read_messages`, `_cmd_context`, `context` subparsers, `commands` dict entry)
 - Modify: `tests/unit/test_cli.py` (import `StringIO`, append `class TestContextCommand`, fix 1 pre-existing E501)
 - Test: append `class TestContextCommand` at END of `tests/unit/test_cli.py`
 
 **Interfaces:**
-- Produces: CLI `school context {status,compress,restore,switch,keep}` — every subcommand accepts `--json` (raw bridge JSON), `--session`, `--worktree` (default: cwd). `compress` reads a JSON array of messages from stdin; `restore [block_id]` (default: all); `switch`/`keep` → bridge `context_coexist` `set_decision` (the exact commands `OFFER_TEXT` tells users to run). Human output prints the chip line and, when DCP is present undecided, the offer.
-- Consumes: bridge `context_status|compress|restore|coexist` (Task 2) dispatched **in-process** via `school.bridge._COMMANDS` — same pattern as the MCP server. `switch`/`keep` exit 0 even when no DCP is detected (decision is recorded; clean break on `switch`).
+- Produces: CLI `toolio context {status,compress,restore,switch,keep}` — every subcommand accepts `--json` (raw bridge JSON), `--session`, `--worktree` (default: cwd). `compress` reads a JSON array of messages from stdin; `restore [block_id]` (default: all); `switch`/`keep` → bridge `context_coexist` `set_decision` (the exact commands `OFFER_TEXT` tells users to run). Human output prints the chip line and, when DCP is present undecided, the offer.
+- Consumes: bridge `context_status|compress|restore|coexist` (Task 2) dispatched **in-process** via `toolio.bridge._COMMANDS` — same pattern as the MCP server. `switch`/`keep` exit 0 even when no DCP is detected (decision is recorded; clean break on `switch`).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1855,7 +1855,7 @@ from io import StringIO
 
 ```python
 class TestContextCommand:
-    """S2 Task 6: `school context` subcommands over the in-process bridge."""
+    """S2 Task 6: `toolio context` subcommands over the in-process bridge."""
 
     def _compress(
         self,
@@ -1869,10 +1869,10 @@ class TestContextCommand:
             {"role": "user" if i % 2 == 0 else "assistant", "content": chr(97 + i) * 300}
             for i in range(8)
         ]
-        argv = ["school", "context", "compress", "--json", "--worktree", str(tmp_path)]
+        argv = ["toolio", "context", "compress", "--json", "--worktree", str(tmp_path)]
         with (
             patch("sys.argv", argv),
-            patch("school.cli.SchoolConfig"),
+            patch("toolio.cli.ToolioConfig"),
             patch("sys.stdin", StringIO(json.dumps(messages))),
         ):
             main()
@@ -1881,19 +1881,19 @@ class TestContextCommand:
     def test_status_json(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        argv = ["school", "context", "status", "--json", "--worktree", str(tmp_path)]
-        with patch("sys.argv", argv), patch("school.cli.SchoolConfig"):
+        argv = ["toolio", "context", "status", "--json", "--worktree", str(tmp_path)]
+        with patch("sys.argv", argv), patch("toolio.cli.ToolioConfig"):
             main()
         payload = json.loads(capsys.readouterr().out)
         assert payload["ok"] is True
-        assert payload["mode"] == "school"
+        assert payload["mode"] == "toolio"
         assert payload["blocks"] == 0
         assert "chip" in payload
 
     def test_missing_subcommand_exits(self) -> None:
         with (
-            patch("sys.argv", ["school", "context"]),
-            patch("school.cli.SchoolConfig"),
+            patch("sys.argv", ["toolio", "context"]),
+            patch("toolio.cli.ToolioConfig"),
             pytest.raises(SystemExit) as excinfo,
         ):
             main()
@@ -1903,14 +1903,14 @@ class TestContextCommand:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         for decision in ("switch", "keep"):
-            argv = ["school", "context", decision, "--json", "--worktree", str(tmp_path)]
-            with patch("sys.argv", argv), patch("school.cli.SchoolConfig"):
+            argv = ["toolio", "context", decision, "--json", "--worktree", str(tmp_path)]
+            with patch("sys.argv", argv), patch("toolio.cli.ToolioConfig"):
                 main()
             payload = json.loads(capsys.readouterr().out)
             assert payload["ok"] is True
             assert payload["decision"] == decision
-        argv = ["school", "context", "status", "--json", "--worktree", str(tmp_path)]
-        with patch("sys.argv", argv), patch("school.cli.SchoolConfig"):
+        argv = ["toolio", "context", "status", "--json", "--worktree", str(tmp_path)]
+        with patch("sys.argv", argv), patch("toolio.cli.ToolioConfig"):
             main()
         assert json.loads(capsys.readouterr().out)["decision"] == "keep"
 
@@ -1923,7 +1923,7 @@ class TestContextCommand:
         payload = self._compress(tmp_path, monkeypatch, capsys)
         assert payload["ok"] is True
         assert payload["blocks_added"] >= 1
-        assert payload["chip"].startswith("[school] compacted")
+        assert payload["chip"].startswith("[toolio] compacted")
 
     def test_restore_roundtrip_is_idempotent(
         self,
@@ -1934,8 +1934,8 @@ class TestContextCommand:
         self._compress(tmp_path, monkeypatch, capsys)
         results = []
         for _ in range(2):
-            argv = ["school", "context", "restore", "--json", "--worktree", str(tmp_path)]
-            with patch("sys.argv", argv), patch("school.cli.SchoolConfig"):
+            argv = ["toolio", "context", "restore", "--json", "--worktree", str(tmp_path)]
+            with patch("sys.argv", argv), patch("toolio.cli.ToolioConfig"):
                 main()
             results.append(json.loads(capsys.readouterr().out))
         assert all(r["ok"] for r in results), results
@@ -1948,13 +1948,13 @@ class TestContextCommand:
             json.dumps({"plugin": ["@tarquinen/opencode-dcp"]}),
             encoding="utf-8",
         )
-        argv = ["school", "context", "status", "--worktree", str(tmp_path)]
-        with patch("sys.argv", argv), patch("school.cli.SchoolConfig"):
+        argv = ["toolio", "context", "status", "--worktree", str(tmp_path)]
+        with patch("sys.argv", argv), patch("toolio.cli.ToolioConfig"):
             main()
         out = capsys.readouterr().out
         assert "mode: dcp" in out
         assert "Keep DCP, or switch?" in out
-        assert "school context switch" in out
+        assert "toolio context switch" in out
 
     def test_status_human_prints_chip(
         self,
@@ -1963,11 +1963,11 @@ class TestContextCommand:
         capsys: pytest.CaptureFixture[str],
     ) -> None:
         self._compress(tmp_path, monkeypatch, capsys)
-        argv = ["school", "context", "status", "--worktree", str(tmp_path)]
-        with patch("sys.argv", argv), patch("school.cli.SchoolConfig"):
+        argv = ["toolio", "context", "status", "--worktree", str(tmp_path)]
+        with patch("sys.argv", argv), patch("toolio.cli.ToolioConfig"):
             main()
         out = capsys.readouterr().out
-        assert "[school] compacted" in out
+        assert "[toolio] compacted" in out
         assert "blocks: " in out
 ```
 
@@ -1976,7 +1976,7 @@ class TestContextCommand:
 Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_cli.py`
 Expected: FAIL — argparse rejects `context` as an invalid choice (`SystemExit: 2`); `test_missing_subcommand_exits` may already pass (same exit code). All pre-existing tests still pass.
 
-- [ ] **Step 3: Implement `school context` in `school/cli.py`**
+- [ ] **Step 3: Implement `toolio context` in `toolio/cli.py`**
 
 3a. Insert after the end of `_cmd_skills` (immediately before `def main()`):
 
@@ -1995,14 +1995,14 @@ def _read_messages() -> list[dict]:
 
 
 def _cmd_context(args: argparse.Namespace) -> None:
-    """school context: status | compress | restore | switch | keep."""
+    """toolio context: status | compress | restore | switch | keep."""
     import json
 
-    from school import bridge
+    from toolio import bridge
 
     action = args.context_command
     if action is None:
-        print("school context: missing subcommand", file=sys.stderr)
+        print("toolio context: missing subcommand", file=sys.stderr)
         sys.exit(2)
 
     worktree = args.worktree or str(Path.cwd())
@@ -2090,7 +2090,7 @@ def _cmd_context(args: argparse.Namespace) -> None:
     context_subparsers.add_parser(
         "switch",
         parents=[context_common],
-        help="School owns compression from now on (clean break)",
+        help="Toolio owns compression from now on (clean break)",
     )
     context_subparsers.add_parser(
         "keep",
@@ -2123,7 +2123,7 @@ The file enters this task with 2 pre-existing ruff errors; both must end green:
     ) -> None:
 ```
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/cli.py tests/unit/test_cli.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/cli.py tests/unit/test_cli.py`
 Expected: All checks passed!
 
 - [ ] **Step 6: Regression**
@@ -2136,12 +2136,12 @@ Expected: all passed
 ### Task 7: Chip rendering across surfaces (`emit_chip`)
 
 **Files:**
-- Modify: `school/plugin_source.py` (`experimental.text.complete` appends the stored chip line)
+- Modify: `toolio/plugin_source.py` (`experimental.text.complete` appends the stored chip line)
 - Create: `tests/unit/test_context_chip_wiring.py`
 
 **Interfaces:**
-- Produces: footer wire format — after the existing status line, one extra raw line `schoolStatus.chip` (e.g. `[school] ctx 62% · −18.4k tok`) whenever Task 3's `applyView` stored a chip; idempotency guard unchanged. Chips on bridge/MCP/CLI already flow from Task 2/5 (`chip` key in every context response) — this task pins the voice contract with tests and renders the footer chip.
-- Consumes: `core.context.build_chip` (S1), `schoolStatus.chip` (Task 3), context responses with `chip` (Task 2/5). Voice (spec §6): one calm monospace line, middle-dot segments, **no `$` in S2** (`spend_usd` is S3).
+- Produces: footer wire format — after the existing status line, one extra raw line `toolioStatus.chip` (e.g. `[toolio] ctx 62% · −18.4k tok`) whenever Task 3's `applyView` stored a chip; idempotency guard unchanged. Chips on bridge/MCP/CLI already flow from Task 2/5 (`chip` key in every context response) — this task pins the voice contract with tests and renders the footer chip.
+- Consumes: `core.context.build_chip` (S1), `toolioStatus.chip` (Task 3), context responses with `chip` (Task 2/5). Voice (spec §6): one calm monospace line, middle-dot segments, **no `$` in S2** (`spend_usd` is S3).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2159,8 +2159,8 @@ from pathlib import Path
 import pytest
 
 from core.context import build_chip
-from school import bridge
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio import bridge
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 
 def big_msgs(n: int = 8) -> list[dict]:
@@ -2175,12 +2175,12 @@ class TestChipVoice:
 
     def test_ctx_chip_matches_spec(self) -> None:
         assert build_chip(used_ratio=0.62, saved_tokens=18400) == (
-            "[school] ctx 62% · −18.4k tok"
+            "[toolio] ctx 62% · −18.4k tok"
         )
 
     def test_compacted_chip_matches_spec(self) -> None:
         assert build_chip(blocks_added=2, restores=1) == (
-            "[school] compacted 2 blocks · restorable · 1 restored"
+            "[toolio] compacted 2 blocks · restorable · 1 restored"
         )
 
     def test_silence_without_data(self) -> None:
@@ -2207,11 +2207,11 @@ class TestBridgeChip:
         resp = bridge._COMMANDS["context_compress"](
             {"worktree": wt, "session": "chip1", "messages": big_msgs()}
         )
-        assert resp["chip"].startswith("[school] compacted")
+        assert resp["chip"].startswith("[toolio] compacted")
         status = bridge._COMMANDS["context_status"](
             {"worktree": wt, "session": "chip1"}
         )
-        assert status["chip"].startswith("[school] compacted")
+        assert status["chip"].startswith("[toolio] compacted")
 
     def test_view_chip_is_ctx_voice(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -2225,7 +2225,7 @@ class TestBridgeChip:
         view = bridge._COMMANDS["context_view"](
             {"worktree": wt, "session": "chip2", "messages": big_msgs()}
         )
-        assert view["chip"].startswith("[school] ctx")
+        assert view["chip"].startswith("[toolio] ctx")
 
 
 class TestMcpChip:
@@ -2234,17 +2234,17 @@ class TestMcpChip:
     def test_status_tool_returns_chip(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from school.mcp import server as mcp_server
+        from toolio.mcp import server as mcp_server
 
         monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
         monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         mcp_server._call_tool(
-            wt, "school_context_compress", {"messages": big_msgs()}
+            wt, "toolio_context_compress", {"messages": big_msgs()}
         )
-        result = mcp_server._call_tool(wt, "school_context_status", {})
+        result = mcp_server._call_tool(wt, "toolio_context_status", {})
         payload = json.loads(result.content[0].text)
-        assert payload["chip"].startswith("[school] compacted")
+        assert payload["chip"].startswith("[toolio] compacted")
 
 
 class TestFooterChipWiring:
@@ -2266,40 +2266,40 @@ class TestFooterChipWiring:
         return match.group(0)
 
     def test_apply_view_persists_chip(self) -> None:
-        assert "schoolStatus.chip = String(" in self._apply_view_block()
+        assert "toolioStatus.chip = String(" in self._apply_view_block()
 
     def test_footer_appends_chip_after_status_line(self) -> None:
         block = self._complete_block()
-        footer_at = block.index("[school] ${schoolFooter()}")
-        chip_at = block.index("if (schoolStatus.chip)")
+        footer_at = block.index("[toolio] ${toolioFooter()}")
+        chip_at = block.index("if (toolioStatus.chip)")
         assert footer_at < chip_at
 
     def test_footer_stays_idempotent(self) -> None:
         block = self._complete_block()
-        assert 'output.text.includes("[school] route:")' in block
+        assert 'output.text.includes("[toolio] route:")' in block
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_context_chip_wiring.py`
-Expected: FAIL — `test_footer_appends_chip_after_status_line` fails (`if (schoolStatus.chip)` not in the text.complete hook); all other tests already pass (they pin S1/Task-2 behavior).
+Expected: FAIL — `test_footer_appends_chip_after_status_line` fails (`if (toolioStatus.chip)` not in the text.complete hook); all other tests already pass (they pin S1/Task-2 behavior).
 
 - [ ] **Step 3: Render the chip in the footer**
 
-In `school/plugin_source.py`, inside the `"experimental.text.complete"` hook, change:
+In `toolio/plugin_source.py`, inside the `"experimental.text.complete"` hook, change:
 
 ```ts
-        output.text = `${output.text}\n\n[school] ${schoolFooter()}`
+        output.text = `${output.text}\n\n[toolio] ${toolioFooter()}`
 ```
 
 to:
 
 ```ts
-        output.text = `${output.text}\n\n[school] ${schoolFooter()}`
-        if (schoolStatus.chip) output.text += `\n${schoolStatus.chip}`
+        output.text = `${output.text}\n\n[toolio] ${toolioFooter()}`
+        if (toolioStatus.chip) output.text += `\n${toolioStatus.chip}`
 ```
 
-The idempotency guard (`output.text.includes("[school] route:")`) and everything else in the hook stay byte-for-byte unchanged.
+The idempotency guard (`output.text.includes("[toolio] route:")`) and everything else in the hook stay byte-for-byte unchanged.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
@@ -2308,7 +2308,7 @@ Expected: all passed
 
 - [ ] **Step 5: Regression (footer + full hooks + live footer)**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py tests/unit/test_bridge_context.py tests/integration/test_plugin_live.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py tests/unit/test_bridge_context.py tests/integration/test_plugin_live.py`
 Expected: all passed — the live footer harness stores no chip, so `first == second` idempotency is unchanged.
 
 - [ ] **Step 6: Ruff (E501 budget!)**
@@ -2316,7 +2316,7 @@ Expected: all passed — the live footer harness stores no chip, so `first == se
 Run: `& ".venv\Scripts\python.exe" -m ruff check tests/unit/test_context_chip_wiring.py`
 Expected: All checks passed!
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py`
 Expected: **16 errors** (unchanged baseline)
 
 ---
@@ -2324,17 +2324,17 @@ Expected: **16 errors** (unchanged baseline)
 ### Task 8: Compaction nudge (`experimental.session.compacting`)
 
 **Files:**
-- Modify: `school/plugin_source.py` (new hook between `experimental.text.complete` and `experimental.chat.messages.transform`)
-- Modify: `tests/unit/test_school_plugin_hooks.py` (`EXPECTED_HOOKS` + docstring + append `class TestCompactingNudge`)
-- Test: append `class TestCompactingNudge` at END of `tests/unit/test_school_plugin_hooks.py`
+- Modify: `toolio/plugin_source.py` (new hook between `experimental.text.complete` and `experimental.chat.messages.transform`)
+- Modify: `tests/unit/test_toolio_plugin_hooks.py` (`EXPECTED_HOOKS` + docstring + append `class TestCompactingNudge`)
+- Test: append `class TestCompactingNudge` at END of `tests/unit/test_toolio_plugin_hooks.py`
 
 **Interfaces:**
-- Produces (TS): hook `"experimental.session.compacting": async (_input, output) => {...}` which, only when hooks+ctx are on and `SCHOOL_COMPRESS != "0"`, estimates `output.context` via the existing `ctxEstimate`, and when it reaches `CTX_THRESHOLD` pushes one calm line onto the compaction context: `[school] compaction · school_context_compress keeps blocks restorable`.
+- Produces (TS): hook `"experimental.session.compacting": async (_input, output) => {...}` which, only when hooks+ctx are on and `SCHOOL_COMPRESS != "0"`, estimates `output.context` via the existing `ctxEstimate`, and when it reaches `CTX_THRESHOLD` pushes one calm line onto the compaction context: `[toolio] compaction · toolio_context_compress keeps blocks restorable`.
 - Consumes: `hooksEnabled()`, `ctxEnabled()`, `ctxEstimate`, `CTX_THRESHOLD` (all S1-exists). Never touches session history — only the `output.context` array of the compaction event. Fail-open: any error → compaction proceeds unmodified.
 
 - [ ] **Step 1: Write the failing tests**
 
-1a. In `tests/unit/test_school_plugin_hooks.py`, extend `EXPECTED_HOOKS` (after `"experimental.text.complete",`):
+1a. In `tests/unit/test_toolio_plugin_hooks.py`, extend `EXPECTED_HOOKS` (after `"experimental.text.complete",`):
 
 ```python
     "experimental.session.compacting",
@@ -2346,7 +2346,7 @@ and add one bullet to the module docstring after the text.complete line:
 - ``experimental.session.compacting`` - budget-pressure nudge during auto-compaction
 ```
 
-1b. Append at the END of `tests/unit/test_school_plugin_hooks.py`:
+1b. Append at the END of `tests/unit/test_toolio_plugin_hooks.py`:
 
 ```python
 class TestCompactingNudge:
@@ -2368,10 +2368,10 @@ class TestCompactingNudge:
         assert "CTX_THRESHOLD" in block
         assert "context.push(" in block
 
-    def test_nudge_is_school_voice(self) -> None:
+    def test_nudge_is_toolio_voice(self) -> None:
         block = self._block()
-        assert "[school] compaction ·" in block
-        assert "school_context_compress" in block
+        assert "[toolio] compaction ·" in block
+        assert "toolio_context_compress" in block
 
     def test_fails_open(self) -> None:
         block = self._block()
@@ -2381,12 +2381,12 @@ class TestCompactingNudge:
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py`
 Expected: FAIL — `missing hook: experimental.session.compacting` and `hook not found: experimental.session.compacting`; everything else passes.
 
 - [ ] **Step 3: Implement the compacting hook**
 
-In `school/plugin_source.py`, insert between the end of the `"experimental.text.complete"` hook (`    },`) and the line `    "experimental.chat.messages.transform": async (_input, output) => {`:
+In `toolio/plugin_source.py`, insert between the end of the `"experimental.text.complete"` hook (`    },`) and the line `    "experimental.chat.messages.transform": async (_input, output) => {`:
 
 ```ts
     "experimental.session.compacting": async (_input, output) => {
@@ -2398,7 +2398,7 @@ In `school/plugin_source.py`, insert between the end of the `"experimental.text.
         const est = ctxEstimate(context.join("\n"))
         if (est < CTX_THRESHOLD) return
         context.push(
-          "[school] compaction · school_context_compress keeps blocks restorable",
+          "[toolio] compaction · toolio_context_compress keeps blocks restorable",
         )
       } catch {
         // Compaction nudges are best-effort.
@@ -2408,7 +2408,7 @@ In `school/plugin_source.py`, insert between the end of the `"experimental.text.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m pytest -q --no-header -p no:cacheprovider tests/unit/test_toolio_plugin_hooks.py`
 Expected: all passed (old + new)
 
 - [ ] **Step 5: Live TS syntax/regression gate**
@@ -2418,10 +2418,10 @@ Expected: all passed — the new hook is registered but never invoked by the har
 
 - [ ] **Step 6: Ruff (E501 budget!)**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py`
 Expected: **16 errors** (unchanged baseline)
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check tests/unit/test_school_plugin_hooks.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check tests/unit/test_toolio_plugin_hooks.py`
 Expected: All checks passed!
 
 ---
@@ -2432,7 +2432,7 @@ Expected: All checks passed!
 - Create: `tests/integration/test_context_surfaces.py`
 
 **Interfaces:**
-- Consumes: everything — five bridge commands over a real `python -m school.bridge` subprocess, apply-view + coexist gate through node running the real TS, kill switches, and the final regression gates.
+- Consumes: everything — five bridge commands over a real `python -m toolio.bridge` subprocess, apply-view + coexist gate through node running the real TS, kill switches, and the final regression gates.
 - Produces: the S2 exit evidence (spec §10): all surfaces live; DCP-present and absent modes both tested; parity/counts green; battery green.
 
 - [ ] **Step 1: Write the integration tests**
@@ -2452,7 +2452,7 @@ from pathlib import Path
 
 import pytest
 
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -2475,9 +2475,9 @@ tool.schema = chain;
 """
 
 TRANSFORM_HARNESS = """\
-import School from "./school.ts";
+import Toolio from "./toolio.ts";
 const [worktree] = process.argv.slice(2);
-const hooks = await School({ worktree, directory: worktree });
+const hooks = await Toolio({ worktree, directory: worktree });
 const mk = (i) => ({
   info: {
     id: `m${i}`,
@@ -2511,13 +2511,13 @@ def _live_env() -> dict:
 
 
 def run_bridge(req: dict, env: dict | None = None) -> dict:
-    """One JSON request through a real ``python -m school.bridge`` process."""
+    """One JSON request through a real ``python -m toolio.bridge`` process."""
     proc_env = dict(os.environ)
     proc_env["PYTHONPATH"] = str(REPO_ROOT)
     if env:
         proc_env.update(env)
     proc = subprocess.run(
-        [sys.executable, "-m", "school.bridge"],
+        [sys.executable, "-m", "toolio.bridge"],
         input=json.dumps(req),
         capture_output=True,
         text=True,
@@ -2551,7 +2551,7 @@ def live_msgs() -> list[dict]:
 def plugin_dir(tmp_path: Path) -> Path:
     d = tmp_path / "plugin"
     (d / "node_modules" / "@opencode-ai" / "plugin").mkdir(parents=True)
-    (d / "school.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
+    (d / "toolio.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
     (d / "package.json").write_text('{"type": "module"}', encoding="utf-8")
     stub = d / "node_modules" / "@opencode-ai" / "plugin"
     (stub / "package.json").write_text(STUB_PKG, encoding="utf-8")
@@ -2588,7 +2588,7 @@ class TestBridgeSubprocess:
             }
         )
         assert resp["ok"] is True
-        assert resp["mode"] == "school"
+        assert resp["mode"] == "toolio"
         assert resp["blocks"] == 0
         assert "chip" in resp
 
@@ -2604,7 +2604,7 @@ class TestBridgeSubprocess:
         assert switched["decision"] == "switch"
         again = run_bridge({**req, "action": "get"})
         assert again["decision"] == "switch"
-        assert again["mode"] == "school"
+        assert again["mode"] == "toolio"
         bad = run_bridge({**req, "action": "set_decision", "decision": "nope"})
         assert bad["ok"] is False
         assert bad["error"]["type"] == "validation"
@@ -2640,7 +2640,7 @@ class TestBridgeSubprocess:
         )
         assert compressed["ok"] is True
         assert compressed["blocks_added"] >= 1
-        assert compressed["chip"].startswith("[school] compacted")
+        assert compressed["chip"].startswith("[toolio] compacted")
         status = run_bridge(
             {"command": "context_status", "worktree": wt, "session": "sub1"}
         )
@@ -2693,7 +2693,7 @@ class TestLiveApplyView:
         out = _run_transform(plugin_dir, worktree, env)
         assert out["after"] != out["before"], "view must replace block ranges"
         assert len(out["after"]) < len(out["before"])
-        assert "school-view-" in out["after"]
+        assert "toolio-view-" in out["after"]
 
     def test_dcp_present_blocks_view_and_offers_once(
         self, plugin_dir: Path, tmp_path: Path
@@ -2707,7 +2707,7 @@ class TestLiveApplyView:
         env = _live_env()
         out = _run_transform(plugin_dir, worktree, env)
         assert out["after"] == out["before"], "DCP owns the view until decided"
-        state_path = worktree / ".school" / "context" / "coexistence.json"
+        state_path = worktree / ".toolio" / "context" / "coexistence.json"
         assert state_path.exists(), "coexist set_offer must persist state"
         state = json.loads(state_path.read_text(encoding="utf-8"))
         assert state["offer_shown"] is True
@@ -2726,14 +2726,14 @@ Expected: all passed — 3049 baseline + the new S2 tests, zero failures/errors;
 
 - [ ] **Step 4: Ruff over every touched Python file**
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check core/context/coexist.py core/context/view.py school/bridge.py school/cli.py school/mcp/server.py tests/unit/test_context_coexist.py tests/unit/test_bridge_context.py tests/unit/test_cli.py tests/unit/test_mcp_server.py tests/unit/test_school_plugin_bridge.py tests/unit/test_school_plugin_hooks.py tests/unit/test_context_chip_wiring.py tests/integration/test_mcp_stdio.py tests/integration/test_plugin_live.py tests/integration/test_context_surfaces.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check core/context/coexist.py core/context/view.py toolio/bridge.py toolio/cli.py toolio/mcp/server.py tests/unit/test_context_coexist.py tests/unit/test_bridge_context.py tests/unit/test_cli.py tests/unit/test_mcp_server.py tests/unit/test_toolio_plugin_bridge.py tests/unit/test_toolio_plugin_hooks.py tests/unit/test_context_chip_wiring.py tests/integration/test_mcp_stdio.py tests/integration/test_plugin_live.py tests/integration/test_context_surfaces.py`
 Expected: All checks passed!
 
-Run: `& ".venv\Scripts\python.exe" -m ruff check school/plugin_source.py`
+Run: `& ".venv\Scripts\python.exe" -m ruff check toolio/plugin_source.py`
 Expected: **16 errors** (the unchanged baseline)
 
 ---
 
 ## Plan notes
 
-- **Task 3 assertion typo (fix at execution time):** `test_apply_view_stores_footer_chip` asserts `"schoolStatus.chip = chip"`, but Task 3 Step 3c implements `schoolStatus.chip = String((resp as any).chip ?? "")`. Change the assertion to `assert "schoolStatus.chip = String(" in block` (the implementation stays as written). Task 7's `test_apply_view_persists_chip` already asserts the correct substring.
+- **Task 3 assertion typo (fix at execution time):** `test_apply_view_stores_footer_chip` asserts `"toolioStatus.chip = chip"`, but Task 3 Step 3c implements `toolioStatus.chip = String((resp as any).chip ?? "")`. Change the assertion to `assert "toolioStatus.chip = String(" in block` (the implementation stays as written). Task 7's `test_apply_view_persists_chip` already asserts the correct substring.

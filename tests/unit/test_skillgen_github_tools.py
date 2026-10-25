@@ -1,4 +1,4 @@
-"""Phase 2 orchestrator tools (school_skill_*): registration, gating, wiring.
+"""Phase 2 orchestrator tools (toolio_skill_*): registration, gating, wiring.
 
 Every dispatch runs against a tmp_path worktree. Network tools are exercised
 either offline (SCHOOL_SKILLGEN_GITHUB_DISABLED) or with discovery functions
@@ -25,19 +25,19 @@ from core.routing.v26.tools.skillgen_github import (
 from core.skillgen.registry import SkillRegistry
 
 GITHUB_TOOL_NAMES = [
-    "school_skill_search_github",
-    "school_skill_discover",
-    "school_skill_analyze_external",
-    "school_skill_compare",
-    "school_skill_import",
+    "toolio_skill_search_github",
+    "toolio_skill_discover",
+    "toolio_skill_analyze_external",
+    "toolio_skill_compare",
+    "toolio_skill_import",
 ]
 
 DISPATCH_KWARGS: dict[str, dict[str, Any]] = {
-    "school_skill_search_github": {"capability_gap": "format markdown tables"},
-    "school_skill_discover": {"capability_gap": "format markdown tables"},
-    "school_skill_analyze_external": {"owner": "acme", "repo": "markdown-tools"},
-    "school_skill_compare": {"owner": "acme", "repo": "markdown-tools"},
-    "school_skill_import": {
+    "toolio_skill_search_github": {"capability_gap": "format markdown tables"},
+    "toolio_skill_discover": {"capability_gap": "format markdown tables"},
+    "toolio_skill_analyze_external": {"owner": "acme", "repo": "markdown-tools"},
+    "toolio_skill_compare": {"owner": "acme", "repo": "markdown-tools"},
+    "toolio_skill_import": {
         "owner": "acme",
         "repo": "markdown-tools",
         "approve": True,
@@ -110,21 +110,21 @@ class TestOfflineFailClosed:
 
     def test_analyze_without_owner_and_repo(self, tmp_path: Path) -> None:
         result = create_orchestrator().dispatch(
-            "school_skill_analyze_external", worktree=str(tmp_path)
+            "toolio_skill_analyze_external", worktree=str(tmp_path)
         )
         assert result.success is False
         assert result.data["reason"] == "owner and repo required"
 
     def test_compare_without_owner_and_repo(self, tmp_path: Path) -> None:
         result = create_orchestrator().dispatch(
-            "school_skill_compare", worktree=str(tmp_path)
+            "toolio_skill_compare", worktree=str(tmp_path)
         )
         assert result.success is False
         assert result.data["reason"] == "owner and repo required"
 
     def test_import_without_owner_and_repo(self, tmp_path: Path) -> None:
         result = create_orchestrator().dispatch(
-            "school_skill_import", worktree=str(tmp_path), approve=True
+            "toolio_skill_import", worktree=str(tmp_path), approve=True
         )
         assert result.success is False
         assert result.data["reason"] == "owner and repo required"
@@ -142,7 +142,7 @@ class TestKwargForwarding:
 
         monkeypatch.setattr(github_tools_module.discovery, "search_github", fake)
         result = create_orchestrator().dispatch(
-            "school_skill_search_github",
+            "toolio_skill_search_github",
             worktree=str(tmp_path),
             task="current task",
             capability_gap="missing capability",
@@ -166,7 +166,7 @@ class TestKwargForwarding:
 
         monkeypatch.setattr(github_tools_module.discovery, "discover", fake)
         result = create_orchestrator().dispatch(
-            "school_skill_discover",
+            "toolio_skill_discover",
             worktree=str(tmp_path),
             task="current task",
             capability_gap="missing capability",
@@ -192,7 +192,7 @@ class TestKwargForwarding:
 
         monkeypatch.setattr(github_tools_module.discovery, "analyze_external", fake)
         result = create_orchestrator().dispatch(
-            "school_skill_analyze_external",
+            "toolio_skill_analyze_external",
             worktree=str(tmp_path),
             owner="acme",
             repo="markdown-tools",
@@ -220,7 +220,7 @@ class TestKwargForwarding:
 
         monkeypatch.setattr(github_tools_module.discovery, "compare", fake)
         result = create_orchestrator().dispatch(
-            "school_skill_compare",
+            "toolio_skill_compare",
             worktree=str(tmp_path),
             owner="acme",
             repo="markdown-tools",
@@ -244,7 +244,7 @@ class TestKwargForwarding:
 
         monkeypatch.setattr(github_tools_module.discovery, "import_external", fake)
         result = create_orchestrator().dispatch(
-            "school_skill_import",
+            "toolio_skill_import",
             worktree=str(tmp_path),
             owner="acme",
             repo="markdown-tools",
@@ -279,7 +279,7 @@ class TestKwargForwarding:
 
         monkeypatch.setattr(github_tools_module.discovery, "import_external", fake)
         create_orchestrator().dispatch(
-            "school_skill_import",
+            "toolio_skill_import",
             worktree=str(tmp_path),
             owner="acme",
             repo="markdown-tools",
@@ -297,7 +297,7 @@ class TestKwargForwarding:
 
         monkeypatch.setattr(github_tools_module.discovery, "import_external", fake)
         result = create_orchestrator().dispatch(
-            "school_skill_import",
+            "toolio_skill_import",
             worktree=str(tmp_path),
             owner="acme",
             repo="markdown-tools",

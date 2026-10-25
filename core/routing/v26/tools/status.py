@@ -1,4 +1,4 @@
-"""Status tool for School V2.6 — checks component health."""
+"""Status tool for Toolio V2.6 — checks component health."""
 
 from __future__ import annotations
 
@@ -6,15 +6,15 @@ from core.routing.v26.tools.base import Tool, ToolResult, fail_open
 
 
 class StatusTool(Tool):
-    """Checks that School V2.6 components are importable and healthy."""
+    """Checks that Toolio V2.6 components are importable and healthy."""
 
     @property
     def name(self) -> str:
-        return "school_status"
+        return "toolio_status"
 
     @property
     def description(self) -> str:
-        return "Check School V2.6 component status and availability."
+        return "Check Toolio V2.6 component status and availability."
 
     @property
     def schema(self) -> dict:

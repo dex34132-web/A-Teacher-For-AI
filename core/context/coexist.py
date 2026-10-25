@@ -12,9 +12,9 @@ STATE_FILE = "coexistence.json"
 DCP_TOKEN = "@tarquinen/opencode-dcp"
 MAX_READ_BYTES = 1_048_576
 OFFER_TEXT = (
-    "School can now handle compression — with restore, budgets, and status. "
-    "Keep DCP, or switch? Run `school context switch` or "
-    "`school context keep` to decide."
+    "Toolio can now handle compression — with restore, budgets, and status. "
+    "Keep DCP, or switch? Run `toolio context switch` or "
+    "`toolio context keep` to decide."
 )
 
 _DCP_CACHE: dict[tuple[str, str], bool] = {}
@@ -117,12 +117,12 @@ def view_mode(worktree: str, dcp_hint: bool = False, home: Path | None = None) -
     state = load_state(worktree)
     decision = state.get("decision", "")
     if decision == "switch":
-        return "school"
+        return "toolio"
     if decision == "keep":
         return "dcp"
     if dcp_hint or detect_dcp_cached(worktree, home=home):
         return "dcp"
-    return "school"
+    return "toolio"
 
 
 __all__ = [

@@ -1,8 +1,8 @@
-"""Central memory manager for School V2.6.
+"""Central memory manager for Toolio V2.6.
 
 Coordinates the V2.6 read/write paths:
 - Memory request validation and scope enforcement
-- Retrieval coordination (via existing School systems)
+- Retrieval coordination (via existing Toolio systems)
 - Confidence filtering
 - Context budget enforcement
 - Experience capture
@@ -11,7 +11,7 @@ Coordinates the V2.6 read/write paths:
 
 Design principles:
 - Does NOT replace V2.3 confidence, V2.2 conflict, V2.4.2 lifecycle, V2.5 routing
-- Coordinates existing School systems rather than rebuilding them
+- Coordinates existing Toolio systems rather than rebuilding them
 - No global mutable state
 - Deterministic and auditable
 """
@@ -344,7 +344,7 @@ class MemoryManager:
     ) -> tuple[bool, str]:
         """Check if an experience is a candidate for promotion.
 
-        Uses existing School mechanisms (confidence, evidence, lifecycle)
+        Uses existing Toolio mechanisms (confidence, evidence, lifecycle)
         to determine promotion readiness.
 
         Args:

@@ -1,4 +1,4 @@
-"""Adversarial fuzz campaign: School memory + routing tool suite.
+"""Adversarial fuzz campaign: Toolio memory + routing tool suite.
 
 Exercises EVERY tool and feature 2000 times each with failure-seeking inputs
 (wrong types for every parameter, NUL bytes, huge payloads, unicode, cyclic
@@ -6,7 +6,7 @@ structures, NaN/inf, path traversal, corrupt JSONL state) against the
 FAIL-OPEN invariant: tool boundaries return a result object and NEVER raise.
 
 Ownership: crashes in core/routing/v26/** (owned) are fixed in place.
-Crashes that trace to NON-OWNED files (school/mcp/server.py, core/learner,
+Crashes that trace to NON-OWNED files (toolio/mcp/server.py, core/learner,
 core/skillgen, core/routing/v26/memory_*.py internals) are recorded in
 NON_OWNED_FINDINGS and allowed only via KNOWN_NON_OWNED signatures; any NEW
 signature fails the run.
@@ -95,11 +95,11 @@ NON_OWNED_FINDINGS: dict[str, int] = {}
 #: Signatures confirmed as non-owned bugs and reported upstream. A NEW
 #: signature (not in this set) raises and fails the campaign.
 KNOWN_NON_OWNED: set[str] = {
-    # school/mcp/server.py:_call_route line ~1473 — `arguments.get("outcome")
+    # toolio/mcp/server.py:_call_route line ~1473 — `arguments.get("outcome")
     # in {"helpful", "useless", "neutral"}` raises TypeError for JSON list/
     # dict outcomes (unhashable). Reachable from valid MCP JSON input
-    # (school_route mode=report, outcome: []). NON-OWNED: recorded only.
-    "TypeError:school/mcp/server.py:_call_route",
+    # (toolio_route mode=report, outcome: []). NON-OWNED: recorded only.
+    "TypeError:toolio/mcp/server.py:_call_route",
     # core/routing/v26/memory_types.py MemoryEntry.to_dict — `sorted(self.tags)`
     # raises TypeError for mixed-type tags left by corrupt persistence state.
     # NON-OWNED: defensively wrapped at owned tool boundaries (safe_memory_dict).
@@ -139,7 +139,7 @@ def _record_finding(exc: BaseException) -> str:
 
 
 def _mcp_call(fn, *args, **kwargs) -> dict:
-    """Call a NON-OWNED school/mcp helper fail-open.
+    """Call a NON-OWNED toolio/mcp helper fail-open.
 
     The MCP route tools have a documented ValueError contract (missing
     situation/severity/lesson) which is a graceful outcome. Any other raise
@@ -147,7 +147,7 @@ def _mcp_call(fn, *args, **kwargs) -> dict:
     """
     try:
         result = fn(*args, **kwargs)
-    except ValueError as exc:  # documented contract for school_route
+    except ValueError as exc:  # documented contract for toolio_route
         return {"documented_error": f"{type(exc).__name__}: {str(exc)[:80]}"}
     except Exception as exc:  # noqa: BLE001 - record non-owned bugs
         return {"recorded_non_owned_bug": _record_finding(exc)}
@@ -171,7 +171,7 @@ _WORKTREES: list[str] = []
 
 
 def _make_worktree() -> str:
-    wt = tempfile.mkdtemp(prefix="school-fuzz-")
+    wt = tempfile.mkdtemp(prefix="toolio-fuzz-")
     _WORKTREES.append(wt)
     return wt
 
@@ -355,7 +355,7 @@ def _check_pipeline(result: Any) -> None:
 
 
 # ---------------------------------------------------------------------------
-# 1-2. school_remember: content / outcome-type / tags+scope
+# 1-2. toolio_remember: content / outcome-type / tags+scope
 # ---------------------------------------------------------------------------
 
 
@@ -364,7 +364,7 @@ def test_fuzz_remember_content() -> None:
         REMEMBER.execute,
         n=N,
         make_args=lambda i: ((), {"content": _v(_TEXT_POOL, i, 1)}),
-        label="school_remember.content",
+        label="toolio_remember.content",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
@@ -381,7 +381,7 @@ def test_fuzz_remember_outcome_type() -> None:
         REMEMBER.execute,
         n=N,
         make_args=args,
-        label="school_remember.outcome_type",
+        label="toolio_remember.outcome_type",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
@@ -405,14 +405,14 @@ def test_fuzz_remember_tags_scope() -> None:
         REMEMBER.execute,
         n=N,
         make_args=args,
-        label="school_remember.tags_scope",
+        label="toolio_remember.tags_scope",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 2. school_recall: query / scope+session params
+# 2. toolio_recall: query / scope+session params
 # ---------------------------------------------------------------------------
 
 
@@ -421,7 +421,7 @@ def test_fuzz_recall_query() -> None:
         RECALL.execute,
         n=N,
         make_args=lambda i: ((), {"query": _v(_TEXT_POOL, i, 11)}),
-        label="school_recall.query",
+        label="toolio_recall.query",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
@@ -442,14 +442,14 @@ def test_fuzz_recall_scope_session() -> None:
         RECALL.execute,
         n=N,
         make_args=args,
-        label="school_recall.scope_session",
+        label="toolio_recall.scope_session",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 3. school_learn / school_search: semantic query + TF-IDF + rank params
+# 3. toolio_learn / toolio_search: semantic query + TF-IDF + rank params
 # ---------------------------------------------------------------------------
 
 
@@ -469,7 +469,7 @@ def test_fuzz_learn_semantic_query() -> None:
         make_args=lambda i: (
             (_v(_TEXT_POOL, i, 17), _v(_TEXT_POOL, i, 18), _v(_NUM_POOL, i, 19)), {}
         ),
-        label="school_learn.semantic_query",
+        label="toolio_learn.semantic_query",
         check=_check_dict,
     )
     assert report.ok, report.summary()
@@ -487,14 +487,14 @@ def test_fuzz_search_rank_params() -> None:
         SEARCH.execute,
         n=N,
         make_args=args,
-        label="school_search.rank_params",
+        label="toolio_search.rank_params",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 4. school_conflict: incoming vs stored, similarity edge cases
+# 4. toolio_conflict: incoming vs stored, similarity edge cases
 # ---------------------------------------------------------------------------
 
 
@@ -511,14 +511,14 @@ def test_fuzz_conflict_similarity_edges() -> None:
         CONFLICT.execute,
         n=N,
         make_args=args,
-        label="school_conflict.similarity_edges",
+        label="toolio_conflict.similarity_edges",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 5. school_confidence: claim scoring + band thresholds
+# 5. toolio_confidence: claim scoring + band thresholds
 # ---------------------------------------------------------------------------
 
 
@@ -539,7 +539,7 @@ def test_fuzz_confidence_claim_scoring() -> None:
         CONFIDENCE.execute,
         n=N,
         make_args=args,
-        label="school_confidence.claim_scoring",
+        label="toolio_confidence.claim_scoring",
         check=_check_conf_result,
     )
     assert report.ok, report.summary()
@@ -564,14 +564,14 @@ def test_fuzz_confidence_band_thresholds() -> None:
         CONFIDENCE.execute,
         n=N,
         make_args=args,
-        label="school_confidence.band_thresholds",
+        label="toolio_confidence.band_thresholds",
         check=_check_conf_result,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 6. school_deduplicate: merge flag + limit extremes
+# 6. toolio_deduplicate: merge flag + limit extremes
 # ---------------------------------------------------------------------------
 
 
@@ -589,14 +589,14 @@ def test_fuzz_deduplicate_merge_limit() -> None:
         DEDUP.execute,
         n=N,
         make_args=args,
-        label="school_deduplicate.merge_limit",
+        label="toolio_deduplicate.merge_limit",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 7. school_knowledge: pattern extraction over hostile memory sets
+# 7. toolio_knowledge: pattern extraction over hostile memory sets
 # ---------------------------------------------------------------------------
 
 
@@ -622,14 +622,14 @@ def test_fuzz_knowledge_pattern_extraction() -> None:
         call,
         n=N,
         make_args=lambda i: ((_v(_ID_POOL, i, 38), _v(_TEXT_POOL, i, 39)), {}),
-        label="school_knowledge.pattern_extraction",
+        label="toolio_knowledge.pattern_extraction",
         check=_check_dict,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 8. school_lifecycle: score/decay/promote/archive + hostile ids/amounts
+# 8. toolio_lifecycle: score/decay/promote/archive + hostile ids/amounts
 # ---------------------------------------------------------------------------
 
 
@@ -645,14 +645,14 @@ def test_fuzz_lifecycle_actions() -> None:
         LIFECYCLE.execute,
         n=N,
         make_args=args,
-        label="school_lifecycle.actions",
+        label="toolio_lifecycle.actions",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 9. school_status / school_dashboard / school_diagnose: read-only status
+# 9. toolio_status / toolio_dashboard / toolio_diagnose: read-only status
 # ---------------------------------------------------------------------------
 
 
@@ -661,7 +661,7 @@ def test_fuzz_status_readonly() -> None:
         STATUS.execute,
         n=N,
         make_args=lambda i: ((), {"probe": gen_value(depth=3)}),
-        label="school_status.readonly",
+        label="toolio_status.readonly",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
@@ -672,7 +672,7 @@ def test_fuzz_diagnose_readonly() -> None:
         DIAGNOSE.execute,
         n=N,
         make_args=lambda i: ((), {"probe": gen_value(depth=3)}),
-        label="school_diagnose.readonly",
+        label="toolio_diagnose.readonly",
         check=_check_tool_result,
     )
     assert report.ok, report.summary()
@@ -685,7 +685,7 @@ def test_fuzz_diagnose_readonly() -> None:
 
 def test_fuzz_orchestrator_dispatch() -> None:
     def args(i: int):
-        names = ["school_remember", "school_recall", "nope", "", None, 123, ["x"], {"a": 1}]
+        names = ["toolio_remember", "toolio_recall", "nope", "", None, 123, ["x"], {"a": 1}]
         return (
             (_v(names, i, 43),),
             {"content": _v(_TEXT_POOL, i, 44), "query": _v(_TEXT_POOL, i, 45),
@@ -706,12 +706,12 @@ def test_fuzz_orchestrator_pipeline() -> None:
     def steps_for(i: int) -> Any:
         kind = i % 5
         if kind == 0:
-            return [("school_remember", {"content": f"pipe {i}"}),
-                    ("school_conflict", {"content": f"pipe {i}"})]
+            return [("toolio_remember", {"content": f"pipe {i}"}),
+                    ("toolio_conflict", {"content": f"pipe {i}"})]
         if kind == 1:
-            return [("school_remember", "not-a-dict")]
+            return [("toolio_remember", "not-a-dict")]
         if kind == 2:
-            return [("unknown-tool", {"content": "x"}), ("school_status", {})]
+            return [("unknown-tool", {"content": "x"}), ("toolio_status", {})]
         if kind == 3:
             return gen_value(depth=3)
         return "not-steps"
@@ -730,7 +730,7 @@ def test_fuzz_orchestrator_parallel() -> None:
     def calls_for(i: int) -> Any:
         kind = i % 4
         if kind == 0:
-            return [("school_status", {}), ("school_diagnose", {})]
+            return [("toolio_status", {}), ("toolio_diagnose", {})]
         if kind == 1:
             return [("unknown", {"probe": gen_value(depth=2)})]
         if kind == 2:
@@ -760,7 +760,7 @@ def test_fuzz_registry_dispatch() -> None:
 
     def args(i: int):
         return (
-            (_v(["school_remember", "school_status", "zzz", "", None, 123, [1], {"a": 1}], i, 47),
+            (_v(["toolio_remember", "toolio_status", "zzz", "", None, 123, [1], {"a": 1}], i, 47),
              _v([None, {"query": "python"}, {"content": "c"}, gen_value(depth=2)], i, 48)),
             {},
         )
@@ -924,7 +924,7 @@ def test_fuzz_manager_lifecycle_ops() -> None:
 
 
 def test_fuzz_manager_load_corrupt() -> None:
-    store_dir = pathlib.Path(WT_B) / ".school" / "memory"
+    store_dir = pathlib.Path(WT_B) / ".toolio" / "memory"
     store_dir.mkdir(parents=True, exist_ok=True)
     store_file = store_dir / "v26_memory.json"
 
@@ -1176,7 +1176,7 @@ def test_fuzz_security_validate_detect() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 16-18. school_route (MCP, NON-OWNED): assess / report / knobs
+# 16-18. toolio_route (MCP, NON-OWNED): assess / report / knobs
 #
 # The MCP route tools document a ValueError contract for missing
 # situation/severity/lesson (tests/unit/test_mcp_server.py). Anything else
@@ -1185,7 +1185,7 @@ def test_fuzz_security_validate_detect() -> None:
 
 
 def _mcp_server():
-    from school.mcp import server as mcp_server  # noqa: PLC0415
+    from toolio.mcp import server as mcp_server  # noqa: PLC0415
 
     return mcp_server
 
@@ -1200,7 +1200,7 @@ _JSON_VALUES = [
 ]
 
 
-def test_fuzz_school_route_assess() -> None:
+def test_fuzz_toolio_route_assess() -> None:
     mcp = _mcp_server()
 
     def args(i: int):
@@ -1214,13 +1214,13 @@ def test_fuzz_school_route_assess() -> None:
         lambda worktree, arguments: _mcp_call(mcp._call_route, worktree, arguments),
         n=N,
         make_args=args,
-        label="school_route.assess",
+        label="toolio_route.assess",
         check=_check_dict,
     )
     assert report.ok, report.summary()
 
 
-def test_fuzz_school_route_report() -> None:
+def test_fuzz_toolio_route_report() -> None:
     mcp = _mcp_server()
 
     def args(i: int):
@@ -1235,15 +1235,15 @@ def test_fuzz_school_route_report() -> None:
         lambda worktree, arguments: _mcp_call(mcp._call_route, worktree, arguments),
         n=N,
         make_args=args,
-        label="school_route.report",
+        label="toolio_route.report",
         check=_check_dict,
     )
     assert report.ok, report.summary()
 
 
-def test_fuzz_school_route_knobs() -> None:
+def test_fuzz_toolio_route_knobs() -> None:
     mcp = _mcp_server()
-    knobs_dir = pathlib.Path(WT_A) / ".school" / "memory"
+    knobs_dir = pathlib.Path(WT_A) / ".toolio" / "memory"
     knobs_dir.mkdir(parents=True, exist_ok=True)
     knobs_file = knobs_dir / "routing.json"
 
@@ -1276,19 +1276,19 @@ def test_fuzz_school_route_knobs() -> None:
         call,
         n=N,
         make_args=lambda i: ((i,), {}),
-        label="school_route.knobs",
+        label="toolio_route.knobs",
         check=_check_dict,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 19. school_route_stats (MCP, NON-OWNED): aggregation over hostile histories
+# 19. toolio_route_stats (MCP, NON-OWNED): aggregation over hostile histories
 # ---------------------------------------------------------------------------
 
 
 def _write_stats_state(wt: str, i: int) -> None:
-    root = pathlib.Path(wt) / ".school" / "memory"
+    root = pathlib.Path(wt) / ".toolio" / "memory"
     root.mkdir(parents=True, exist_ok=True)
     path = root / "routing-stats.jsonl"
     state = i % 6
@@ -1316,7 +1316,7 @@ def _write_stats_state(wt: str, i: int) -> None:
         )
 
 
-def test_fuzz_school_route_stats_aggregation() -> None:
+def test_fuzz_toolio_route_stats_aggregation() -> None:
     mcp = _mcp_server()
 
     def call(i: int) -> dict:
@@ -1330,18 +1330,18 @@ def test_fuzz_school_route_stats_aggregation() -> None:
         call,
         n=N,
         make_args=lambda i: ((i,), {}),
-        label="school_route_stats.aggregation",
+        label="toolio_route_stats.aggregation",
         check=_check_dict,
     )
     assert report.ok, report.summary()
 
 
 # ---------------------------------------------------------------------------
-# 20. school_dashboard (MCP, NON-OWNED): read-only status object
+# 20. toolio_dashboard (MCP, NON-OWNED): read-only status object
 # ---------------------------------------------------------------------------
 
 
-def test_fuzz_school_dashboard_readonly() -> None:
+def test_fuzz_toolio_dashboard_readonly() -> None:
     mcp = _mcp_server()
 
     def call(i: int) -> dict:
@@ -1354,7 +1354,7 @@ def test_fuzz_school_dashboard_readonly() -> None:
         call,
         n=N,
         make_args=lambda i: ((i,), {}),
-        label="school_dashboard.readonly",
+        label="toolio_dashboard.readonly",
         check=_check_dict,
     )
     assert report.ok, report.summary()
@@ -1365,21 +1365,21 @@ def test_fuzz_school_dashboard_readonly() -> None:
 # ---------------------------------------------------------------------------
 
 EXPECTED_LABELS = {
-    "school_remember.content": N,
-    "school_remember.outcome_type": N,
-    "school_remember.tags_scope": N,
-    "school_recall.query": N,
-    "school_recall.scope_session": N,
-    "school_learn.semantic_query": N,
-    "school_search.rank_params": N,
-    "school_conflict.similarity_edges": N,
-    "school_confidence.claim_scoring": N,
-    "school_confidence.band_thresholds": N,
-    "school_deduplicate.merge_limit": N,
-    "school_knowledge.pattern_extraction": N,
-    "school_lifecycle.actions": N,
-    "school_status.readonly": N,
-    "school_diagnose.readonly": N,
+    "toolio_remember.content": N,
+    "toolio_remember.outcome_type": N,
+    "toolio_remember.tags_scope": N,
+    "toolio_recall.query": N,
+    "toolio_recall.scope_session": N,
+    "toolio_learn.semantic_query": N,
+    "toolio_search.rank_params": N,
+    "toolio_conflict.similarity_edges": N,
+    "toolio_confidence.claim_scoring": N,
+    "toolio_confidence.band_thresholds": N,
+    "toolio_deduplicate.merge_limit": N,
+    "toolio_knowledge.pattern_extraction": N,
+    "toolio_lifecycle.actions": N,
+    "toolio_status.readonly": N,
+    "toolio_diagnose.readonly": N,
     "orchestrator.dispatch": N,
     "orchestrator.pipeline": N,
     "orchestrator.parallel": N,
@@ -1392,11 +1392,11 @@ EXPECTED_LABELS = {
     "semantic_retrieval.scored_query": N,
     "identity.construct_roundtrip": N,
     "security.validate_detect": N,
-    "school_route.assess": N,
-    "school_route.report": N,
-    "school_route.knobs": N,
-    "school_route_stats.aggregation": N,
-    "school_dashboard.readonly": N,
+    "toolio_route.assess": N,
+    "toolio_route.report": N,
+    "toolio_route.knobs": N,
+    "toolio_route_stats.aggregation": N,
+    "toolio_dashboard.readonly": N,
 }
 
 

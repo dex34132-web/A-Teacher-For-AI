@@ -1,4 +1,4 @@
-"""1A-2Z: orchestrator tools (school_skill_*) and bridge command wiring."""
+"""1A-2Z: orchestrator tools (toolio_skill_*) and bridge command wiring."""
 
 from __future__ import annotations
 
@@ -8,13 +8,13 @@ from core.routing.v26.factory import create_orchestrator
 from core.routing.v26.tools.skillgen import create_skillgen_tools
 
 SKILL_TOOLS = [
-    "school_skill_list",
-    "school_skill_search",
-    "school_skill_create",
-    "school_skill_use",
-    "school_skill_feedback",
-    "school_skill_status",
-    "school_skill_evolve",
+    "toolio_skill_list",
+    "toolio_skill_search",
+    "toolio_skill_create",
+    "toolio_skill_use",
+    "toolio_skill_feedback",
+    "toolio_skill_status",
+    "toolio_skill_evolve",
 ]
 
 
@@ -64,7 +64,7 @@ class TestRegistration:
 
 class TestToolLoop:
     def test_status_on_empty_registry(self, tmp_path: Path) -> None:
-        result = _orch().dispatch("school_skill_status", worktree=str(tmp_path))
+        result = _orch().dispatch("toolio_skill_status", worktree=str(tmp_path))
         assert result.success is True
         assert result.data["ok"] is True
         assert result.data["skills"] == 0
@@ -76,26 +76,26 @@ class TestToolLoop:
         wt = str(tmp_path)
         orch = _orch()
 
-        created = orch.dispatch("school_skill_create", worktree=wt, **_payload())
+        created = orch.dispatch("toolio_skill_create", worktree=wt, **_payload())
         assert created.success is True
         assert created.data["action"] == "created"
         assert created.data["state"] == "active"
 
         searched = orch.dispatch(
-            "school_skill_search", worktree=wt, query="quarantine flaky test"
+            "toolio_skill_search", worktree=wt, query="quarantine flaky test"
         )
         assert searched.success is True
         assert searched.data["count"] >= 1
         assert searched.data["matches"][0]["name"] == "quarantine-flaky-tests"
 
         used = orch.dispatch(
-            "school_skill_use", worktree=wt, name="quarantine-flaky-tests"
+            "toolio_skill_use", worktree=wt, name="quarantine-flaky-tests"
         )
         assert used.success is True
         assert "name: quarantine-flaky-tests" in used.data["markdown"]
 
         feedback = orch.dispatch(
-            "school_skill_feedback",
+            "toolio_skill_feedback",
             worktree=wt,
             name="quarantine-flaky-tests",
             success=True,
@@ -105,24 +105,24 @@ class TestToolLoop:
         assert feedback.data["confidence"] > 0.5
         assert feedback.data["success_count"] == 1
 
-        listed = orch.dispatch("school_skill_list", worktree=wt)
+        listed = orch.dispatch("toolio_skill_list", worktree=wt)
         assert listed.success is True
         assert listed.data["count"] == 1
         assert listed.data["skills"][0]["name"] == "quarantine-flaky-tests"
         assert listed.data["skills"][0]["state"] == "active"
 
-        status = orch.dispatch("school_skill_status", worktree=wt)
+        status = orch.dispatch("toolio_skill_status", worktree=wt)
         assert status.success is True
         assert status.data["skills"] == 1
 
     def test_search_without_query_fails(self, tmp_path: Path) -> None:
-        result = _orch().dispatch("school_skill_search", worktree=str(tmp_path))
+        result = _orch().dispatch("toolio_skill_search", worktree=str(tmp_path))
         assert result.success is False
         assert "query required" in result.errors[0]
 
     def test_feedback_without_success_fails(self, tmp_path: Path) -> None:
         result = _orch().dispatch(
-            "school_skill_feedback",
+            "toolio_skill_feedback",
             worktree=str(tmp_path),
             name="quarantine-flaky-tests",
         )
@@ -131,7 +131,7 @@ class TestToolLoop:
 
     def test_create_without_purpose_fails_validation(self, tmp_path: Path) -> None:
         result = _orch().dispatch(
-            "school_skill_create",
+            "toolio_skill_create",
             worktree=str(tmp_path),
             **_payload(purpose=""),
         )
@@ -141,10 +141,10 @@ class TestToolLoop:
     def test_evolve_revise_and_consolidate(self, tmp_path: Path) -> None:
         wt = str(tmp_path)
         orch = _orch()
-        orch.dispatch("school_skill_create", worktree=wt, **_payload())
+        orch.dispatch("toolio_skill_create", worktree=wt, **_payload())
 
         revised = orch.dispatch(
-            "school_skill_evolve",
+            "toolio_skill_evolve",
             worktree=wt,
             action="revise",
             name="quarantine-flaky-tests",
@@ -154,7 +154,7 @@ class TestToolLoop:
         assert revised.data["version"] == 2
 
         consolidated = orch.dispatch(
-            "school_skill_evolve", worktree=wt, action="consolidate"
+            "toolio_skill_evolve", worktree=wt, action="consolidate"
         )
         assert consolidated.success is True
         assert consolidated.data["count"] == 0
@@ -165,20 +165,20 @@ class TestToolLoop:
         wt = str(tmp_path)
         orch = _orch()
         orch.dispatch(
-            "school_skill_create",
+            "toolio_skill_create",
             worktree=wt,
             project="p1",
             **_payload(),
         )
         visible = orch.dispatch(
-            "school_skill_search",
+            "toolio_skill_search",
             worktree=wt,
             query="quarantine flaky test",
             project="p1",
         )
         assert visible.data["count"] == 1
         hidden = orch.dispatch(
-            "school_skill_search",
+            "toolio_skill_search",
             worktree=wt,
             query="quarantine flaky test",
             project="p2",
@@ -188,7 +188,7 @@ class TestToolLoop:
 
 class TestBridgeWiring:
     def test_bridge_exposes_all_seven_commands(self) -> None:
-        import school.bridge as bridge
+        import toolio.bridge as bridge
 
         commands = set(bridge._COMMANDS)
         expected = {
@@ -198,7 +198,7 @@ class TestBridgeWiring:
         assert expected <= commands
 
     def test_bridge_skill_command_dispatches(self, tmp_path: Path) -> None:
-        import school.bridge as bridge
+        import toolio.bridge as bridge
 
         handler = bridge._COMMANDS["skill_status"]
         response = handler({"command": "skill_status", "worktree": str(tmp_path)})

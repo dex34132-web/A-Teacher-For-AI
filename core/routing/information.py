@@ -1,8 +1,8 @@
-"""Universal information model for School V2.5.
+"""Universal information model for Toolio V2.5.
 
 Defines the normalized representation of information flowing through
 the routing layer. InformationPackets are the fundamental unit that
-agents submit to School for routing and processing.
+agents submit to Toolio for routing and processing.
 
 Design principles:
 - Agent-agnostic: does not assume coding, chat, or any specific domain
@@ -56,7 +56,7 @@ class SourceType(Enum):
     """Where the information originated."""
 
     AGENT = auto()  # From the connected AI agent
-    School = auto()  # From School itself (internal)
+    Toolio = auto()  # From Toolio itself (internal)
     USER = auto()  # From a human user
     EXTERNAL = auto()  # From an external system
     UNKNOWN = auto()  # Source not identified
@@ -86,12 +86,20 @@ class SensitivityLevel(Enum):
 # ---------------------------------------------------------------------------
 
 
+def _short_id() -> str:
+    """Generate a short 3-letter id."""
+    import random
+    import string
+
+    return "".join(random.choice(string.ascii_lowercase) for _ in range(3))
+
+
 @dataclass(frozen=True, slots=True)
 class InformationPacket:
-    """A normalized unit of information for routing through School.
+    """A normalized unit of information for routing through Toolio.
 
     This is the fundamental input to the V2.5 routing system. Agents
-    submit InformationPackets, and School routes them to appropriate
+    submit InformationPackets, and Toolio routes them to appropriate
     destinations based on type, priority, cost, and policy.
 
     Attributes:
@@ -114,7 +122,7 @@ class InformationPacket:
     content: str
     information_type: InformationType = InformationType.UNKNOWN
     source: SourceType = SourceType.AGENT
-    id: str = field(default_factory=lambda: uuid.uuid4().hex[:16])
+    id: str = field(default_factory=_short_id)
     scope: str = ""
     timestamp: float = field(default_factory=lambda: datetime.now(UTC).timestamp())
     priority: int = 2  # 0=CRITICAL, 1=HIGH, 2=NORMAL, 3=LOW, 4=BACKGROUND

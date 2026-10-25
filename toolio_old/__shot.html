@@ -1,0 +1,25 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;padding:0;background:#f4f1ea;overflow:hidden}
+iframe{display:block;width:1920px;height:1180px;border:0}
+</style></head><body>
+<iframe id="f" src=""></iframe>
+<script>
+var q = new URLSearchParams(location.search);
+var s = q.get('s') || '';
+var o = parseInt(q.get('o') || '40', 10);
+var v = q.get('v') || '153';
+var f = document.getElementById('f');
+f.src = '/?v=' + v;
+f.addEventListener('load', function () {
+  var w = f.contentWindow, d = f.contentDocument;
+  w.document.documentElement.style.scrollBehavior = 'auto';
+  setTimeout(function () {
+    var el = s ? d.getElementById(s) : null;
+    var y = el ? el.getBoundingClientRect().top + w.scrollY - o : 0;
+    w.scrollTo(0, y);
+    setTimeout(function () { w.scrollTo(0, y); }, 700);
+  }, 2600);
+});
+</script>
+</body></html>

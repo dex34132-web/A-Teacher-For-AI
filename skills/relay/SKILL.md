@@ -113,7 +113,7 @@ don't blame the workers.
 When all lanes are merged and the full `gate` passes, write the debrief: which
 seams held, which collided, and what the next split should change. Ship it as
 `reports/relay-<goal>.md` (create `reports/` on first write) and send the
-durable lesson to memory via `school_remember` — it is the whole point of
+durable lesson to memory via `toolio_remember` — it is the whole point of
 running a relay instead of a marathon.
 
 ## Formation patterns
@@ -147,9 +147,9 @@ is the smallest one that still fits the deadline.
 - Never spawn lanes you cannot brief or check. Parallelism without contracts
   is just parallel mess.
 
-## Suite map — artifacts → School tools
+## Suite map — artifacts → Toolio tools
 
-`clarion` (interview) → `school_clarion` · `blueprint` (spec) → `school_blueprint` · `edict` (commands) → `school_edict`
-`weave` (formation) → `school_weave` · `compass` (acceptance) → `school_compass` · `brainstorm` (ideas) → `school_brainstorm`
-CLI: `school <artifact>` — e.g. `school edict`, `school brainstorm` (legacy alias: `school prism`).
+`clarion` (interview) → `toolio_clarion` · `blueprint` (spec) → `toolio_blueprint` · `edict` (commands) → `toolio_edict`
+`weave` (formation) → `toolio_weave` · `compass` (acceptance) → `toolio_compass` · `brainstorm` (ideas) → `toolio_brainstorm`
+CLI: `toolio <artifact>` — e.g. `toolio edict`, `toolio brainstorm` (legacy alias: `toolio prism`).
 Bridge wire names: `clarion`, `blueprint`, `edict`, `weave`, `compass`, `prism` (`prism` = brainstorm, legacy wire name kept for compatibility).

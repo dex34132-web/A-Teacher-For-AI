@@ -10,16 +10,16 @@ from pathlib import Path
 
 import pytest
 
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-FOOTER_ONE = re.compile(r"\[school ctx: \d+→\d+ tokens\]")
+FOOTER_ONE = re.compile(r"\[toolio ctx: \d+→\d+ tokens\]")
 
 HARNESS = """\
-import School from "./school.ts";
+import Toolio from "./toolio.ts";
 import { readFileSync } from "node:fs";
 const [worktree, bigPath] = process.argv.slice(2);
-const hooks = await School({ worktree, directory: worktree });
+const hooks = await Toolio({ worktree, directory: worktree });
 const text = readFileSync(bigPath, "utf8");
 const output = { title: "read", output: text, args: { filePath: "big.py" } };
 await hooks["tool.execute.after"](
@@ -42,15 +42,15 @@ tool.schema = chain;
 STUB_INDEX_JS = "export {};\n"
 
 FOOTER_HARNESS = """\
-import School from "./school.ts";
+import Toolio from "./toolio.ts";
 const [worktree] = process.argv.slice(2);
-const hooks = await School({ worktree, directory: worktree });
+const hooks = await Toolio({ worktree, directory: worktree });
 const output = { text: "Assistant reply." };
 const hook = hooks["experimental.text.complete"];
 await hook({ sessionID: "s", messageID: "m", partID: "p" }, output);
 const first = output.text;
 await hook({ sessionID: "s", messageID: "m", partID: "p" }, output);
-const dash = await hooks.tool.school_dashboard.execute(
+const dash = await hooks.tool.toolio_dashboard.execute(
   {},
   { worktree, sessionID: "s" },
 );
@@ -79,7 +79,7 @@ def _big_py() -> str:
 def plugin_dir(tmp_path: Path) -> Path:
     d = tmp_path / "plugin"
     (d / "node_modules" / "@opencode-ai" / "plugin").mkdir(parents=True)
-    (d / "school.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
+    (d / "toolio.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
     (d / "package.json").write_text('{"type": "module"}', encoding="utf-8")
     stub = d / "node_modules" / "@opencode-ai" / "plugin"
     (stub / "package.json").write_text(STUB_PKG, encoding="utf-8")
@@ -122,7 +122,7 @@ class TestLiveContextOptimizer:
         assert len(out["output"]) < len(original)
         assert len(FOOTER_ONE.findall(out["output"])) == 1
         assert "def compute(a: int) -> int:" in out["output"]
-        assert "school" in out["title"]
+        assert "toolio" in out["title"]
 
     def test_bridge_path_preferred(self, plugin_dir: Path, tmp_path: Path):
         worktree = tmp_path / "wt"
@@ -150,7 +150,7 @@ class TestLiveContextOptimizer:
         out = _run(plugin_dir, worktree, big, env)
         original = big.read_text(encoding="utf-8")
         assert out["output"] == original
-        assert "school ctx" not in out["output"]
+        assert "toolio ctx" not in out["output"]
 
 
 def _run_footer(plugin_dir: Path, worktree: Path, env: dict) -> dict:
@@ -169,7 +169,7 @@ def _run_footer(plugin_dir: Path, worktree: Path, env: dict) -> dict:
 
 @pytest.mark.integration
 class TestLiveStatusFooter:
-    """The [school] footer and dashboard tool render on every response."""
+    """The [toolio] footer and dashboard tool render on every response."""
 
     def _env(self, tmp_path: Path) -> dict:
         env = dict(os.environ)
@@ -186,7 +186,7 @@ class TestLiveStatusFooter:
         worktree.mkdir()
         out = _run_footer(plugin_dir, worktree, self._env(tmp_path))
         assert out["first"].startswith("Assistant reply.")
-        assert "\n\n[school] route:" in out["first"]
+        assert "\n\n[toolio] route:" in out["first"]
         for chip in ("next: ", "ctx: ", "recall: ", "learn: ", "diag: "):
             assert chip in out["first"], chip
         assert out["second"] == out["first"]  # no double append
@@ -197,7 +197,7 @@ class TestLiveStatusFooter:
         worktree = tmp_path / "wt"
         worktree.mkdir()
         out = _run_footer(plugin_dir, worktree, self._env(tmp_path))
-        assert out["title"] == "School Dashboard"
+        assert out["title"] == "Toolio Dashboard"
         assert "route: " in out["dash"]
         assert "learn: off" in out["dash"]  # no bridge in sandbox
         assert "diag: off" in out["dash"]

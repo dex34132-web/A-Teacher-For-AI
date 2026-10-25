@@ -50,7 +50,7 @@ def build_chip(
             parts = []
             if blocks_added > 0:
                 noun = "block" if blocks_added == 1 else "blocks"
-                parts.append(f"[school] compacted {blocks_added} {noun}")
+                parts.append(f"[toolio] compacted {blocks_added} {noun}")
                 parts.append("restorable")
             if restores > 0:
                 noun = "block" if restores == 1 else "blocks"
@@ -64,7 +64,7 @@ def build_chip(
             return " · ".join(parts)
         if used_ratio is None:
             return ""
-        parts = [f"[school] ctx {round(used_ratio * 100)}%"]
+        parts = [f"[toolio] ctx {round(used_ratio * 100)}%"]
         if saved_tokens > 0:
             parts.append(f"−{fmt_tokens(saved_tokens)} tok")
         if spend_usd is not None:

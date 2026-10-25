@@ -7,23 +7,23 @@ class TestFactory:
         orch = create_orchestrator()
         tool_names = [t["name"] for t in orch._registry.list_tools()]
         expected = [
-            "school_status",
-            "school_remember",
-            "school_recall",
-            "school_conflict",
-            "school_confidence",
-            "school_search",
-            "school_deduplicate",
-            "school_knowledge",
-            "school_lifecycle",
-            "school_diagnose",
-            "school_skill_list",
-            "school_skill_search",
-            "school_skill_create",
-            "school_skill_use",
-            "school_skill_feedback",
-            "school_skill_status",
-            "school_skill_evolve",
+            "toolio_status",
+            "toolio_remember",
+            "toolio_recall",
+            "toolio_conflict",
+            "toolio_confidence",
+            "toolio_search",
+            "toolio_deduplicate",
+            "toolio_knowledge",
+            "toolio_lifecycle",
+            "toolio_diagnose",
+            "toolio_skill_list",
+            "toolio_skill_search",
+            "toolio_skill_create",
+            "toolio_skill_use",
+            "toolio_skill_feedback",
+            "toolio_skill_status",
+            "toolio_skill_evolve",
         ]
         for name in expected:
             assert name in tool_names, f"Tool {name} not registered"
@@ -47,38 +47,38 @@ class TestFactory:
             monkeypatch.setattr(skillgen_github.discovery, _fn, _fake_discovery)
         # Tools that need specific params - provide defaults
         defaults = {
-            "school_remember": {"content": "test"},
-            "school_recall": {"query": "test"},
-            "school_conflict": {"content": "test"},
-            "school_deduplicate": {"content": "test"},
-            "school_search": {"query": "test"},
-            "school_lifecycle": {"action": "score", "memory_id": "test"},
-            "school_skill_list": {"worktree": wt},
-            "school_skill_search": {"query": "test", "worktree": wt},
-            "school_skill_create": {
+            "toolio_remember": {"content": "test"},
+            "toolio_recall": {"query": "test"},
+            "toolio_conflict": {"content": "test"},
+            "toolio_deduplicate": {"content": "test"},
+            "toolio_search": {"query": "test"},
+            "toolio_lifecycle": {"action": "score", "memory_id": "test"},
+            "toolio_skill_list": {"worktree": wt},
+            "toolio_skill_search": {"query": "test", "worktree": wt},
+            "toolio_skill_create": {
                 "name": "factory-exec-test",
                 "description": "Factory executable test skill",
                 "purpose": "Created by the factory executability test",
                 "procedure": ["Do the one thing"],
                 "worktree": wt,
             },
-            "school_skill_use": {"query": "test", "worktree": wt},
-            "school_skill_feedback": {
+            "toolio_skill_use": {"query": "test", "worktree": wt},
+            "toolio_skill_feedback": {
                 "name": "factory-exec-test",
                 "success": True,
                 "worktree": wt,
             },
-            "school_skill_status": {"worktree": wt},
-            "school_skill_evolve": {"worktree": wt},
-            "school_skill_search_github": {"task": "test task", "worktree": wt},
-            "school_skill_discover": {"task": "test task", "worktree": wt},
-            "school_skill_analyze_external": {
+            "toolio_skill_status": {"worktree": wt},
+            "toolio_skill_evolve": {"worktree": wt},
+            "toolio_skill_search_github": {"task": "test task", "worktree": wt},
+            "toolio_skill_discover": {"task": "test task", "worktree": wt},
+            "toolio_skill_analyze_external": {
                 "owner": "acme",
                 "repo": "demo",
                 "worktree": wt,
             },
-            "school_skill_compare": {"owner": "acme", "repo": "demo", "worktree": wt},
-            "school_skill_import": {
+            "toolio_skill_compare": {"owner": "acme", "repo": "demo", "worktree": wt},
+            "toolio_skill_import": {
                 "owner": "acme",
                 "repo": "demo",
                 "approve": True,
@@ -86,7 +86,7 @@ class TestFactory:
             },
         }
         # Tools that may fail due to state dependencies (not param issues)
-        state_dependent = {"school_lifecycle"}
+        state_dependent = {"toolio_lifecycle"}
         for tool_info in orch._registry.list_tools():
             params = defaults.get(tool_info["name"], {})
             result = orch.dispatch(tool_info["name"], **params)

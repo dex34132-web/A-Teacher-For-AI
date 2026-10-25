@@ -2,11 +2,11 @@
 
 Date: 2026-10-02
 Status: approved (design gate passed in session; awaiting spec review)
-Scope: Phase 1 of the School roadmap. Domain-general — for everything, not only coding.
+Scope: Phase 1 of the Toolio roadmap. Domain-general — for everything, not only coding.
 
 ## Problem
 
-School exposes 11+ memory tools to the model, but tool usage is static: the same
+Toolio exposes 11+ memory tools to the model, but tool usage is static: the same
 recall/hook behavior fires everywhere regardless of whether it helps. The user wants
 the system to *learn where and where not to use each tool*, using "a little bit of the
 model's computing power" for short bursts, with visible feedback whenever the machinery
@@ -35,9 +35,9 @@ MCP prompt/agent exposure.
 
 ## Components
 
-### 1. `school_route` tool
+### 1. `toolio_route` tool
 
-Registered by the plugin (OpenCode) and by `school/mcp/server.py` (MCP).
+Registered by the plugin (OpenCode) and by `toolio/mcp/server.py` (MCP).
 
 **Mode `assess`**
 
@@ -70,13 +70,13 @@ Registered by the plugin (OpenCode) and by `school/mcp/server.py` (MCP).
 - Every report appends one evidence line.
 
 **Display**: `tool.execute.after` appends ` · routing: <engage|reported>` to the
-title of `school_route` / `school_route_stats` in addition to the existing
-` · school: N` marker.
+title of `toolio_route` / `toolio_route_stats` in addition to the existing
+` · toolio: N` marker.
 
-### 2. `school_route_stats` tool
+### 2. `toolio_route_stats` tool
 
 - Args: `limit` (int, default 20).
-- Reads `.school/routing-stats.jsonl` plus a `recall` of tag `routing` lessons,
+- Reads `.toolio/routing-stats.jsonl` plus a `recall` of tag `routing` lessons,
   plus the current knobs; returns `{recent, aggregates: {per_tool: {calls, avg_ms}},
   lessons, knobs, last_activity}`.
 - Plugin: implemented in TS (file read + bridge recall). MCP: implemented in
@@ -85,18 +85,18 @@ title of `school_route` / `school_route_stats` in addition to the existing
 ### 3. Hook auto-tracking (plugin only)
 
 - `tool.execute.after` appends `{"ts", "tool", "ms", "ok", "hits?"}` per execution.
-  `hits` parsed only when the output carries a school payload; else null.
+  `hits` parsed only when the output carries a toolio payload; else null.
 - File capped at ~2000 lines (oldest lines dropped on append).
 - Silent on any write failure. Disabled by the existing `SCHOOL_HOOKS=0` kill switch.
 
-### 4. Skill `school-routing`
+### 4. Skill `toolio-routing`
 
-- Single `SKILL.md`, installed by `school install` into OpenCode's user skill
+- Single `SKILL.md`, installed by `toolio install` into OpenCode's user skill
   directory (exact path confirmed against OpenCode docs during implementation).
 - Description drives model self-selection: load for light/medium-light situations;
-  at medium+ the `school_route` assess result instructs loading it as well.
+  at medium+ the `toolio_route` assess result instructs loading it as well.
 - Workflow (all three, per user): review stats + recent lessons → write routing
-  lessons into School memory via the bridge → update `.school/routing.json` knobs →
+  lessons into Toolio memory via the bridge → update `.toolio/routing.json` knobs →
   print a compact audit and ask ≤3 preference questions.
 - The skill's first-ever question in a project is a 4-option calibration question
   (3 preset questioning intensities + 1 "type your own") — deferred to Phase 5's
@@ -104,7 +104,7 @@ title of `school_route` / `school_route_stats` in addition to the existing
 
 ### 5. Knobs file
 
-`.school/routing.json` in the project memory root:
+`.toolio/routing.json` in the project memory root:
 
 ```json
 {
@@ -124,10 +124,10 @@ title of `school_route` / `school_route_stats` in addition to the existing
 
 ## Data formats
 
-- Evidence line (`.school/routing-stats.jsonl`, one JSON per line):
+- Evidence line (`.toolio/routing-stats.jsonl`, one JSON per line):
   `{"ts": ISO-8601, "tool": str, "ms": int, "ok": bool, "hits": int|null,
   "kind": "exec"|"assess"|"report", "severity"?: str, "engage"?: str}`
-- Lessons: ordinary School memories, tags `["routing", <outcome>]`, agent `opencode`.
+- Lessons: ordinary Toolio memories, tags `["routing", <outcome>]`, agent `opencode`.
 
 ## Error handling
 
@@ -152,11 +152,11 @@ title of `school_route` / `school_route_stats` in addition to the existing
 
 | File | Change |
 |---|---|
-| `school/plugin_source.py` | `school_route`, `school_route_stats` tools; tracking in `tool.execute.after`; knobs reader; ` · routing` marker |
-| `school/mcp/server.py` | parity for both tools (self-rated fallback); stats reader |
-| `skills/school-routing/SKILL.md` | new skill (source of truth) |
-| `school/cli.py` | `school install` ships the skill |
-| `tests/unit/test_school_plugin_hooks.py` | tracking, markers, knobs, kill switch |
+| `toolio/plugin_source.py` | `toolio_route`, `toolio_route_stats` tools; tracking in `tool.execute.after`; knobs reader; ` · routing` marker |
+| `toolio/mcp/server.py` | parity for both tools (self-rated fallback); stats reader |
+| `skills/toolio-routing/SKILL.md` | new skill (source of truth) |
+| `toolio/cli.py` | `toolio install` ships the skill |
+| `tests/unit/test_toolio_plugin_hooks.py` | tracking, markers, knobs, kill switch |
 | `tests/unit/test_mcp_server.py` | route/stats contracts, required-severity fallback |
 | `tests/integration/test_mcp_stdio.py` | route/stats over stdio |
 | `docs/routing.md` | user-facing doc (domain-general examples) |
@@ -173,10 +173,10 @@ title of `school_route` / `school_route_stats` in addition to the existing
 
 ## Acceptance criteria
 
-- [ ] `school_route` assess makes a real ≤10 s model call and returns a graded
+- [ ] `toolio_route` assess makes a real ≤10 s model call and returns a graded
       engage decision with a reason; fallback path works when the call fails.
-- [ ] `school_route report` persists tagged lessons retrievable by
-      `school_route_stats` and `school_recall`.
+- [ ] `toolio_route report` persists tagged lessons retrievable by
+      `toolio_route_stats` and `toolio_recall`.
 - [ ] Every route/stats execution shows a ` · routing` marker.
 - [ ] Evidence lines accumulate per execution; stats aggregates are correct.
 - [ ] Skill installs, self-selects for light situations, and its audit flow

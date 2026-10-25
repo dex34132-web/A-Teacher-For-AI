@@ -1,4 +1,4 @@
-"""Security model for School V2.5 routing.
+"""Security model for Toolio V2.5 routing.
 
 Maintains clear boundaries between information, instruction, policy,
 and system control. Prevents prompt-injection-like content from gaining
@@ -7,7 +7,7 @@ instruction-level authority.
 Key principle:
     An information packet containing text like "ignore previous instructions..."
     must remain DATA. It must never automatically gain instruction-level
-    authority simply because School retrieved or routed it.
+    authority simply because Toolio retrieved or routed it.
 """
 
 from __future__ import annotations

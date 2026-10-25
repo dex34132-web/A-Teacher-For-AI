@@ -333,7 +333,7 @@ class TestForgeVsSuperpowers:
         for kind, art in bundle.items():
             assert art.kind == kind
             assert art.markdown.strip() and art.visual.strip()
-            assert art.path.startswith(".school/forge/")
+            assert art.path.startswith(".toolio/forge/")
             assert art.domain == Domain.WRITING.value
 
         # artifacts are deliverables: they persist to their promised paths
@@ -483,7 +483,7 @@ class TestForgeScoreboard:
         "discovery_dimensions": (12, BASELINE_DIMENSIONS),
     }
 
-    def test_school_wins_all_dimensions(self):
+    def test_toolio_wins_all_dimensions(self):
         live = {
             "artifacts_per_interview": self._artifact_kinds(),
             "brainstorm_techniques": self._active_techniques(),
@@ -522,10 +522,10 @@ class TestForgeScoreboard:
         lines = ["=" * 62, "FORGE vs SUPERPOWERS SCOREBOARD", "=" * 62]
         wins = 0
         for dim, (forge_n, base_n) in self.SCOREBOARD.items():
-            school_wins = forge_n > base_n
-            wins += int(school_wins)
+            toolio_wins = forge_n > base_n
+            wins += int(toolio_wins)
             lines.append(f"{dim:<26} forge {forge_n:3d}  vs superpowers {base_n:3d}"
-                         f"  -> {'WIN' if school_wins else 'LOSS'}")
+                         f"  -> {'WIN' if toolio_wins else 'LOSS'}")
         lines.append("-" * 62)
         lines.append("adaptive interview: forge yes vs superpowers static")
         lines.append(f"Forge wins: {wins}/{len(self.SCOREBOARD)} dimensions")

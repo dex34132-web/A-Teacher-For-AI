@@ -1249,7 +1249,7 @@ def _render_visual_impl(
         f"  │   {str(viz_type)[:24]:<24} │\n"
         f"  │                            │\n"
         f"  │ Available: 101 types       │\n"
-        f"  │ school visualize --list    │\n"
+        f"  │ toolio visualize --list    │\n"
         f"  └{'─' * 28}┘"
     )
 
@@ -1260,7 +1260,7 @@ def render_visual(
     label: str = "",
     width: int = 20,
 ) -> str:
-    """Render any School visual by name.
+    """Render any Toolio visual by name.
 
     FAIL-OPEN: never raises. On any error or unknown type, returns a graceful
     fallback card so the agent always gets usable output. This is the single
@@ -1277,7 +1277,7 @@ def render_visual(
             f"  │   {str(exc)[:24]:<24} │\n"
             f"  │                            │\n"
             f"  │ Visuals always available   │\n"
-            f"  │ school visualize --list    │\n"
+            f"  │ toolio visualize --list    │\n"
             f"  └{'─' * 28}┘"
         )
 

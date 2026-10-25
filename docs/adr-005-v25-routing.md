@@ -1,6 +1,6 @@
-# ADR: Lerev V2.5 — Universal Agent Routing & Intelligence Layer
+# ADR: Toolio V2.5 — Universal Agent Routing & Intelligence Layer
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *School*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 ## Status
@@ -9,17 +9,17 @@ Accepted — V2.5 Implementation Complete
 
 ## Context
 
-Lerev V2.4.2 was a direct-consumption learning engine: harness adapters fed information directly to learning subsystems. This worked for self-learning but created a 1:1 coupling between each harness and Lerev's internals.
+Toolio V2.4.2 was a direct-consumption learning engine: harness adapters fed information directly to learning subsystems. This worked for self-learning but created a 1:1 coupling between each harness and Toolio's internals.
 
-As Lerev matures, it needs to connect to **any AI system** — not just harness adapters, but agents, copilots, assistants, tools, IDEs, CLIs. Each system produces different information types, has different priority needs, and requires different security boundaries.
+As Toolio matures, it needs to connect to **any AI system** — not just harness adapters, but agents, copilots, assistants, tools, IDEs, CLIs. Each system produces different information types, has different priority needs, and requires different security boundaries.
 
-The question: **How do we make Lerev universal without rebuilding all subsystems?**
+The question: **How do we make Toolio universal without rebuilding all subsystems?**
 
 ## Decision
 
-Implement a **universal, agent-agnostic routing and intelligence layer** (V2.5) that sits between any AI system and Lerev's existing subsystems.
+Implement a **universal, agent-agnostic routing and intelligence layer** (V2.5) that sits between any AI system and Toolio's existing subsystems.
 
-**Core principle**: Let the agent do the semantic thinking. Let Lerev make the routing structured, efficient, safe, explainable, and cheap.
+**Core principle**: Let the agent do the semantic thinking. Let Toolio make the routing structured, efficient, safe, explainable, and cheap.
 
 ### Key design choices:
 
@@ -37,7 +37,7 @@ Implement a **universal, agent-agnostic routing and intelligence layer** (V2.5) 
 ## Consequences
 
 ### Positive
-- Any AI system can connect to Lerev through a standard protocol
+- Any AI system can connect to Toolio through a standard protocol
 - V2.4.2 subsystems remain untouched and frozen
 - Security is enforced at the routing layer, not per-adapter
 - Cost tracking enables budget management
@@ -45,7 +45,7 @@ Implement a **universal, agent-agnostic routing and intelligence layer** (V2.5) 
 - Scope isolation prevents cross-project contamination
 
 ### Negative
-- Adds a routing layer between agent and Lerev (latency: ~0.77ms per route)
+- Adds a routing layer between agent and Toolio (latency: ~0.77ms per route)
 - Requires agents to adopt the protocol (or use the integration bridge)
 - 17 new files in `core/routing/`
 

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from school.plugin_source import TS_PLUGIN_SOURCE
+from toolio.plugin_source import TS_PLUGIN_SOURCE
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -34,9 +34,9 @@ tool.schema = chain;
 """
 
 TRANSFORM_HARNESS = """\
-import School from "./school.ts";
+import Toolio from "./toolio.ts";
 const [worktree] = process.argv.slice(2);
-const hooks = await School({ worktree, directory: worktree });
+const hooks = await Toolio({ worktree, directory: worktree });
 const mk = (i) => ({
   info: {
     id: `m${i}`,
@@ -56,7 +56,7 @@ process.stdout.write(
 """
 
 
-_CLEAN_HOME = Path(tempfile.mkdtemp(prefix="school_it_home_"))
+_CLEAN_HOME = Path(tempfile.mkdtemp(prefix="toolio_it_home_"))
 
 
 def _clean_home_env(env: dict) -> dict:
@@ -80,14 +80,14 @@ def _live_env() -> dict:
 
 
 def run_bridge(req: dict, env: dict | None = None) -> dict:
-    """One JSON request through a real ``python -m school.bridge`` process."""
+    """One JSON request through a real ``python -m toolio.bridge`` process."""
     proc_env = dict(os.environ)
     proc_env["PYTHONPATH"] = str(REPO_ROOT)
     _clean_home_env(proc_env)
     if env:
         proc_env.update(env)
     proc = subprocess.run(
-        [sys.executable, "-m", "school.bridge"],
+        [sys.executable, "-m", "toolio.bridge"],
         input=json.dumps(req),
         capture_output=True,
         text=True,
@@ -119,9 +119,9 @@ def live_msgs() -> list[dict]:
 
 @pytest.fixture
 def plugin_dir() -> Path:
-    d = Path(tempfile.mkdtemp(prefix="school_plugin_"))
+    d = Path(tempfile.mkdtemp(prefix="toolio_plugin_"))
     (d / "node_modules" / "@opencode-ai" / "plugin").mkdir(parents=True)
-    (d / "school.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
+    (d / "toolio.ts").write_text(TS_PLUGIN_SOURCE, encoding="utf-8")
     (d / "package.json").write_text('{"type": "module"}', encoding="utf-8")
     stub = d / "node_modules" / "@opencode-ai" / "plugin"
     (stub / "package.json").write_text(STUB_PKG, encoding="utf-8")
@@ -158,7 +158,7 @@ class TestBridgeSubprocess:
             }
         )
         assert resp["ok"] is True
-        assert resp["mode"] == "school"
+        assert resp["mode"] == "toolio"
         assert resp["blocks"] == 0
         assert "chip" in resp
 
@@ -174,7 +174,7 @@ class TestBridgeSubprocess:
         assert switched["decision"] == "switch"
         again = run_bridge({**req, "action": "get"})
         assert again["decision"] == "switch"
-        assert again["mode"] == "school"
+        assert again["mode"] == "toolio"
         bad = run_bridge({**req, "action": "set_decision", "decision": "nope"})
         assert bad["ok"] is False
         assert bad["error"]["type"] == "validation"
@@ -210,7 +210,7 @@ class TestBridgeSubprocess:
         )
         assert compressed["ok"] is True
         assert compressed["blocks_added"] >= 1
-        assert compressed["chip"].startswith("[school] compacted")
+        assert compressed["chip"].startswith("[toolio] compacted")
         status = run_bridge(
             {"command": "context_status", "worktree": wt, "session": "sub1"},
             env=env,
@@ -249,7 +249,7 @@ class TestLiveApplyView:
     def test_compressed_blocks_are_applied(
         self, plugin_dir: Path
     ) -> None:
-        worktree = Path(tempfile.mkdtemp(prefix="school_wt_"))
+        worktree = Path(tempfile.mkdtemp(prefix="toolio_wt_"))
         env = _live_env()
         compressed = run_bridge(
             {
@@ -264,12 +264,12 @@ class TestLiveApplyView:
         out = _run_transform(plugin_dir, worktree, env)
         assert out["after"] != out["before"], "view must replace block ranges"
         assert len(out["after"]) < len(out["before"])
-        assert "school-view-" in out["after"]
+        assert "toolio-view-" in out["after"]
 
     def test_dcp_present_blocks_view_and_offers_once(
         self, plugin_dir: Path
     ) -> None:
-        worktree = Path(tempfile.mkdtemp(prefix="school_wt_"))
+        worktree = Path(tempfile.mkdtemp(prefix="toolio_wt_"))
         (worktree / "opencode.json").write_text(
             json.dumps({"plugin": ["@tarquinen/opencode-dcp"]}),
             encoding="utf-8",
@@ -277,7 +277,7 @@ class TestLiveApplyView:
         env = _live_env()
         out = _run_transform(plugin_dir, worktree, env)
         assert out["after"] == out["before"], "DCP owns the view until decided"
-        state_path = worktree / ".school" / "context" / "coexistence.json"
+        state_path = worktree / ".toolio" / "context" / "coexistence.json"
         assert state_path.exists(), "coexist set_offer must persist state"
         state = json.loads(state_path.read_text(encoding="utf-8"))
         assert state["offer_shown"] is True
