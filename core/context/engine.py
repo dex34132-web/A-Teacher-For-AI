@@ -17,7 +17,7 @@ from core.skillgen.budget import ModelCallBudget
 
 _AUTO = object()
 _WINDOW_DEFAULT = 128000
-_TRIGGER_DEFAULT = 0.8
+_TRIGGER_DEFAULT = 0.05
 
 
 def _env_float(name: str, default: float) -> float:

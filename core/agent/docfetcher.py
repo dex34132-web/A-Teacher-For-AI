@@ -107,10 +107,34 @@ def _build_url(query: str, library: str | None, version: str | None) -> str:
 
 
 def _fetch_url(url: str, timeout: float = FETCH_TIMEOUT_S) -> str:
-    """Fetch raw doc text over HTTP. Raises on network failure."""
-    req = urllib.request.Request(url, headers={"User-Agent": "toolio-docfetcher/2.6"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
-        return resp.read().decode("utf-8", "replace")
+    """Fetch raw doc text over HTTP. Retries on 429 with backoff."""
+    import time as _time
+    last_exc = None
+    for attempt in range(3):
+        req = urllib.request.Request(url, headers={"User-Agent": "toolio-docfetcher/2.6"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+                return resp.read().decode("utf-8", "replace")
+        except urllib.error.HTTPError as exc:
+            last_exc = exc
+            if exc.code == 429 and attempt < 2:
+                retry_after = exc.headers.get("Retry-After") if exc.headers else None
+                try:
+                    wait = float(retry_after) if retry_after else (1.0 * (attempt + 1))
+                except (ValueError, TypeError):
+                    wait = 1.0 * (attempt + 1)
+                _time.sleep(min(wait, 5.0))
+                continue
+            raise
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            if attempt < 2:
+                _time.sleep(0.5 * (attempt + 1))
+                continue
+            raise
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("fetch failed")
 
 
 def _search_key(query: str, library: str | None, version: str | None) -> str:
