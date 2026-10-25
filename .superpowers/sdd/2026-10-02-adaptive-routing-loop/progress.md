@@ -1,4 +1,4 @@
-# SDD ledger — plan: docs/superpowers/plans/2026-10-02-adaptive-routing-loop.md
+﻿# SDD ledger — plan: docs/toolio/plans/2026-10-02-adaptive-routing-loop.md
 
 ## Pre-flight conflict scan (run before Task 1)
 
@@ -19,7 +19,7 @@
 
 1. Ruling: work directly on `main` (no worktree) — session convention; 5 prior user-approved main commits (32d4506, 14127de, dafce0c, 70141cc, a5c8b55); user asked to "commit everything". — Cost if wrong: revertable history noise on main.
 2. Ruling: "ruff clean on changed files" = no NEW ruff errors vs baseline (plugin_source.py has pre-existing E501s inside the embedded TS string; new long physical lines are forbidden). — Cost if wrong: minor lint debt remains.
-3. Ruling: no `sh.exe` on this system → PowerShell equivalents of sdd-workspace/task-brief/review-package (same outputs: workspace `.superpowers/sdd/2026-10-02-adaptive-routing-loop/`, briefs by line-slice, review packages via git log/diff redirected to file). — Cost if wrong: none, artifacts equivalent.
+3. Ruling: no `sh.exe` on this system → PowerShell equivalents of sdd-workspace/task-brief/review-package (same outputs: workspace `.toolio/sdd/2026-10-02-adaptive-routing-loop/`, briefs by line-slice, review packages via git log/diff redirected to file). — Cost if wrong: none, artifacts equivalent.
 4. Ruling: task tool exposes no model parameter → implementers and reviewers dispatched as `general` subagents (fix rounds resume via task_id); model-tier selection unavailable in harness. — Cost if wrong: less cost tuning; mitigated by precise briefs.
 5. Ruling (standing): identity test tool-count/list updates are additive-only when T2 adds the two tools. — Cost if wrong: test loosened by two names.
 

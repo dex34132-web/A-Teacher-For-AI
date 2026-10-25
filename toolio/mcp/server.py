@@ -1,4 +1,4 @@
-"""Toolio MCP server — stdio transport, thin translation over the bridge.
+﻿"""Toolio MCP server — stdio transport, thin translation over the bridge.
 
 Every MCP tool call is routed to the existing ``toolio.bridge`` command
 handlers (the same scope-aware, security-validated paths used by the
@@ -1842,7 +1842,7 @@ def _route_result(data: dict[str, Any]) -> types.CallToolResult:
 _SKIPPED_DIRS = frozenset({
     ".git", "node_modules", ".venv", "venv", "__pycache__", ".toolio",
     ".evo", "dist", "build", ".mypy_cache", ".ruff_cache", ".pytest_tmp",
-    ".pytest_cache", ".opencode", ".superpowers",
+    ".pytest_cache", ".opencode", ".toolio",
 })
 _MAX_GREP_FILE = 1_000_000
 _MAX_READ_FILE = 2_000_000

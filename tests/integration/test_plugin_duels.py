@@ -1,4 +1,4 @@
-"""Competitive duels: Toolio tools vs the 7 OpenCode plugins they replace.
+﻿"""Competitive duels: Toolio tools vs the 7 OpenCode plugins they replace.
 
 Each class proves Toolio's tool is SIGNIFICANTLY better than the external
 plugin on measurable criteria: richer field surface, action breadth,
@@ -24,8 +24,8 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
-def baseline_superpowers(task: str) -> dict[str, str]:
-    """superpowers: general SDD guidance only. No state, no timing, no history."""
+def baseline_toolio(task: str) -> dict[str, str]:
+    """toolio: general SDD guidance only. No state, no timing, no history."""
     return {"guidance": f"Think step by step about {task}."}
 
 
@@ -110,12 +110,12 @@ def _patch_fetch_boom(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Duel 1: toolio_workflow vs superpowers
+# Duel 1: toolio_workflow vs toolio
 # ---------------------------------------------------------------------------
 
 
-class TestWorkflowVsSuperpowers:
-    """superpowers gives general guidance; Toolio persists runs, times each
+class TestWorkflowVstoolio:
+    """toolio gives general guidance; Toolio persists runs, times each
     phase, learns from history, and supports custom workflows."""
 
     def test_four_builtin_workflows_vs_general_guidance(self, worktree):
@@ -123,7 +123,7 @@ class TestWorkflowVsSuperpowers:
 
         assert set(BUILTINS) == {"tdd", "debug", "brainstorm", "review"}
         # baseline has zero named workflows: guidance is free-form text
-        assert "workflows" not in baseline_superpowers("ship a feature")
+        assert "workflows" not in baseline_toolio("ship a feature")
 
         for name in BUILTINS:
             r = workflow(worktree, name, action="start")
@@ -141,7 +141,7 @@ class TestWorkflowVsSuperpowers:
         state = json.loads(wf_file.read_text(encoding="utf-8"))
         assert any(key.startswith("tdd@") for key in state)
         # baseline writes nothing to disk
-        assert "state_file" not in baseline_superpowers("x")
+        assert "state_file" not in baseline_toolio("x")
 
     def test_phase_durations_recorded(self, worktree):
         from core.agent.workflows import workflow
@@ -190,8 +190,8 @@ class TestWorkflowVsSuperpowers:
         assert sorted(VALID_ACTIONS) == [
             "abort", "advance", "block", "define", "list", "start", "status",
         ]
-        # superpowers has one implicit action: "follow the guidance"
-        assert len(baseline_superpowers("x")) == 1
+        # toolio has one implicit action: "follow the guidance"
+        assert len(baseline_toolio("x")) == 1
 
     def test_fail_open_unknown_workflow_returns_error_result(self, worktree):
         from core.agent.workflows import workflow
@@ -213,7 +213,7 @@ class TestWorkflowVsSuperpowers:
 
         r = workflow(worktree, "tdd", action="status")
         toolio_fields = {f.name for f in fields(WorkflowResult)}
-        baseline_fields = set(baseline_superpowers("x"))
+        baseline_fields = set(baseline_toolio("x"))
         assert len(toolio_fields) > len(baseline_fields)
 
         assert isinstance(r, WorkflowResult)
@@ -838,7 +838,7 @@ class TestPluginScoreboard:
 
     #: duel -> (toolio fields, baseline fields)
     FIELD_SURFACE = {
-        "workflow_vs_superpowers": (7, 1),
+        "workflow_vs_toolio": (7, 1),
         "docs_vs_context7": (8, 2),
         "research_vs_websearch": (9, 3),
         "execute_vs_pty": (12, 4),
@@ -849,7 +849,7 @@ class TestPluginScoreboard:
 
     #: duel -> (toolio actions/modes, baseline actions)
     ACTION_BREADTH = {
-        "workflow_vs_superpowers": (7, 1),
+        "workflow_vs_toolio": (7, 1),
         "docs_vs_context7": (4, 1),
         "research_vs_websearch": (6, 1),
         "execute_vs_pty": (6, 1),
@@ -860,7 +860,7 @@ class TestPluginScoreboard:
 
     #: duel -> persistence artifact
     PERSISTENCE = {
-        "workflow_vs_superpowers": "workflows.json",
+        "workflow_vs_toolio": "workflows.json",
         "docs_vs_context7": "docs_cache.json",
         "research_vs_websearch": "observations.jsonl",
         "execute_vs_pty": "observations.jsonl",
@@ -871,7 +871,7 @@ class TestPluginScoreboard:
 
     #: duels with an observer/learning trail
     LEARNING_DUELS = {
-        "workflow_vs_superpowers",
+        "workflow_vs_toolio",
         "docs_vs_context7",
         "research_vs_websearch",
         "execute_vs_pty",
@@ -887,7 +887,7 @@ class TestPluginScoreboard:
         from core.context import CompressionReport
 
         real = {
-            "workflow_vs_superpowers": len({f.name for f in fields(WorkflowResult)}),
+            "workflow_vs_toolio": len({f.name for f in fields(WorkflowResult)}),
             "docs_vs_context7": len({f.name for f in fields(DocResult)}),
             "research_vs_websearch": len({f.name for f in fields(ResearchResult)}),
             "execute_vs_pty": len({f.name for f in fields(ExecuteResult)}),

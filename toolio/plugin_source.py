@@ -1,4 +1,4 @@
-"""Toolio plugin source — bundled TypeScript plugin for OpenCode."""
+﻿"""Toolio plugin source — bundled TypeScript plugin for OpenCode."""
 
 from __future__ import annotations
 
@@ -371,9 +371,9 @@ const TOOL_CHOICE_GUARD: Record<string, { toolio: string; duel: string; proof: s
     duel: "memory vs opencode-mem",
     proof: "9 actions vs 2, conflict/confidence/dedup/lifecycle, persistent",
   },
-  superpowers: {
+  toolio: {
     toolio: "toolio_blueprint",
-    duel: "forge suite vs superpowers",
+    duel: "forge suite vs toolio",
     proof: "interview->spec->plan->commands->acceptance in one chain, persisted + rendered",
   },
   brainstorm: {

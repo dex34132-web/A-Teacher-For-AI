@@ -1,4 +1,4 @@
-# Question Budget — Configurable Adaptive Questioning
+﻿# Question Budget â€” Configurable Adaptive Questioning
 
 `toolio elicit` can run a **budgeted adaptive questioning controller**: the user sets the
 maximum number of questions Toolio may ask, and Toolio adapts each next question to the
@@ -15,7 +15,7 @@ latest answer and evidence until the objective is covered or the budget is spent
 | `stop_early` | `true` | bool | Stop when the objective is genuinely covered |
 
 - Maximum budget is **100** (`MAX_QUESTION_BUDGET`). Values above the limit are
-  **rejected, never silently clamped** — the error names the limit.
+  **rejected, never silently clamped** â€” the error names the limit.
 - Zero, negative, booleans-as-integers (`True`), malformed strings, floats, `None`, and
   lists are all rejected with an actionable `ValueError` message. Invalid configuration
   can never create an unbounded loop.
@@ -33,7 +33,7 @@ python toolio/cli.py elicit --file req.json --no-followups --no-early-stop
 ```
 
 `--answers` takes a JSON list of `{"id" | "question", "answer", "confidence"?}` rows.
-An unknown question id is an error (`question not in this session`) — never a silent drop.
+An unknown question id is an error (`question not in this session`) â€” never a silent drop.
 
 ## Budget accounting (exact rule)
 
@@ -46,12 +46,12 @@ An unknown question id is an error (`question not in this session`) — never a 
 5. The count never exceeds the configured maximum; the final allowed question reports
    `remaining after: 0`.
 6. A resumed session **preserves** the presented count from its session file. Malformed
-   session state is rejected with an error — it never silently restores a fresh budget.
+   session state is rejected with an error â€” it never silently restores a fresh budget.
 
 ## Adaptive selection
 
 Selection reuses `core/forge/requirements.py` (`prioritize` / `next_batch` /
-`mark_asked` / `elicitation_status`) — there is no competing ranking system. After each
+`mark_asked` / `elicitation_status`) â€” there is no competing ranking system. After each
 answer the controller re-validates, records, updates state, and recomputes the next
 question. Deterministic tie-breaking (materiality, then id). Answered, duplicate, and
 reliably-derivable questions are never re-asked.
@@ -59,7 +59,7 @@ reliably-derivable questions are never re-asked.
 Follow-ups (when `allow_followups`) are raised **deterministically** when an answer is:
 
 - ambiguous or incomplete (empty, uncertain markers such as "not sure", trailing `?`),
-- low confidence (`< 0.5` → the unknown becomes `CONFLICTED`),
+- low confidence (`< 0.5` â†’ the unknown becomes `CONFLICTED`),
 - contradictory with a previous answer to the same variable (both become `CONFLICTED`).
 
 Follow-ups are not an LLM question generator; they restate the specific gap.
@@ -70,14 +70,14 @@ Follow-ups are not an LLM question generator; they restate the specific gap.
 |---|---|---|
 | `early-stopped` | Objective covered *and* verification defined; more questions would not reduce uncertainty | `succeeded` |
 | `complete` | Allowance spent exactly as the objective became covered | `succeeded` |
-| `budget-exhausted` | Questioning allowance spent — **not** a success claim | `budget exhausted (not success)` |
-| `no-questions-remaining` | Queue empty but verification is undefined — **not** a success claim | `incomplete (not success)` |
+| `budget-exhausted` | Questioning allowance spent â€” **not** a success claim | `budget exhausted (not success)` |
+| `no-questions-remaining` | Queue empty but verification is undefined â€” **not** a success claim | `incomplete (not success)` |
 | `blocked` | Material unresolved/conflicted questions remain; affected conclusions stay `UNRESOLVED` | `incomplete (not success)` |
 
 Stopping is **never** triggered by generator failure, parse/persistence errors, a
 convenient answer, or a merely emptied queue. Budget exhaustion means the allowance is
 spent; it never means the investigation succeeded. Material unresolved questions block
-closure (`UNRESOLVED` → conclusions marked `BLOCKED`).
+closure (`UNRESOLVED` â†’ conclusions marked `BLOCKED`).
 
 ## Persistence / resume semantics
 
@@ -86,9 +86,9 @@ closure (`UNRESOLVED` → conclusions marked `BLOCKED`).
   states (including evidence links via `depends_on` / provenance).
 - Written atomically (`.tmp` + `os.replace`).
 - Loader is strict: wrong version, wrong shapes, out-of-range counts, or invalid config
-  raise `ValueError` (`elicit error: cannot restore session: …`, exit 2). Malformed data
+  raise `ValueError` (`elicit error: cannot restore session: â€¦`, exit 2). Malformed data
   is never converted into an empty investigation or a fresh budget.
-- Legacy `elicit --file/--interview/--asked` invocations are byte-identical to before —
+- Legacy `elicit --file/--interview/--asked` invocations are byte-identical to before â€”
   controller mode only activates when at least one new flag is passed.
 
 ## Known limitations

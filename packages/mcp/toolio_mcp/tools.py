@@ -1,4 +1,4 @@
-"""Toolio MCP distribution — fail-open tool registry.
+﻿"""Toolio MCP distribution — fail-open tool registry.
 
 Self-contained: exposes all 52 ``toolio_*`` tools. Each tool is dispatched
 FAIL-OPEN — ``call_tool`` *never* raises and always returns a valid dict.
@@ -324,7 +324,7 @@ CATALOG: list[tuple] = [
         ["title"]),
     _mk("toolio_brainstorm", "forge",
         "Multi-technique divergent→convergent brainstorming (9 techniques), "
-        "scored and clustered. 10x the superpowers brainstorm.",
+        "scored and clustered. 10x the toolio brainstorm.",
         "prism",
         {"topic": _str("Topic to brainstorm."),
          "domain": _str("Domain."),

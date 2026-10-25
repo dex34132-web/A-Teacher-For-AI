@@ -1,12 +1,12 @@
-"""Competitive duels: Forge (universal Idea->Artifact) vs superpowers.
+﻿"""Competitive duels: Forge (universal Idea->Artifact) vs toolio.
 
-Each duel proves the Forge engine beats the superpowers brainstorming skill it
+Each duel proves the Forge engine beats the toolio brainstorming skill it
 replaces on measurable criteria: adaptive scored discovery (12 dimensions vs
 one static question), five distinct artifacts per interview vs a single design
 doc, 11 domains vs coding-only, four interview modes vs one, and divergent
 brainstorm breadth (>=5 techniques vs 2-3 approaches).
 
-The baseline simulator models only the *documented* superpowers contract
+The baseline simulator models only the *documented* toolio contract
 (static one-question-at-a-time path -> 2-3 approaches -> one design doc) so
 every comparison is deterministic and offline. Scratch dirs come from
 ``tempfile.mkdtemp()`` (OneDrive-safe; never ``tmp_path``).
@@ -41,12 +41,12 @@ from core.forge.render import render_bundle
 from core.forge.weave import build_weave
 
 # ---------------------------------------------------------------------------
-# Baseline simulator: the documented superpowers brainstorming contract
+# Baseline simulator: the documented toolio brainstorming contract
 # ---------------------------------------------------------------------------
 
 
-def baseline_superpowers_brainstorm(task: str) -> dict[str, object]:
-    """superpowers' brainstorming skill: one static question, then 2-3
+def baseline_toolio_brainstorm(task: str) -> dict[str, object]:
+    """toolio' brainstorming skill: one static question, then 2-3
     approaches and a single design doc. No scoring, no branching, no domains,
     no modes, no persistence, no artifacts beyond the doc."""
     return {
@@ -204,9 +204,9 @@ def _answered_dimensions(interview) -> set[str]:
 # ---------------------------------------------------------------------------
 
 
-class TestForgeVsSuperpowers:
+class TestForgeVstoolio:
     """Forge's clarion interview is adaptive, scored, branching, and pick-one-
-    or-custom; superpowers asks one static question and stops."""
+    or-custom; toolio asks one static question and stops."""
 
     def test_interview_covers_all_12_dimensions(self):
         iv = start_interview("Cosy mystery novel", Domain.WRITING)
@@ -219,7 +219,7 @@ class TestForgeVsSuperpowers:
         assert set(iv.dimension_scores) == set(DIMENSIONS)
         assert all(0.0 <= s <= 1.0 for s in iv.dimension_scores.values())
 
-        base = baseline_superpowers_brainstorm("a novel")
+        base = baseline_toolio_brainstorm("a novel")
         assert len(base["questions"]) == BASELINE_DIMENSIONS
         assert "dimension_scores" not in base
 
@@ -250,8 +250,8 @@ class TestForgeVsSuperpowers:
         assert next_question(iv_a).id != next_question(iv_b).id
 
         # baseline is static: the same question every time
-        base = baseline_superpowers_brainstorm("a novel")
-        assert base["questions"] == baseline_superpowers_brainstorm("other")["questions"]
+        base = baseline_toolio_brainstorm("a novel")
+        assert base["questions"] == baseline_toolio_brainstorm("other")["questions"]
 
     def test_choice_accepts_pick_one_or_custom(self):
         iv_pick = start_interview("Cosy mystery novel", Domain.WRITING)
@@ -344,7 +344,7 @@ class TestForgeVsSuperpowers:
             assert target.read_text(encoding="utf-8") == art.markdown
 
         # baseline produces exactly one artifact: a design doc
-        base = baseline_superpowers_brainstorm("a novel")
+        base = baseline_toolio_brainstorm("a novel")
         assert set(base) == {"questions", "approaches", "design_doc"}
         assert BASELINE_ARTIFACTS == 1
 
@@ -414,8 +414,8 @@ class TestForgeVsSuperpowers:
         assert iv_batch.answer_map()[ids[1]].value == "my own unlisted plan"
         assert "Unmatched form field: bogus_field" in iv_batch.open_questions
 
-        # superpowers has a single static path and no modes at all
-        assert "mode" not in baseline_superpowers_brainstorm("x")
+        # toolio has a single static path and no modes at all
+        assert "mode" not in baseline_toolio_brainstorm("x")
 
     # -- duel 5: brainstorm breadth ---------------------------------------
 
@@ -439,7 +439,7 @@ class TestForgeVsSuperpowers:
         assert len(top.selected) == 3
         assert cluster_ideas(s1)
 
-        base = baseline_superpowers_brainstorm(topic)
+        base = baseline_toolio_brainstorm(topic)
         assert len(base["approaches"]) <= BASELINE_TECHNIQUES_MAX
         assert len(active) > BASELINE_TECHNIQUES_MAX
 
@@ -472,9 +472,9 @@ class TestForgeVsSuperpowers:
 
 
 class TestForgeScoreboard:
-    """Aggregate: Forge wins every duel dimension against superpowers."""
+    """Aggregate: Forge wins every duel dimension against toolio."""
 
-    #: dimension -> (forge, superpowers)
+    #: dimension -> (forge, toolio)
     SCOREBOARD = {
         "artifacts_per_interview": (5, BASELINE_ARTIFACTS),
         "brainstorm_techniques": (5, BASELINE_TECHNIQUES_MAX),
@@ -503,8 +503,8 @@ class TestForgeScoreboard:
         submit_answer(iv, q1.id, "a fully custom discovery answer", confidence=1.0)
         q2 = next_question(iv)
         assert q2.dimension != q1.dimension  # adaptive (forge)
-        base = baseline_superpowers_brainstorm("a novel")
-        assert base["questions"] == baseline_superpowers_brainstorm("x")["questions"]
+        base = baseline_toolio_brainstorm("a novel")
+        assert base["questions"] == baseline_toolio_brainstorm("x")["questions"]
 
     @staticmethod
     def _artifact_kinds() -> int:
@@ -519,15 +519,15 @@ class TestForgeScoreboard:
 
     def test_scoreboard_summary(self):
         """Print and assert the final scoreboard."""
-        lines = ["=" * 62, "FORGE vs SUPERPOWERS SCOREBOARD", "=" * 62]
+        lines = ["=" * 62, "FORGE vs toolio SCOREBOARD", "=" * 62]
         wins = 0
         for dim, (forge_n, base_n) in self.SCOREBOARD.items():
             toolio_wins = forge_n > base_n
             wins += int(toolio_wins)
-            lines.append(f"{dim:<26} forge {forge_n:3d}  vs superpowers {base_n:3d}"
+            lines.append(f"{dim:<26} forge {forge_n:3d}  vs toolio {base_n:3d}"
                          f"  -> {'WIN' if toolio_wins else 'LOSS'}")
         lines.append("-" * 62)
-        lines.append("adaptive interview: forge yes vs superpowers static")
+        lines.append("adaptive interview: forge yes vs toolio static")
         lines.append(f"Forge wins: {wins}/{len(self.SCOREBOARD)} dimensions")
         lines.append("=" * 62)
         print("\n".join(lines))

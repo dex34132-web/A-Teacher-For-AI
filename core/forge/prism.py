@@ -1,13 +1,13 @@
-"""prism — the divergent→convergent brainstorming engine of the Forge suite.
+﻿"""prism â€” the divergentâ†’convergent brainstorming engine of the Forge suite.
 
-``prism`` is the "10x superpowers" ideation core. It runs MANY divergent
+``prism`` is the "10x toolio" ideation core. It runs MANY divergent
 techniques over one topic (first principles, SCAMPER, role-storming, worst-idea
 inversion, random prompts, analogies, constraint removal, reverse, and
 brainwriting that builds on prior ideas), records which technique produced each
 idea, then converges: impact/feasibility scoring, ranking, top-N selection, and
 theme clustering.
 
-Universal by design — the lenses are domain-neutral, so a session works the same
+Universal by design â€” the lenses are domain-neutral, so a session works the same
 way for coding, writing, research, business, planning, education, creative work,
 ops, data, life, or anything else (``Domain.GENERAL`` fallback). Every public
 function is fail-open: hostile input (None, ints, objects whose ``__str__`` /

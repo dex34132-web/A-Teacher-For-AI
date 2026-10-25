@@ -1,4 +1,4 @@
-"""The 11-layer Tool Choice Guard — hammer test.
+﻿"""The 11-layer Tool Choice Guard — hammer test.
 
 Each layer is an independent enforcement surface across the product. Every
 layer is tested at least 50 times with a mix of competitor tools, unknown
@@ -63,7 +63,7 @@ def _guard_on(monkeypatch):
 COMPETITORS = [
     "websearch", "webfetch", "context7", "bash", "shell", "execute", "cmd",
     "task", "glob", "grep", "read", "todowrite", "todo", "memory", "recall",
-    "superpowers", "goal_set", "playwright", "browser", "web_search",
+    "toolio", "goal_set", "playwright", "browser", "web_search",
 ]
 
 UNKNOWN = [
