@@ -68,13 +68,13 @@ def _clean_home_env(env: dict) -> dict:
 
 def _live_env() -> dict:
     env = dict(os.environ)
-    env["SCHOOL_HOME"] = str(REPO_ROOT)
+    env["TOOLIO_HOME"] = str(REPO_ROOT)
     env["PYTHONPATH"] = str(REPO_ROOT)
     scripts = str(REPO_ROOT / ".venv" / "Scripts")
     env["PATH"] = scripts + os.pathsep + env.get("PATH", "")
-    env["SCHOOL_COMPRESS_WINDOW_TOKENS"] = "200"
-    env["SCHOOL_COMPRESS_TAIL_TOKENS"] = "0"
-    for key in ("SCHOOL_HOOKS", "SCHOOL_CTX", "SCHOOL_COMPRESS"):
+    env["TOOLIO_COMPRESS_WINDOW_TOKENS"] = "200"
+    env["TOOLIO_COMPRESS_TAIL_TOKENS"] = "0"
+    for key in ("TOOLIO_HOOKS", "TOOLIO_CTX", "TOOLIO_COMPRESS"):
         env.pop(key, None)
     return _clean_home_env(env)
 
@@ -242,9 +242,9 @@ class TestLiveApplyView:
         worktree = tmp_path / "wt"
         worktree.mkdir()
         env = _live_env()
-        env["SCHOOL_COMPRESS"] = "0"
+        env["TOOLIO_COMPRESS"] = "0"
         out = _run_transform(plugin_dir, worktree, env)
-        assert out["after"] == out["before"], "SCHOOL_COMPRESS=0 -> no rewrite"
+        assert out["after"] == out["before"], "TOOLIO_COMPRESS=0 -> no rewrite"
 
     def test_compressed_blocks_are_applied(
         self, plugin_dir: Path

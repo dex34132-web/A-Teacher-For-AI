@@ -484,13 +484,13 @@ class TestExecuteVsPty:
 
         r = execute(
             worktree,
-            'python -c "import os; print(os.environ.get(\'SCHOOL_TEST_VAR\'))"',
-            env={"SCHOOL_TEST_VAR": "injected"},
+            'python -c "import os; print(os.environ.get(\'TOOLIO_TEST_VAR\'))"',
+            env={"TOOLIO_TEST_VAR": "injected"},
             learn=False,
         )
         assert r.ok
         assert "injected" in r.stdout
-        assert r.env_overrides == {"SCHOOL_TEST_VAR": "injected"}
+        assert r.env_overrides == {"TOOLIO_TEST_VAR": "injected"}
 
     def test_output_truncation_flag(self, worktree):
         from core.agent.executor import execute
@@ -551,9 +551,9 @@ class TestContextVsDcp:
     def _engine(self, worktree: Path, monkeypatch: pytest.MonkeyPatch):
         from core.context import ContextEngine
 
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "2000")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TRIGGER", "0.3")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "100")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "2000")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TRIGGER", "0.3")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "100")
         return ContextEngine(str(worktree), "duel5")
 
     def _messages(self) -> list[dict[str, str]]:
@@ -622,7 +622,7 @@ class TestContextVsDcp:
     def test_kill_switch_blocks_compression(self, worktree, monkeypatch):
         from core.context import ContextEngine
 
-        monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS", "0")
         engine = ContextEngine(str(worktree), "k")
         rep = engine.compress(self._messages())
         assert rep.triggered is False
@@ -921,9 +921,9 @@ class TestPluginScoreboard:
         goal(worktree, "set", goal_id="g1", objective="persist goal")
 
         # context engine block persistence
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "2000")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TRIGGER", "0.3")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "100")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "2000")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TRIGGER", "0.3")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "100")
         from core.context import ContextEngine
 
         engine = ContextEngine(str(worktree), "scoreboard")
@@ -958,7 +958,7 @@ class TestPluginScoreboard:
 
     def test_scoreboard_summary(self) -> None:
         """Print and assert the final scoreboard."""
-        lines = ["=" * 62, "SCHOOL vs OPENCODE PLUGIN SCOREBOARD", "=" * 62]
+        lines = ["=" * 62, "TOOLIO vs OPENCODE PLUGIN SCOREBOARD", "=" * 62]
         wins = 0
         for duel in self.FIELD_SURFACE:
             sf, bf = self.FIELD_SURFACE[duel]

@@ -1,11 +1,11 @@
-# LEREV Orchestrator + Tool Interface Implementation Plan
+# TOOLIO Orchestrator + Tool Interface Implementation Plan
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *TOOLIO* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a typed tool interface + orchestrator that routes requests to existing LEREV learning pipeline systems, with three execution modes (on-demand, background, hybrid).
+**Goal:** Build a typed tool interface + orchestrator that routes requests to existing TOOLIO learning pipeline systems, with three execution modes (on-demand, background, hybrid).
 
 **Architecture:** Three-layer design: Tool classes (Layer 1) wrap existing systems, Orchestrator (Layer 2) routes and executes pipelines, Bridge extension (Layer 3) exposes new commands. All tools use existing V2.2-V2.6 systems — no new engines.
 
@@ -238,12 +238,12 @@ Expected: FAIL with `ModuleNotFoundError: No module named 'core.routing.v26.tool
 
 Create `core/routing/v26/tools/__init__.py`:
 ```python
-"""LEREV V2.6 tool interface for the learning pipeline."""
+"""TOOLIO V2.6 tool interface for the learning pipeline."""
 ```
 
 Create `core/routing/v26/tools/base.py`:
 ```python
-"""Base classes for LEREV tools."""
+"""Base classes for TOOLIO tools."""
 from __future__ import annotations
 
 import time
@@ -269,7 +269,7 @@ class ToolResult:
 
 
 class Tool(ABC):
-    """Base class for all LEREV tools."""
+    """Base class for all TOOLIO tools."""
 
     @property
     @abstractmethod
@@ -400,7 +400,7 @@ Expected: FAIL with `ModuleNotFoundError`
 - [ ] **Step 3: Write implementation**
 
 ```python
-"""Status tool — checks LEREV component availability."""
+"""Status tool — checks TOOLIO component availability."""
 from __future__ import annotations
 
 from core.routing.v26.tools.base import Tool, ToolResult
@@ -413,7 +413,7 @@ class StatusTool(Tool):
 
     @property
     def description(self) -> str:
-        return "Check LEREV runtime status including component availability"
+        return "Check TOOLIO runtime status including component availability"
 
     @property
     def schema(self) -> dict:
@@ -567,7 +567,7 @@ class RememberTool(Tool):
 
     @property
     def description(self) -> str:
-        return "Store an experience or memory through LEREV V2.6"
+        return "Store an experience or memory through TOOLIO V2.6"
 
     @property
     def schema(self) -> dict:
@@ -712,7 +712,7 @@ class RecallTool(Tool):
 
     @property
     def description(self) -> str:
-        return "Retrieve memories from LEREV V2.6 long-term memory"
+        return "Retrieve memories from TOOLIO V2.6 long-term memory"
 
     @property
     def schema(self) -> dict:
@@ -1871,7 +1871,7 @@ Expected: FAIL with `ModuleNotFoundError`
 
 Update `core/routing/v26/tools/__init__.py`:
 ```python
-"""LEREV V2.6 tool interface for the learning pipeline."""
+"""TOOLIO V2.6 tool interface for the learning pipeline."""
 from core.routing.v26.tools.base import BackgroundTask, PipelineResult, Tool, ToolRegistry, ToolResult
 from core.routing.v26.tools.status import StatusTool
 

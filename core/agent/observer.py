@@ -121,7 +121,7 @@ def observe(
     evidence: dict[str, Any] | None = None,
 ) -> ObserveResult:
     """Record an agent-behaviour observation and extract a pattern."""
-    if os.environ.get("SCHOOL_OBSERVE", "") == "0":
+    if os.environ.get("TOOLIO_OBSERVE", "") == "0":
         return ObserveResult(ok=True, total=0)
 
     if not isinstance(observation, str) or not observation:

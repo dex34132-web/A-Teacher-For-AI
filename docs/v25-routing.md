@@ -38,7 +38,7 @@ Any AI System                    Toolio V2.5 Universal Router
                                     │  DESTINATIONS                       │
                                     │                                     │
                                     │  AGENT_CONTEXT  (immediate)         │
-                                    │  SCHOOL_CONTEXT    (immediate)         │
+                                    │  TOOLIO_CONTEXT    (immediate)         │
                                     │  LEARNING       (deferred)          │
                                     │  RETRIEVAL      (deferred)          │
                                     │  KNOWLEDGE      (deferred)          │

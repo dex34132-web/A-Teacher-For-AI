@@ -183,7 +183,7 @@ class TestCLIDoctor:
         with patch("sys.argv", ["toolio", "doctor"]):
             main()
         captured = capsys.readouterr()
-        assert "SCHOOL DOCTOR" in captured.out
+        assert "TOOLIO DOCTOR" in captured.out
         assert "RESULT:" in captured.out
 
     def test_doctor_checks_python(self, capsys: pytest.CaptureFixture[str]) -> None:
@@ -198,7 +198,7 @@ class TestCLIDoctor:
         with patch("sys.argv", ["toolio", "doctor"]):
             main()
         captured = capsys.readouterr()
-        assert "SCHOOL package" in captured.out
+        assert "TOOLIO package" in captured.out
 
     def test_doctor_checks_bridge(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Doctor checks bridge."""
@@ -267,7 +267,7 @@ class TestLegacyDuplicateCleanup:
         assert not legacy.exists()
         from toolio import __version__
 
-        assert f'const SCHOOL_VERSION = "{__version__}"' in installed
+        assert f'const TOOLIO_VERSION = "{__version__}"' in installed
 
     def test_install_command_cleans_legacy_directory(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]

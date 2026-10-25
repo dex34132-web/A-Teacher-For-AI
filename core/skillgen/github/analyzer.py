@@ -19,7 +19,7 @@ from core.skillgen.judge import ModelJudge
 
 ANALYZER_VERSION = "1"
 _GITHUB_MAX_MODEL_CALLS = int(
-    os.environ.get("SCHOOL_SKILLGEN_GITHUB_MAX_MODEL_CALLS", "4") or 4
+    os.environ.get("TOOLIO_SKILLGEN_GITHUB_MAX_MODEL_CALLS", "4") or 4
 )
 
 

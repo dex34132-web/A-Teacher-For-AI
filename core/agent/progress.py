@@ -67,7 +67,7 @@ def progress(
 ) -> ProgressResult:
     """Track learning progress: write / read / render bars."""
     action_s = safe_str(action)
-    if os.environ.get("SCHOOL_PROGRESS", "") == "0":
+    if os.environ.get("TOOLIO_PROGRESS", "") == "0":
         return ProgressResult(ok=True, action=action_s)
 
     key = safe_str(worktree, _KEY_LIMIT)

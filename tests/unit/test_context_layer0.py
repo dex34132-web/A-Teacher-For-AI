@@ -16,13 +16,13 @@ def test_estimate_tokens() -> None:
 
 
 def test_protected_from_respects_tail_budget(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "15")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "15")
     msgs = [msg("user", "y" * 40) for _ in range(5)]  # 10 tokens each
     assert protected_from(msgs) == 3
 
 
 def test_duplicate_errors_and_runs_become_spans(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [
         msg("user", "please fix"),
         msg("tool", ERR),
@@ -45,7 +45,7 @@ def test_duplicate_errors_and_runs_become_spans(monkeypatch) -> None:
 
 
 def test_pair_safety_never_splits_tool_call_result(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     assistant = msg("assistant", "", tool_calls=[{"id": "t1"}])
     result = msg("tool", ERR)
     msgs = [
@@ -63,7 +63,7 @@ def test_pair_safety_never_splits_tool_call_result(monkeypatch) -> None:
 
 
 def test_existing_blocks_excluded(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [msg("tool", ERR), msg("assistant", "ok"), msg("tool", ERR), msg("user", "tail")]
     existing = [Block.make("b1", 0, 1, [msgs[0]], "prior", 1)]
     spans = find_spans(msgs, existing)
@@ -73,7 +73,7 @@ def test_existing_blocks_excluded(monkeypatch) -> None:
 
 
 def test_fail_open_on_junk(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     assert find_spans([None, {"role": "tool", "content": None}], []) == []
 
 
@@ -82,7 +82,7 @@ def test_fail_open_on_exception() -> None:
 
 
 def test_run_flushes_on_non_error_tool(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [
         msg("tool", ERR),
         msg("tool", ERR),

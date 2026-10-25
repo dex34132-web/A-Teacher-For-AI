@@ -87,7 +87,7 @@ title of `toolio_route` / `toolio_route_stats` in addition to the existing
 - `tool.execute.after` appends `{"ts", "tool", "ms", "ok", "hits?"}` per execution.
   `hits` parsed only when the output carries a toolio payload; else null.
 - File capped at ~2000 lines (oldest lines dropped on append).
-- Silent on any write failure. Disabled by the existing `SCHOOL_HOOKS=0` kill switch.
+- Silent on any write failure. Disabled by the existing `TOOLIO_HOOKS=0` kill switch.
 
 ### 4. Skill `toolio-routing`
 
@@ -138,8 +138,8 @@ title of `toolio_route` / `toolio_route_stats` in addition to the existing
 | Stats write fails | silent |
 | Knobs file invalid | per-key defaults |
 | Skill not installed | assess returns `engage` + note `skill not found` |
-| `SCHOOL_ROUTE=0` | micro-calls skipped entirely (self-rated path) |
-| `SCHOOL_HOOKS=0` | tracking + markers off (existing behavior) |
+| `TOOLIO_ROUTE=0` | micro-calls skipped entirely (self-rated path) |
+| `TOOLIO_HOOKS=0` | tracking + markers off (existing behavior) |
 
 ## Security
 

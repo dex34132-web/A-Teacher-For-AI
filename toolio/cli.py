@@ -206,7 +206,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     config = ToolioConfig()
     bridge = discover_bridge(".")
 
-    print("SCHOOL DOCTOR")
+    print("TOOLIO DOCTOR")
     print("=" * 40)
     print("")
 
@@ -222,9 +222,9 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     # 2. Toolio package importable
     try:
         from toolio import __version__ as toolio_ver  # noqa: F401
-        results.append(("SCHOOL package", True, f"v{toolio_ver}"))
+        results.append(("TOOLIO package", True, f"v{toolio_ver}"))
     except Exception as exc:
-        results.append(("SCHOOL package", False, str(exc)))
+        results.append(("TOOLIO package", False, str(exc)))
 
     # 3. V2.6 memory system
     try:
@@ -280,7 +280,7 @@ def _cmd_doctor(args: argparse.Namespace) -> None:
     passed = sum(1 for _, ok, _ in results if ok)
     total = len(results)
     if passed == total:
-        print("RESULT: SCHOOL IS READY")
+        print("RESULT: TOOLIO IS READY")
     else:
         failed = total - passed
         print(f"RESULT: {failed} issue(s) found — fix them above")
@@ -475,9 +475,9 @@ def _cmd_skills(args: argparse.Namespace) -> None:
             "matches": match(
                 registry_for("."),
                 str(args.query or ""),
-                agent_id=os.environ.get("SCHOOL_AGENT", "opencode"),
-                project_id=os.environ.get("SCHOOL_PROJECT", ""),
-                session_id=os.environ.get("SCHOOL_SESSION", ""),
+                agent_id=os.environ.get("TOOLIO_AGENT", "opencode"),
+                project_id=os.environ.get("TOOLIO_PROJECT", ""),
+                session_id=os.environ.get("TOOLIO_SESSION", ""),
                 include_unusable=True,
                 limit=10,
             ),

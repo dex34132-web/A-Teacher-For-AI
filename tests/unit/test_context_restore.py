@@ -17,8 +17,8 @@ def compress_once(tmp_path, session: str = "s1") -> ContextEngine:
 
 
 def test_blocks_survive_restart(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = compress_once(tmp_path)
     before = [b.to_dict() for b in engine.store.load()]
     assert before  # something persisted
@@ -29,8 +29,8 @@ def test_blocks_survive_restart(tmp_path, monkeypatch) -> None:
 
 
 def test_restore_is_idempotent_and_counted(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = compress_once(tmp_path)
     first = engine.restore()  # expand-last
     assert first["ok"] is True
@@ -53,8 +53,8 @@ def test_restore_errors_fail_closed(tmp_path) -> None:
 
 
 def test_corrupt_block_file_recoverable(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = compress_once(tmp_path)
     engine.store.path.write_text("{broken", encoding="utf-8")
     assert engine.store.load() == []
@@ -66,8 +66,8 @@ def test_corrupt_block_file_recoverable(tmp_path, monkeypatch) -> None:
 
 
 def test_sessions_are_isolated(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     e1 = ContextEngine(str(tmp_path), "alpha", judge=None)
     e1.compress([msg("user", "q" * 400), msg("assistant", "a" * 400)])
     e2 = ContextEngine(str(tmp_path), "beta", judge=None)
@@ -76,8 +76,8 @@ def test_sessions_are_isolated(tmp_path, monkeypatch) -> None:
 
 
 def test_restore_unknown_id_with_blocks_present(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = compress_once(tmp_path)
     assert engine.store.load()
     assert engine.restore("b999") == {"ok": False, "reason": "block_not_found"}

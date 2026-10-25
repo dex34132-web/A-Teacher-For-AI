@@ -59,7 +59,7 @@ index ca4799a..a20133f 100644
 +    directory: string,
 +    situation: string,
 +  ): Promise<RouteDecision | null> {
-+    if (process.env.SCHOOL_ROUTE === "0") return null
++    if (process.env.TOOLIO_ROUTE === "0") return null
 +    const c = client as any
 +    if (!c?.session?.create || !c?.session?.prompt) return null
 +    try {
@@ -255,7 +255,7 @@ index ca4799a..a20133f 100644
 +                ? "self-rated (severity argument)"
 +                : "fallback default (micro-call unavailable)",
 +            }
-+            source = process.env.SCHOOL_ROUTE === "0"
++            source = process.env.TOOLIO_ROUTE === "0"
 +              ? "self-rated"
 +              : args.severity
 +                ? "self-rated"
@@ -564,7 +564,7 @@ index 4dd49d1..7557cc0 100644
 +        assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE
 +
 +    def test_kill_switch(self):
-+        assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
++        assert 'process.env.TOOLIO_ROUTE === "0"' in TS_PLUGIN_SOURCE
 +
 +    def test_report_stores_tagged_lesson(self):
 +        idx = TS_PLUGIN_SOURCE.index("toolio_route: tool(")

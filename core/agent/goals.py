@@ -127,7 +127,7 @@ def goal(
     """Manage learning goals: set / status / complete / block / pause / resume / clear / history."""
     action_s = safe_str(action)
     goal_id_s = safe_str(goal_id)
-    if os.environ.get("SCHOOL_GOAL", "") == "0":
+    if os.environ.get("TOOLIO_GOAL", "") == "0":
         return GoalResult(ok=True, action=action_s)
 
     if action_s not in ACTIONS:

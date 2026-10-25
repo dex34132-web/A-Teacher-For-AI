@@ -139,7 +139,7 @@ class TestWorkflowErrors:
         assert r.error == "unknown action: bogus"
 
     def test_kill_switch(self, worktree: str, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_WORKFLOW", "0")
+        monkeypatch.setenv("TOOLIO_WORKFLOW", "0")
         r = workflow(worktree, "tdd")
         assert r.ok is True
         assert r.workflow == "tdd"

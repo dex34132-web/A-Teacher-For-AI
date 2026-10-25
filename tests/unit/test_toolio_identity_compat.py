@@ -1,11 +1,11 @@
-"""Toolio identity + LEREV legacy-compatibility tests.
+"""Toolio identity + TOOLIO legacy-compatibility tests.
 
-Covers the repository-wide LEREV -> Toolio migration:
+Covers the repository-wide TOOLIO -> Toolio migration:
 - canonical Toolio identity (package, CLI, bridge, OpenCode tools)
 - Classroom terminology guard (technical ``group`` usages must be untouched)
 - legacy compat (``import toolio`` shim, ``toolio`` console script,
   memory-root chain read in place without migration)
-- no stale public LEREV identity outside the labelled legacy surface
+- no stale public TOOLIO identity outside the labelled legacy surface
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ class TestToolioIdentity:
         # server function must be reachable via the `server` key.
         assert "export default { id: \"toolio\", server: Toolio, setup: toolioV2Setup }" in TS_PLUGIN_SOURCE
         assert "const Toolio: Plugin" in TS_PLUGIN_SOURCE
-        assert 'const SCHOOL_VERSION = "' in TS_PLUGIN_SOURCE
+        assert 'const TOOLIO_VERSION = "' in TS_PLUGIN_SOURCE
 
     def test_plugin_tools_are_toolio_named(self) -> None:
         for tool in (
@@ -73,13 +73,13 @@ class TestToolioIdentity:
         bridge_src = (REPO_ROOT / "toolio" / "bridge.py").read_text(encoding="utf-8")
         assert '"toolio_remember"' in bridge_src
         assert '"toolio_diagnose"' in bridge_src
-        assert "School" not in bridge_src
-        assert '"school' not in bridge_src
-        assert "school_" not in bridge_src
+        assert "Toolio" not in bridge_src
+        assert '"toolio' not in bridge_src
+        assert "toolio_" not in bridge_src
 
     def test_plugin_has_legacy_fallbacks_only(self) -> None:
         allowed = {
-            "LEREV_HOME",
+            "TOOLIO_HOME",
             "toolio-bridge",
             "toolio.bridge",
             "toolio_bridge.py",
@@ -92,10 +92,10 @@ class TestToolioIdentity:
             '".toolio"',
         }
         for lineno, line in enumerate(TS_PLUGIN_SOURCE.splitlines(), start=1):
-            if "school" not in line:
+            if "toolio" not in line:
                 continue
             assert any(token in line for token in allowed), (
-                f"unexpected public LEREV identity at plugin line {lineno}: {line!r}"
+                f"unexpected public TOOLIO identity at plugin line {lineno}: {line!r}"
             )
 
 
@@ -144,7 +144,7 @@ class TestLegacyCompat:
         assert 'toolio = "toolio.cli:main"' in text
         assert 'toolio-bridge = "toolio.bridge:main"' in text
         assert "teacher =" not in text
-        assert "school =" not in text
+        assert "toolio =" not in text
 
     def test_legacy_plugin_methods(self, tmp_path: Path) -> None:
         with patch.object(Path, "home", return_value=tmp_path):
@@ -159,7 +159,7 @@ class TestLegacyCompat:
 
         import os
 
-        with patch.dict(os.environ, {"LEREV_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
+        with patch.dict(os.environ, {"TOOLIO_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
             discovery = discover_bridge(str(REPO_ROOT))
 
         assert discovery is None or not discovery.bridge_path.startswith(str(home))
@@ -247,9 +247,9 @@ class TestNoStalePublicToolioIdentity:
             rel = str(path.relative_to(REPO_ROOT)).replace("\\", "/")
             if rel in allowed:
                 continue
-            if "school" in path.read_text(encoding="utf-8"):
+            if "toolio" in path.read_text(encoding="utf-8"):
                 hits.append(rel)
-        assert hits == [], f"stale LEREV identity in core: {hits}"
+        assert hits == [], f"stale TOOLIO identity in core: {hits}"
 
     def test_toolio_package_free_of_toolio_symbols(self) -> None:
         # Labelled legacy surfaces are the only files allowed to mention
@@ -267,11 +267,11 @@ class TestNoStalePublicToolioIdentity:
         for path in (REPO_ROOT / "toolio").glob("*.py"):
             if path.name in allowed:
                 continue
-            if "school" in path.read_text(encoding="utf-8"):
+            if "toolio" in path.read_text(encoding="utf-8"):
                 hits.append(path.name)
-        assert hits == [], f"stale LEREV identity in toolio package: {hits}"
+        assert hits == [], f"stale TOOLIO identity in toolio package: {hits}"
 
     def test_scripts_entrypoint_is_toolio(self) -> None:
         text = (REPO_ROOT / "scripts" / "toolio_bridge.py").read_text(encoding="utf-8")
         assert "toolio.bridge" in text
-        assert "school" not in text
+        assert "toolio" not in text

@@ -28,9 +28,9 @@ def _env_float(name: str, default: float) -> float:
         return default
 
 
-MIN_CANDIDATE_SCORE = _env_float("SCHOOL_SKILLGEN_MIN_SCORE", 0.45)
-MIN_NOVELTY = _env_float("SCHOOL_SKILLGEN_MIN_NOVELTY", 0.15)
-MIN_IMPACT = _env_float("SCHOOL_SKILLGEN_MIN_IMPACT", 0.0)
+MIN_CANDIDATE_SCORE = _env_float("TOOLIO_SKILLGEN_MIN_SCORE", 0.45)
+MIN_NOVELTY = _env_float("TOOLIO_SKILLGEN_MIN_NOVELTY", 0.15)
+MIN_IMPACT = _env_float("TOOLIO_SKILLGEN_MIN_IMPACT", 0.0)
 
 # Trivial experiences that must never become skills (explicit examples).
 _TRIVIAL_PATTERNS = (

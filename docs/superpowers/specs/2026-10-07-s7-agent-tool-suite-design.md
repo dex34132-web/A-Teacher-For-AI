@@ -189,14 +189,14 @@ core/agent/                  # S7 core logic (new)
 
 | Env | Effect |
 |-----|--------|
-| `SCHOOL_OBSERVE=0` | No observation recording |
-| `SCHOOL_GOAL=0` | No goal tracking |
-| `SCHOOL_RESEARCH=0` | No research calls |
-| `SCHOOL_EXPLORE=0` | No codebase exploration |
-| `SCHOOL_PROGRESS=0` | No progress tracking |
-| `SCHOOL_SESSION=0` | No session management |
-| `SCHOOL_EXECUTE=0` | No command execution learning |
-| `SCHOOL_NAVIGATE=0` | No file navigation |
+| `TOOLIO_OBSERVE=0` | No observation recording |
+| `TOOLIO_GOAL=0` | No goal tracking |
+| `TOOLIO_RESEARCH=0` | No research calls |
+| `TOOLIO_EXPLORE=0` | No codebase exploration |
+| `TOOLIO_PROGRESS=0` | No progress tracking |
+| `TOOLIO_SESSION=0` | No session management |
+| `TOOLIO_EXECUTE=0` | No command execution learning |
+| `TOOLIO_NAVIGATE=0` | No file navigation |
 
 ## 8. Constraints (from master spec)
 

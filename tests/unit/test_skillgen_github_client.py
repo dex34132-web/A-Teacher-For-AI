@@ -246,7 +246,7 @@ class TestDefaultClient:
     def test_disabled_flag_raises_disabled_error(
         self, monkeypatch: pytest.MonkeyPatch, value: str
     ) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_DISABLED", value)
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_DISABLED", value)
         with pytest.raises(GitHubError) as excinfo:
             default_client()
         assert excinfo.value.kind == "disabled"
@@ -264,7 +264,7 @@ class TestGetFileContent:
         assert "/contents/SKILL.md" in transport.calls[0].url
 
     def test_file_over_env_cap_raises_413(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_MAX_FILE_BYTES", "10")
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_MAX_FILE_BYTES", "10")
         client, _, _ = build(
             ok_json({"type": "file", "size": 999, "encoding": "base64", "content": "AA=="})
         )
@@ -275,7 +275,7 @@ class TestGetFileContent:
         assert "too large" in str(excinfo.value)
 
     def test_decoded_text_is_truncated_to_cap(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_MAX_FILE_BYTES", "5")
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_MAX_FILE_BYTES", "5")
         payload = base64.b64encode(b"hello world").decode()
         client, _, _ = build(
             ok_json({"type": "file", "size": 5, "encoding": "base64", "content": payload})
@@ -321,7 +321,7 @@ class TestGetTree:
         assert transport.calls[0].url.endswith("?recursive=1")
 
     def test_tree_capped_by_env_limit(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_MAX_TREE_ENTRIES", "3")
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_MAX_TREE_ENTRIES", "3")
         tree = [{"type": "blob", "path": f"file{i}.md"} for i in range(10)]
         client, _, _ = build(ok_json({"tree": tree}))
         paths = client.get_tree("octo", "repo")

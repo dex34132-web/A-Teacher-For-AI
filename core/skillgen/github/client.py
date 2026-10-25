@@ -96,7 +96,7 @@ class GitHubClient:
         self.timeout = (
             timeout
             if timeout is not None
-            else _env_float("SCHOOL_SKILLGEN_GITHUB_TIMEOUT", 15.0)
+            else _env_float("TOOLIO_SKILLGEN_GITHUB_TIMEOUT", 15.0)
         )
         self._transport = transport or _urllib_transport
         self._sleep = sleep
@@ -218,7 +218,7 @@ class GitHubClient:
         if not isinstance(data, dict) or not isinstance(data.get("tree"), list):
             raise GitHubError("malformed", "tree response invalid")
         entries = [e for e in data["tree"] if isinstance(e, dict) and e.get("type") == "blob"]
-        max_entries = int(os.environ.get("SCHOOL_SKILLGEN_GITHUB_MAX_TREE_ENTRIES", "400") or 400)
+        max_entries = int(os.environ.get("TOOLIO_SKILLGEN_GITHUB_MAX_TREE_ENTRIES", "400") or 400)
         return [str(e.get("path", "")) for e in entries if e.get("path")][:max_entries]
 
     def get_file_content(self, owner: str, repo: str, path: str, ref: str = "") -> str:
@@ -233,7 +233,7 @@ class GitHubClient:
         if not isinstance(data, dict) or data.get("type") != "file":
             raise GitHubError("malformed", "file content response invalid")
         size = int(data.get("size") or 0)
-        max_size = int(os.environ.get("SCHOOL_SKILLGEN_GITHUB_MAX_FILE_BYTES", "65536") or 65536)
+        max_size = int(os.environ.get("TOOLIO_SKILLGEN_GITHUB_MAX_FILE_BYTES", "65536") or 65536)
         if size > max_size:
             raise GitHubError("http", f"file too large ({size} > {max_size} bytes)", 413)
         encoding = str(data.get("encoding") or "")
@@ -251,7 +251,7 @@ class GitHubClient:
 
 def default_client() -> GitHubClient:
     """Client honoring GITHUB_TOKEN if present (never required)."""
-    if os.environ.get("SCHOOL_SKILLGEN_GITHUB_DISABLED", ""):
+    if os.environ.get("TOOLIO_SKILLGEN_GITHUB_DISABLED", ""):
         raise GitHubError("disabled", "GitHub discovery disabled by configuration")
     return GitHubClient()
 

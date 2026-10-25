@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-SCHOOL_VERSION="2.6.0"
+TOOLIO_VERSION="2.6.0"
 INSTALL_DIR="${HOME}/.local/bin"
 
 echo "Toolio Installer"

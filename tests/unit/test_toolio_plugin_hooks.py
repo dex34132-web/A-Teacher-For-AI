@@ -200,7 +200,7 @@ class TestRecallBudgetAndCostGuards:
             assert legacy in TS_PLUGIN_SOURCE, legacy
 
     def test_kill_switch_env_var(self) -> None:
-        assert 'process.env.SCHOOL_HOOKS !== "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.TOOLIO_HOOKS !== "0"' in TS_PLUGIN_SOURCE
 
     def test_no_npm_dependency_added(self) -> None:
         """Hooks use only existing imports — no new runtime dependencies."""
@@ -281,7 +281,7 @@ class TestContextOptimizer:
         assert "const CTX_TIMEOUT_MS = 2000" in TS_PLUGIN_SOURCE
 
     def test_kill_switch(self):
-        assert 'process.env.SCHOOL_CTX !== "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.TOOLIO_CTX !== "0"' in TS_PLUGIN_SOURCE
 
     def test_footer_regex_literal(self):
         assert r"\[toolio ctx: \d+→\d+ tokens\]" in TS_PLUGIN_SOURCE
@@ -335,7 +335,7 @@ class TestApplyView:
         block = self._block("applyView")
         assert "hooksEnabled()" in block
         assert "ctxEnabled()" in block
-        assert 'process.env.SCHOOL_COMPRESS === "0"' in block
+        assert 'process.env.TOOLIO_COMPRESS === "0"' in block
 
     def test_apply_view_is_timeboxed(self) -> None:
         assert "const VIEW_TIMEOUT_MS = 4000" in TS_PLUGIN_SOURCE
@@ -402,7 +402,7 @@ class TestDcpCoexist:
         block = self._block("checkCoexist")
         assert "hooksEnabled()" in block
         assert "ctxEnabled()" in block
-        assert 'process.env.SCHOOL_COMPRESS === "0"' in block
+        assert 'process.env.TOOLIO_COMPRESS === "0"' in block
 
     def test_check_coexist_runs_once_and_fails_open(self) -> None:
         block = self._block("checkCoexist")
@@ -443,7 +443,7 @@ class TestCompactingNudge:
         block = self._block()
         assert "hooksEnabled()" in block
         assert "ctxEnabled()" in block
-        assert 'process.env.SCHOOL_COMPRESS === "0"' in block
+        assert 'process.env.TOOLIO_COMPRESS === "0"' in block
 
     def test_nudges_only_above_threshold(self) -> None:
         block = self._block()

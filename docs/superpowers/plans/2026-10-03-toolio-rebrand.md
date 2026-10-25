@@ -14,8 +14,8 @@
 
 - Brand: all public names become `toolio`. Breaking change accepted. Console aliases `toolio` and `toolio` are dropped. GitHub repo name/URL are NOT changed (pyproject `project.urls` keep their current pre-rename values — intentional, pre-existing comment says so).
 - Memory root (spec Decision 2): first existing of `.toolio`, `.toolio`, `.toolio`, `.evo` (checked as `<root>/memory`); if none exists, create `.toolio/memory`. Existing roots are read **in place** — never copied, moved, or deleted. No migration code may remain.
-- No code-surface compatibility (spec Decision 3): bridge discovery = `SCHOOL_HOME` env, `toolio-bridge` on PATH, `toolio.bridge` module, `scripts/toolio_bridge.py` dev fallback — no `SCHOOL_*`/`LEREV_HOME`/`EVO_HOME`/`toolio-bridge` aliases anywhere in discovery (TS or Python). Env vars are `SCHOOL_HOOKS`, `SCHOOL_ROUTE`, `SCHOOL_AGENT`, `SCHOOL_PROJECT`, `SCHOOL_SESSION`, `SCHOOL_WORKTREE`, `SCHOOL_HOME`.
-- Tools: all 13 plugin + 13 MCP tools are `toolio_*` (`toolio_status`, `toolio_remember`, `toolio_recall`, `toolio_learn`, `toolio_conflict`, `toolio_confidence`, `toolio_search`, `toolio_deduplicate`, `toolio_knowledge`, `toolio_lifecycle`, `toolio_diagnose`, `toolio_route`, `toolio_route_stats`). `const Toolio`, `export default Toolio`, `SCHOOL_VERSION`, `__SCHOOL_VERSION__`. TS↔MCP description parity is asserted by existing regex tests — keep descriptions byte-identical on both surfaces (mechanical replace guarantees this; do not hand-edit one side only).
+- No code-surface compatibility (spec Decision 3): bridge discovery = `TOOLIO_HOME` env, `toolio-bridge` on PATH, `toolio.bridge` module, `scripts/toolio_bridge.py` dev fallback — no `TOOLIO_*`/`TOOLIO_HOME`/`EVO_HOME`/`toolio-bridge` aliases anywhere in discovery (TS or Python). Env vars are `TOOLIO_HOOKS`, `TOOLIO_ROUTE`, `TOOLIO_AGENT`, `TOOLIO_PROJECT`, `TOOLIO_SESSION`, `TOOLIO_WORKTREE`, `TOOLIO_HOME`.
+- Tools: all 13 plugin + 13 MCP tools are `toolio_*` (`toolio_status`, `toolio_remember`, `toolio_recall`, `toolio_learn`, `toolio_conflict`, `toolio_confidence`, `toolio_search`, `toolio_deduplicate`, `toolio_knowledge`, `toolio_lifecycle`, `toolio_diagnose`, `toolio_route`, `toolio_route_stats`). `const Toolio`, `export default Toolio`, `TOOLIO_VERSION`, `__TOOLIO_VERSION__`. TS↔MCP description parity is asserted by existing regex tests — keep descriptions byte-identical on both surfaces (mechanical replace guarantees this; do not hand-edit one side only).
 - The `toolio/` Python package stays (tests import it as a shim); its `toolio` references are mechanically renamed to `toolio`.
 - Full suite green at the end of every task (baseline 2507; a count shift is acceptable only where the test itself was brand-literal). ruff: **no NEW errors** on changed files. Never stage `.opencode/**` (excluded from rename; leave untouched).
 - The rebrand script is ephemeral: lives in `C:\Users\dex34\AppData\Local\Temp\opencode\`, never committed, never run twice.
@@ -35,7 +35,7 @@
 - Every other tracked text file: mechanical replace only
 
 **Interfaces:**
-- Produces: package `toolio` importable (`toolio.cli`, `toolio.bridge`, `toolio.mcp`, `toolio.plugin_source`, `toolio.discovery`, `toolio.config`); tools `toolio_*`; `resolve_memory_dir(worktree) -> Path` with chain semantics; `discover_bridge(worktree) -> BridgeDiscovery | None` toolio-only; TS `discoverBridge` toolio-only; `SCHOOL_*` → `SCHOOL_*` everywhere.
+- Produces: package `toolio` importable (`toolio.cli`, `toolio.bridge`, `toolio.mcp`, `toolio.plugin_source`, `toolio.discovery`, `toolio.config`); tools `toolio_*`; `resolve_memory_dir(worktree) -> Path` with chain semantics; `discover_bridge(worktree) -> BridgeDiscovery | None` toolio-only; TS `discoverBridge` toolio-only; `TOOLIO_*` → `TOOLIO_*` everywhere.
 - Consumes: nothing (first task).
 
 - [ ] **Step 1: Capture pre-state**
@@ -98,7 +98,7 @@ EXCLUDE = {
     "docs/superpowers/specs/2026-10-03-toolio-rebrand-design.md",
 }
 # Order matters: uppercase first, then capitalized, then lowercase.
-REPLACEMENTS = [("SCHOOL", "SCHOOL"), ("Toolio", "Toolio"), ("toolio", "toolio")]
+REPLACEMENTS = [("TOOLIO", "TOOLIO"), ("Toolio", "Toolio"), ("toolio", "toolio")]
 
 out = subprocess.run(["git", "ls-files", "-z"], capture_output=True, check=True)
 changed = excluded = skipped_non_utf8 = 0
@@ -240,12 +240,12 @@ Then remove `import shutil` from `toolio/config.py` if ruff reports it unused (i
 
 ```python
     def test_tier1_legacy_home_envs_not_honoured(self, tmp_path: Path) -> None:
-        """LEREV_HOME / EVO_HOME are no longer honoured (no compat fallbacks)."""
+        """TOOLIO_HOME / EVO_HOME are no longer honoured (no compat fallbacks)."""
         home = tmp_path / "legacy_home"
         (home / "toolio").mkdir(parents=True)
         (home / "toolio" / "bridge.py").write_text("", encoding="utf-8")
 
-        with patch.dict(os.environ, {"LEREV_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
+        with patch.dict(os.environ, {"TOOLIO_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
             result = discover_bridge(str(tmp_path))
 
         assert result is None or not result.bridge_path.startswith(str(home))
@@ -263,7 +263,7 @@ In `tests/unit/test_toolio_identity_compat.py`: DELETE `test_toolio_home_env_hon
 
         import os
 
-        with patch.dict(os.environ, {"LEREV_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
+        with patch.dict(os.environ, {"TOOLIO_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
             discovery = discover_bridge(str(REPO_ROOT))
 
         assert discovery is None or not discovery.bridge_path.startswith(str(home))
@@ -309,7 +309,7 @@ def _file_exists(path: str) -> bool:
 def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     """Discover the Toolio bridge using a 4-tier cascade.
 
-    Tier 1: SCHOOL_HOME env var
+    Tier 1: TOOLIO_HOME env var
     Tier 2: toolio-bridge on PATH
     Tier 3: python -m toolio.bridge
     Tier 4: Dev fallback ({worktree}/scripts/toolio_bridge.py)
@@ -317,14 +317,14 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     python = _find_python()
 
     # Tier 1: env-configured install root
-    home = os.environ.get("SCHOOL_HOME")
+    home = os.environ.get("TOOLIO_HOME")
     if home:
         bridge_path = str(Path(home) / "toolio" / "bridge.py")
         if _file_exists(bridge_path):
             return BridgeDiscovery(
                 python=python or "python3",
                 bridge_path=bridge_path,
-                tier="SCHOOL_HOME",
+                tier="TOOLIO_HOME",
             )
 
     # Tier 2: bridge launcher on PATH
@@ -360,7 +360,7 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     return None
 ```
 
-7d. In `toolio/plugin_source.py`, the bulk replace already renamed `SCHOOL_HOME`→`SCHOOL_HOME`, `toolioHome`→`toolioHome`, `toolio-bridge`→`toolio-bridge`, `toolio.bridge`→`toolio.bridge`, `toolio_bridge.py`→`toolio_bridge.py`. What remains is stripping the legacy aliases. Post-state of `discoverBridge` and its doc comment (keep the surrounding helpers and the single-element `for` loops — tests pin the `where ${command}` / `which ${command}` strings):
+7d. In `toolio/plugin_source.py`, the bulk replace already renamed `TOOLIO_HOME`→`TOOLIO_HOME`, `toolioHome`→`toolioHome`, `toolio-bridge`→`toolio-bridge`, `toolio.bridge`→`toolio.bridge`, `toolio_bridge.py`→`toolio_bridge.py`. What remains is stripping the legacy aliases. Post-state of `discoverBridge` and its doc comment (keep the surrounding helpers and the single-element `for` loops — tests pin the `where ${command}` / `which ${command}` strings):
 
 ```ts
 /**
@@ -369,12 +369,12 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
 async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
   const python = await findPython()
 
-  // Tier 1: SCHOOL_HOME env var
-  const toolioHome = process.env.SCHOOL_HOME
+  // Tier 1: TOOLIO_HOME env var
+  const toolioHome = process.env.TOOLIO_HOME
   if (toolioHome) {
     const bridgePath = resolve(toolioHome, "toolio", "bridge.py")
     if (fileExists(bridgePath)) {
-      return { python: python ?? "python3", bridgePath, tier: "SCHOOL_HOME" }
+      return { python: python ?? "python3", bridgePath, tier: "TOOLIO_HOME" }
     }
   }
 
@@ -415,7 +415,7 @@ async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
 }
 ```
 
-Delete the old doc-comment lines mentioning `LEREV_HOME / EVO_HOME / toolio-bridge / toolio.bridge / toolio_bridge.py` and the `// Legacy aliases ...` comments.
+Delete the old doc-comment lines mentioning `TOOLIO_HOME / EVO_HOME / toolio-bridge / toolio.bridge / toolio_bridge.py` and the `// Legacy aliases ...` comments.
 
 7e. In `tests/unit/test_toolio_plugin_bridge.py` (`test_cross_platform_bridge_discovery`, ~line 67-73):
 - docstring → `"""Plugin uses cross-platform PATH detection."""`
@@ -465,7 +465,7 @@ Expected: exit 0.
 Expected failure classes if anything remains (fix in place, do not weaken assertions):
 - `ModuleNotFoundError: toolio` in subprocess/integration tests → Step 8 was skipped or failed; rerun it.
 - Tests asserting copy/migration semantics elsewhere (search `copytree`/`copied` under `tests/`) → rewrite to chain semantics (same rules as Step 6).
-- `toolio-bridge` / `LEREV_HOME` / `EVO_HOME` pins outside Step 7's files → grep: `git grep -ln "toolio-bridge\|LEREV_HOME\|EVO_HOME" -- tests` and apply the same not-honoured treatment.
+- `toolio-bridge` / `TOOLIO_HOME` / `EVO_HOME` pins outside Step 7's files → grep: `git grep -ln "toolio-bridge\|TOOLIO_HOME\|EVO_HOME" -- tests` and apply the same not-honoured treatment.
 - Literal-brand pins (`"toolio ..."` assertions) that bulk-rename should have caught but did not (odd casing/split strings) → fix the literal on both sides of the assertion.
 
 Ruff gate (no NEW errors):

@@ -42,9 +42,9 @@ def test_success_resets_ladder() -> None:
 
 
 def test_env_cooldown_default(monkeypatch) -> None:
-    monkeypatch.delenv("SCHOOL_COMPRESS_COOLDOWN", raising=False)
+    monkeypatch.delenv("TOOLIO_COMPRESS_COOLDOWN", raising=False)
     cb = CircuitBreaker(clock=lambda: 0.0)
     assert cb.cooldown == 300.0
-    monkeypatch.setenv("SCHOOL_COMPRESS_COOLDOWN", "42")
+    monkeypatch.setenv("TOOLIO_COMPRESS_COOLDOWN", "42")
     cb2 = CircuitBreaker(clock=lambda: 0.0)
     assert cb2.cooldown == 42.0

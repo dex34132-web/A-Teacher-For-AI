@@ -34,7 +34,7 @@ class TestProgress:
         assert "step 1" in r.bars
 
     def test_progress_kill_switch(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_PROGRESS", "0")
+        monkeypatch.setenv("TOOLIO_PROGRESS", "0")
         r = progress(str(tmp_path), "write", items=[{"content": "x", "status": "pending"}])
         assert r.ok is True
         assert r.items == []

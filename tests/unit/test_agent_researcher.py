@@ -62,7 +62,7 @@ class TestResearch:
         assert r.error == "empty query"
 
     def test_research_kill_switch(self, worktree: str, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_RESEARCH", "0")
+        monkeypatch.setenv("TOOLIO_RESEARCH", "0")
         r = research(worktree, "anything")
         assert r.ok is True
         assert r.learnings == "research disabled"

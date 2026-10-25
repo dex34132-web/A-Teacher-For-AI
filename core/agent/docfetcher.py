@@ -225,7 +225,7 @@ def fetch_docs(
     the observer learning trail. Network failure falls back to any cached entry.
     """
     query_s = safe_str(query)
-    if os.environ.get("SCHOOL_DOCS", "") == "0":
+    if os.environ.get("TOOLIO_DOCS", "") == "0":
         return DocResult(
             ok=True,
             query=query_s,

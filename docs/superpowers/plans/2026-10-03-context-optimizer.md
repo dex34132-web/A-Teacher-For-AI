@@ -14,7 +14,7 @@
 
 - Threshold: `est = ceil(chars/4)`; `< 1000` tokens → pass raw untouched, NO marker/footer; `≥ 1000` → compress + append exactly ONE footer `[toolio ctx: <in>→<out> tokens]`.
 - Footer excluded from downstream estimates (strip before re-estimating); never expand: if `tokens_out >= tokens_in` → fail open with original text.
-- Kill switch `SCHOOL_CTX=0` → passthrough raw (independent of `SCHOOL_HOOKS=0`).
+- Kill switch `TOOLIO_CTX=0` → passthrough raw (independent of `TOOLIO_HOOKS=0`).
 - Fail open everywhere: any exception → original text, no footer. Error messages pass raw. Never modify tool INPUTS. One footer max per result.
 - Heuristic path: no I/O, no network, target ~50ms (test bound <1.0s for 100KB).
 - Bridge AST attempt capped at `CTX_TIMEOUT_MS=2000` (separate from recall budget); total failure → TS fallback → fail open.
@@ -137,7 +137,7 @@ class TestBelowThreshold:
 
 class TestKillSwitch:
     def test_toolio_ctx_zero_passthrough(self, monkeypatch):
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         text = _payload_lines(400)
         res = optimize(text, filename="data.json")
         assert res.compressed is False
@@ -857,7 +857,7 @@ def optimize(
     original = text
     body = strip_footer(text)
     tokens_in = estimate_tokens(body)
-    if os.environ.get("SCHOOL_CTX") == "0" or tokens_in < CTX_THRESHOLD:
+    if os.environ.get("TOOLIO_CTX") == "0" or tokens_in < CTX_THRESHOLD:
         return _passthrough(body, tokens_in, original)
     try:
         if strategy == "matches":
@@ -1172,7 +1172,7 @@ class TestAstBigSix:
         )
         if estimate_tokens(strip_footer(text)) < CTX_THRESHOLD:
             text += "\n" + ("#" * 4)
-        monkeypatch.delenv("SCHOOL_CTX", raising=False)
+        monkeypatch.delenv("TOOLIO_CTX", raising=False)
         res = optimize(text, filename="sample.py")
         assert res.compressed is True
         assert res.parser in {"tree-sitter-python", "heuristic"}
@@ -1700,7 +1700,7 @@ class TestSkeletonCommand:
     def test_kill_switch(self, monkeypatch):
         import toolio.bridge as bridge_mod
 
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         text = "\n".join('{"k": "some value %d"}' % i for i in range(400))
         out = bridge_mod._handle_skeleton({"text": text, "filename": "d.json"})
         assert out["ok"] is True
@@ -2295,7 +2295,7 @@ class TestContextOptimizer:
         assert "const CTX_TIMEOUT_MS = 2000" in TS_PLUGIN_SOURCE
 
     def test_kill_switch(self):
-        assert 'process.env.SCHOOL_CTX !== "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.TOOLIO_CTX !== "0"' in TS_PLUGIN_SOURCE
 
     def test_footer_regex_literal(self):
         assert r"\[toolio ctx: \d+→\d+ tokens\]" in TS_PLUGIN_SOURCE
@@ -2355,7 +2355,7 @@ Expected: FAIL (`const CTX_THRESHOLD = 1000` not found / function ctxOptimize no
   ]);
 
   function ctxEnabled(): boolean {
-    return process.env.SCHOOL_CTX !== "0";
+    return process.env.TOOLIO_CTX !== "0";
   }
   function ctxEstimate(s: string): number {
     return Math.ceil(s.length / 4);
@@ -2693,7 +2693,7 @@ git commit -m "feat: plugin context optimizer hook"
 
 **Interfaces:**
 - Consumes: `TS_PLUGIN_SOURCE` (Task 5), Node 24 native TS type-stripping, `Toolio` default export with `tool.execute.after` hook.
-- Produces: three green integration tests proving live compression, TS fallback, and the `SCHOOL_CTX=0` kill switch through the real Node runtime.
+- Produces: three green integration tests proving live compression, TS fallback, and the `TOOLIO_CTX=0` kill switch through the real Node runtime.
 
 - [ ] **Step 1: Write the harness test file**
 
@@ -2785,7 +2785,7 @@ class TestLiveContextOptimizer:
         big = tmp_path / "big.py"
         big.write_text(_big_py(), encoding="utf-8")
         env = dict(os.environ)
-        env["SCHOOL_HOME"] = str(tmp_path / "nowhere")
+        env["TOOLIO_HOME"] = str(tmp_path / "nowhere")
         env["PATH"] = str(tmp_path / "nopath")
         env.pop("PYTHONPATH", None)
         out = _run(plugin_dir, worktree, big, env)
@@ -2803,7 +2803,7 @@ class TestLiveContextOptimizer:
         big = tmp_path / "big.py"
         big.write_text(_big_py(), encoding="utf-8")
         env = dict(os.environ)
-        env["SCHOOL_HOME"] = str(REPO_ROOT)
+        env["TOOLIO_HOME"] = str(REPO_ROOT)
         env["PYTHONPATH"] = str(REPO_ROOT)
         scripts = str(REPO_ROOT / ".venv" / "Scripts")
         env["PATH"] = scripts + os.pathsep + env.get("PATH", "")
@@ -2819,7 +2819,7 @@ class TestLiveContextOptimizer:
         big = tmp_path / "big.py"
         big.write_text(_big_py(), encoding="utf-8")
         env = dict(os.environ)
-        env["SCHOOL_CTX"] = "0"
+        env["TOOLIO_CTX"] = "0"
         out = _run(plugin_dir, worktree, big, env)
         original = big.read_text(encoding="utf-8")
         assert out["output"] == original
@@ -2830,10 +2830,10 @@ class TestLiveContextOptimizer:
 
 Run: `& ".venv\Scripts\python.exe" -m pytest tests/integration/test_plugin_live.py -q --no-header -p no:cacheprovider`
 Expected: PASS. Debug notes:
-- If `Toolio()` throws during discovery: PATH/SCHOOL_HOME games must stay try/caught — they are in the template; check stderr from the assert message.
+- If `Toolio()` throws during discovery: PATH/TOOLIO_HOME games must stay try/caught — they are in the template; check stderr from the assert message.
 - If node fails to import `.ts`: ensure Node ≥22.6/24 (env has v24.20.0) and `package.json {"type":"module"}` exists in plugin_dir.
 - If title lacks `toolio`: the after-hook marker logic should still run after compression — verify hook ordering.
-- Test 1 outcome must hold even with `SCHOOL_HOME` pointed nowhere (TS heuristic path); test 2 is outcome-based (bridge OR heuristic both acceptable — footer + shrink + signature).
+- Test 1 outcome must hold even with `TOOLIO_HOME` pointed nowhere (TS heuristic path); test 2 is outcome-based (bridge OR heuristic both acceptable — footer + shrink + signature).
 
 - [ ] **Step 3: Commit**
 
@@ -2897,7 +2897,7 @@ If nothing changed, skip this commit.
 - Footer format + dedupe + downstream strip → T1 (`TestFooter`, idempotence).
 - Never-expand → T1 `TestNeverExpand`.
 - Fail open (garbage, exceptions, bridge failure) → T1 `TestFailOpen`, T5 `ctxOptimize` catch, T2 `skeletonize_ast → None`.
-- `SCHOOL_CTX=0` → T1 `TestKillSwitch`, T3 `test_kill_switch`, T6 `test_kill_switch_raw`.
+- `TOOLIO_CTX=0` → T1 `TestKillSwitch`, T3 `test_kill_switch`, T6 `test_kill_switch_raw`.
 - Big-6 AST contract tests → T2 `TestAstBigSix`.
 - 2 heuristic-only samples (.sql, .yaml) → T1 `TestHeuristicContract`.
 - Heuristic perf bound → T1 `test_perf_100kb_under_1s`.
@@ -2906,7 +2906,7 @@ If nothing changed, skip this commit.
 - MCP stdio integration (raw small, skeletonized, unknown-path error) → T4 Step 5–6.
 - Plugin source-contract (constants, footer, wiring order, kill switch, no new imports, 13 tools) → T5.
 - Live oversized read through real Node → T6.
-- Kill switch independent of SCHOOL_HOOKS → T5 uses `SCHOOL_CTX` only; existing `hooksEnabled` untouched.
+- Kill switch independent of TOOLIO_HOOKS → T5 uses `TOOLIO_CTX` only; existing `hooksEnabled` untouched.
 
 **2. Placeholder scan** — no TBD/TODO/"similar to task N"; all code steps carry full code; description strings exact.
 

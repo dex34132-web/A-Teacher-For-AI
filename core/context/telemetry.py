@@ -26,7 +26,7 @@ class TelemetryCollector:
 
     def record(self, event: str, **kwargs: Any) -> None:
         """Buffer an event.  No-op when kill switch is set."""
-        if os.environ.get("SCHOOL_TELEMETRY", "") == "0":
+        if os.environ.get("TOOLIO_TELEMETRY", "") == "0":
             return
         entry: dict[str, Any] = {
             "ts": int(time.time() * 1000),

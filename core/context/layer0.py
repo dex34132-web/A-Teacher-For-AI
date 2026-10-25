@@ -49,7 +49,7 @@ def total_tokens(messages: list[Any]) -> int:
 
 def protected_from(messages: list[Any]) -> int:
     """First index of the protected tail (newest ~N tokens never compressed)."""
-    budget = _env_int("SCHOOL_COMPRESS_TAIL_TOKENS", 20000)
+    budget = _env_int("TOOLIO_COMPRESS_TAIL_TOKENS", 20000)
     if budget <= 0:
         budget = 1
     acc = 0

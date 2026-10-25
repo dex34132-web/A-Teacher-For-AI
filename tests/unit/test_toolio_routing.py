@@ -170,7 +170,7 @@ class TestRouteTools:
         assert "toolioStatus.next" in TS_PLUGIN_SOURCE  # picks surface in footer
 
     def test_kill_switch(self):
-        assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.TOOLIO_ROUTE === "0"' in TS_PLUGIN_SOURCE
 
     def test_report_stores_tagged_lesson(self):
         idx = TS_PLUGIN_SOURCE.index("toolio_route: tool(")

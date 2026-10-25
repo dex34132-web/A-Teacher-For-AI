@@ -32,7 +32,7 @@ from core.skillgen.registry import SkillRegistry, registry_for
 from core.skillgen.types import SkillScope
 
 MAX_CONTENT_FETCHES = int(
-    os.environ.get("SCHOOL_SKILLGEN_GITHUB_MAX_FILES", "5") or 5
+    os.environ.get("TOOLIO_SKILLGEN_GITHUB_MAX_FILES", "5") or 5
 )
 
 

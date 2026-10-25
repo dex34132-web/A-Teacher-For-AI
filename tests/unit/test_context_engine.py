@@ -31,7 +31,7 @@ def over_threshold_msgs() -> list[dict]:
 
 
 def test_kill_switch_passthrough(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = over_threshold_msgs()
     report = engine.compress(msgs)
@@ -42,7 +42,7 @@ def test_kill_switch_passthrough(tmp_path, monkeypatch) -> None:
 
 
 def test_below_threshold_skipped(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100000")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100000")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     report = engine.compress([msg("user", "hi")])
     assert report.skipped == "below_threshold"
@@ -50,8 +50,8 @@ def test_below_threshold_skipped(tmp_path, monkeypatch) -> None:
 
 
 def test_layer0_creates_blocks_and_view(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = [
         msg("user", "start"),
@@ -72,8 +72,8 @@ def test_layer0_creates_blocks_and_view(tmp_path, monkeypatch) -> None:
 
 
 def test_layer1_used_when_no_layer0_spans(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge()
     engine = ContextEngine(str(tmp_path), "s1", judge=judge)
     report = engine.compress(over_threshold_msgs())
@@ -86,8 +86,8 @@ def test_layer1_used_when_no_layer0_spans(tmp_path, monkeypatch) -> None:
 
 
 def test_judge_failure_falls_to_layer2_and_trips_circuit(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge(fail=True)
     engine = ContextEngine(str(tmp_path), "s1", judge=judge)
     report = engine.compress(over_threshold_msgs())
@@ -99,8 +99,8 @@ def test_judge_failure_falls_to_layer2_and_trips_circuit(tmp_path, monkeypatch) 
 
 
 def test_tripped_circuit_skips_layer1(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge()
     engine = ContextEngine(str(tmp_path), "s1", judge=judge)
     for _ in range(3):
@@ -112,8 +112,8 @@ def test_tripped_circuit_skips_layer1(tmp_path, monkeypatch) -> None:
 
 
 def test_budget_zero_skips_layer1(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge()
     budget = ModelCallBudget({}, max_per_task=0)
     engine = ContextEngine(str(tmp_path), "s1", judge=judge, budget=budget)
@@ -123,8 +123,8 @@ def test_budget_zero_skips_layer1(tmp_path, monkeypatch) -> None:
 
 
 def test_store_failure_fails_open(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = over_threshold_msgs()
 
@@ -138,8 +138,8 @@ def test_store_failure_fails_open(tmp_path, monkeypatch) -> None:
 
 
 def test_should_compress_and_report_shape(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "40")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "40")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = over_threshold_msgs()
     assert engine.should_compress(msgs) is True

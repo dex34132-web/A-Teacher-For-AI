@@ -991,7 +991,7 @@ class TestRoutingPipeline:
             priority=2,
         )
         d = pipe.route(p)
-        assert d.has_destination(DestinationType.SCHOOL_CONTEXT)
+        assert d.has_destination(DestinationType.TOOLIO_CONTEXT)
 
     def test_route_observation(self):
         pipe = RoutingPipeline()

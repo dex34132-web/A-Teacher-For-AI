@@ -83,8 +83,8 @@ registry/lifecycle/ModelCallBudget; existing storage discipline.
 
 Fail-open at every step: any layer failure degrades to the next free layer or to
 originals — a session never crashes or blocks on compression.
-Kill switches: `SCHOOL_COMPRESS=0` (compression), `SCHOOL_CTX=0` (skeletonization),
-`SCHOOL_HOOKS=0` (footer) — consistent with existing patterns.
+Kill switches: `TOOLIO_COMPRESS=0` (compression), `TOOLIO_CTX=0` (skeletonization),
+`TOOLIO_HOOKS=0` (footer) — consistent with existing patterns.
 
 ## 5. Section 2 — Block store & restore (APPROVED)
 

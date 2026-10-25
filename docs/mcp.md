@@ -248,19 +248,19 @@ Memories are isolated by agent → project → session, exactly like the plugin:
 
 | Setting | Precedence |
 |---------|-----------|
-| `project` argument | → `SCHOOL_PROJECT` env → worktree folder name |
-| `session` argument | → `SCHOOL_SESSION` env → omitted |
-| `agent_id` argument | → `SCHOOL_AGENT` env → `opencode` |
+| `project` argument | → `TOOLIO_PROJECT` env → worktree folder name |
+| `session` argument | → `TOOLIO_SESSION` env → omitted |
+| `agent_id` argument | → `TOOLIO_AGENT` env → `opencode` |
 
 `opencode` is the same default the bridge and the OpenCode plugin use, so MCP tools
 and the plugin see the **same memories**. Environment variables:
 
 | Variable | Effect |
 |----------|--------|
-| `SCHOOL_WORKTREE` | Which project directory the server binds to (default: cwd) |
-| `SCHOOL_PROJECT` | Default project scope |
-| `SCHOOL_SESSION` | Default session scope |
-| `SCHOOL_AGENT` | Default agent identity |
+| `TOOLIO_WORKTREE` | Which project directory the server binds to (default: cwd) |
+| `TOOLIO_PROJECT` | Default project scope |
+| `TOOLIO_SESSION` | Default session scope |
+| `TOOLIO_AGENT` | Default agent identity |
 
 Memory storage lives in `<worktree>/.toolio/memory/` (legacy `.toolio/` and `.evo/`
 locations are migrated non-destructively).
@@ -288,8 +288,8 @@ they are not a guarantee of factual output.
 ## Compatibility notes
 
 - The JSON bridge (`python -m toolio.bridge`), `toolio install` plugin flow, and
-  legacy LEREV paths are untouched; all pre-existing tests must stay green.
-- One MCP server process binds to one worktree (`SCHOOL_WORKTREE` or cwd), matching
+  legacy TOOLIO paths are untouched; all pre-existing tests must stay green.
+- One MCP server process binds to one worktree (`TOOLIO_WORKTREE` or cwd), matching
   the bridge's one-worktree-per-process model.
 - `python -m toolio.mcp` and `toolio mcp` are equivalent.
 

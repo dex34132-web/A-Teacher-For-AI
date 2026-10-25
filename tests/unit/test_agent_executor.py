@@ -55,7 +55,7 @@ class TestExecute:
         assert r.ok is False
 
     def test_execute_kill_switch(self, worktree: str, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_EXECUTE", "0")
+        monkeypatch.setenv("TOOLIO_EXECUTE", "0")
         r = execute(worktree, "echo test")
         assert r.ok is True
         assert r.command == "echo test"

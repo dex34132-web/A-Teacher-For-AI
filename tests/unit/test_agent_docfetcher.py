@@ -112,7 +112,7 @@ class TestFetchDocs:
         assert r.error == "empty query"
 
     def test_kill_switch(self, worktree: str, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_DOCS", "0")
+        monkeypatch.setenv("TOOLIO_DOCS", "0")
         r = fetch_docs(worktree, "anything")
         assert r.ok is True
         assert r.source == "disabled"

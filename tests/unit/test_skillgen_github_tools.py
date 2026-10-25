@@ -1,7 +1,7 @@
 """Phase 2 orchestrator tools (toolio_skill_*): registration, gating, wiring.
 
 Every dispatch runs against a tmp_path worktree. Network tools are exercised
-either offline (SCHOOL_SKILLGEN_GITHUB_DISABLED) or with discovery functions
+either offline (TOOLIO_SKILLGEN_GITHUB_DISABLED) or with discovery functions
 monkeypatched - no test ever reaches api.github.com or an external model.
 """
 
@@ -78,7 +78,7 @@ class TestOfflineFailClosed:
     def test_every_network_tool_fails_closed_when_disabled(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_DISABLED", "1")
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_DISABLED", "1")
         orch = create_orchestrator()
         for name, kwargs in DISPATCH_KWARGS.items():
             result = orch.dispatch(name, worktree=str(tmp_path), **kwargs)

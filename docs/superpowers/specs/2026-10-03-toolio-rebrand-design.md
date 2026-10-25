@@ -21,7 +21,7 @@ installers, docs, and tests. The GitHub repo is already `A-Toolio-For-AI`.
    disk are never moved, copied, or deleted by this rebrand.
 3. **No compatibility fallbacks for code surface.** Bridge discovery searches
    `toolio-bridge` only (plus the always-working file-path fallback). Env vars
-   become `SCHOOL_*` with no `TEACHER_*` fallback.
+   become `TOOLIO_*` with no `TEACHER_*` fallback.
 
 ## Rename surface
 
@@ -36,10 +36,10 @@ installers, docs, and tests. The GitHub repo is already `A-Toolio-For-AI`.
   toolio_lifecycle, toolio_diagnose, toolio_route, toolio_route_stats).
   TS↔MCP description parity tests re-pin automatically (regex-based).
 - **Identifiers:** `const Teacher` → `const Toolio`, `export default Teacher`
-  → `Toolio`, `TEACHER_VERSION` → `SCHOOL_VERSION`, skill frontmatter name
+  → `Toolio`, `TEACHER_VERSION` → `TOOLIO_VERSION`, skill frontmatter name
   `teacher-routing` → `toolio-routing`.
 - **Env vars:** `TEACHER_HOOKS/ROUTE/AGENT/PROJECT/SESSION/WORKTREE` →
-  `SCHOOL_*` (grep for stragglers).
+  `TOOLIO_*` (grep for stragglers).
 - **Memory/routing data:** root chain as in Decision 2; routing files
   (`routing-stats.jsonl`, `routing.json`) live under whichever root resolved.
   `.gitignore`: add `.toolio/` (old entries stay — stale dirs remain on disk).
@@ -57,7 +57,7 @@ installers, docs, and tests. The GitHub repo is already `A-Toolio-For-AI`.
   "Teacher" brand strings in tool descriptions, `_INSTRUCTIONS`, skill text,
   prompts. Product version numbering (V2.6) unchanged.
 - **Tests:** ~140 files, baseline **2507 passed**; ordered mechanical replace
-  (`TEACHER_`→`SCHOOL_`, `teacher_`→`toolio_`, `teacher`→`toolio`,
+  (`TEACHER_`→`TOOLIO_`, `teacher_`→`toolio_`, `teacher`→`toolio`,
   `Teacher`→`Toolio`) with identity legacy-allowance chain re-scoped (the
   historical `toolio`/`evo`/`teacher` allowance tokens may remain only where
   they guard real legacy paths).

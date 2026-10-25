@@ -33,7 +33,7 @@ def _file_exists(path: str) -> bool:
 def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     """Discover the Toolio bridge using a 4-tier cascade.
 
-    Tier 1: SCHOOL_HOME env var
+    Tier 1: TOOLIO_HOME env var
     Tier 2: toolio-bridge on PATH
     Tier 3: python -m toolio.bridge
     Tier 4: Dev fallback ({worktree}/scripts/toolio_bridge.py)
@@ -41,14 +41,14 @@ def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     python = _find_python()
 
     # Tier 1: env-configured install root
-    home = os.environ.get("SCHOOL_HOME")
+    home = os.environ.get("TOOLIO_HOME")
     if home:
         bridge_path = str(Path(home) / "toolio" / "bridge.py")
         if _file_exists(bridge_path):
             return BridgeDiscovery(
                 python=python or "python3",
                 bridge_path=bridge_path,
-                tier="SCHOOL_HOME",
+                tier="TOOLIO_HOME",
             )
 
     # Tier 2: bridge launcher on PATH

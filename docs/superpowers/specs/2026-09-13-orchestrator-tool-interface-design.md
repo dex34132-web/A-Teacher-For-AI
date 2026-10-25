@@ -1,6 +1,6 @@
-# LEREV Orchestrator + Tool Interface Design
+# TOOLIO Orchestrator + Tool Interface Design
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *TOOLIO* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 **Date:** 2026-09-13
@@ -9,7 +9,7 @@
 
 ## 1. Problem Statement
 
-LEREV has a complete learning pipeline (V2.2 conflict, V2.3 confidence, V2.4.2 lifecycle, V2.6 memory, semantic retrieval) but no unified interface to orchestrate these systems. The bridge protocol exposes 3 hardcoded commands. There is no way to:
+TOOLIO has a complete learning pipeline (V2.2 conflict, V2.3 confidence, V2.4.2 lifecycle, V2.6 memory, semantic retrieval) but no unified interface to orchestrate these systems. The bridge protocol exposes 3 hardcoded commands. There is no way to:
 
 - Run multi-step learning pipelines (e.g., store → conflict check → deduplicate → confidence score)
 - Execute background learning tasks continuously
@@ -56,7 +56,7 @@ LEREV has a complete learning pipeline (V2.2 conflict, V2.3 confidence, V2.4.2 l
 
 ```python
 class Tool(ABC):
-    """Base class for all LEREV tools."""
+    """Base class for all TOOLIO tools."""
 
     @property
     @abstractmethod
@@ -105,7 +105,7 @@ class ToolResult:
 ```python
 class StatusTool(Tool):
     name = "toolio_status"
-    description = "Check LEREV runtime status including component availability"
+    description = "Check TOOLIO runtime status including component availability"
     schema = {}  # no parameters
 
     def execute(self) -> ToolResult:
@@ -118,7 +118,7 @@ class StatusTool(Tool):
 ```python
 class RememberTool(Tool):
     name = "toolio_remember"
-    description = "Store an experience or memory through LEREV V2.6"
+    description = "Store an experience or memory through TOOLIO V2.6"
     schema = {
         "content": {"type": "string", "description": "Memory content"},
         "outcome": {"type": "string", "enum": ["SUCCESS", "FAILURE", "NEUTRAL", "MIXED"]},
@@ -139,7 +139,7 @@ class RememberTool(Tool):
 ```python
 class RecallTool(Tool):
     name = "toolio_recall"
-    description = "Retrieve memories from LEREV V2.6 long-term memory"
+    description = "Retrieve memories from TOOLIO V2.6 long-term memory"
     schema = {
         "query": {"type": "string"},
         "confidence_threshold": {"type": "number", "default": 0.0},

@@ -129,8 +129,8 @@ class TestContextCommand:
         monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> dict:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         messages = [
             {"role": "user" if i % 2 == 0 else "assistant", "content": chr(97 + i) * 300}
             for i in range(8)

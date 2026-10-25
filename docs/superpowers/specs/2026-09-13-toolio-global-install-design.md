@@ -1,6 +1,6 @@
 # Toolio — Global Cross-Platform Installation & Distribution
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *TOOLIO* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 **Date:** 2026-09-13
@@ -24,12 +24,12 @@ After installation, OpenCode must be able to use Toolio from **any project direc
 | npm | `toolio` |
 | CLI | `toolio` |
 | Memory dir | `.toolio/memory/` |
-| Env var | `LEREV_HOME` |
+| Env var | `TOOLIO_HOME` |
 
 ### Backward Compatibility
 
 - `.toolio/memory/` directories remain readable during transition
-- `LEREV_HOME` env var still supported (fallback)
+- `TOOLIO_HOME` env var still supported (fallback)
 - Internal Python modules (`core/`, `core/routing/v26/`) keep existing names
 
 ---
@@ -52,7 +52,7 @@ After installation, OpenCode must be able to use Toolio from **any project direc
                   │
 ┌─────────────────▼───────────────────────────┐
 │           Discovery Layer                   │
-│  Bridge discovery (LEREV_HOME → PATH →      │
+│  Bridge discovery (TOOLIO_HOME → PATH →      │
 │  installed module → dev fallback)           │
 │  OpenCode global config registration        │
 └─────────────────┬───────────────────────────┘
@@ -70,7 +70,7 @@ toolio/
 ├── __init__.py          # version, public API
 ├── __main__.py          # python -m toolio
 ├── cli.py               # argparse CLI
-├── config.py            # LEREV_HOME, paths, OpenCode config discovery
+├── config.py            # TOOLIO_HOME, paths, OpenCode config discovery
 ├── discovery.py         # Bridge discovery (4-tier cascade)
 ├── bridge.py            # Bridge protocol (extracted from scripts/toolio_bridge.py)
 └── plugin_source.py     # TypeScript plugin source (bundled as string)
@@ -108,7 +108,7 @@ toolio/
 ### 4-Tier Cascade
 
 ```
-1. LEREV_HOME env var → {LEREV_HOME}/toolio/bridge.py
+1. TOOLIO_HOME env var → {TOOLIO_HOME}/toolio/bridge.py
 2. `toolio-bridge` on PATH → execute directly
 3. Installed module → python -m toolio.bridge
 4. Dev fallback → {worktree}/scripts/toolio_bridge.py
@@ -120,8 +120,8 @@ The plugin will implement the cascade:
 
 ```typescript
 async function discoverBridge(worktree: string): Promise<{python: string, bridgePath: string} | null> {
-  // Tier 1: LEREV_HOME
-  const toolioHome = process.env.LEREV_HOME || process.env.LEREV_HOME
+  // Tier 1: TOOLIO_HOME
+  const toolioHome = process.env.TOOLIO_HOME || process.env.TOOLIO_HOME
   if (toolioHome) {
     const bridgePath = resolve(toolioHome, "toolio", "bridge.py")
     if (await fileExists(bridgePath)) return { python: await findPython(), bridgePath }
@@ -351,7 +351,7 @@ Cross-project isolation:
 8. version
 9. Python discovery
 10. invalid Python discovery
-11. LEREV_HOME
+11. TOOLIO_HOME
 12. PATH bridge discovery
 13. installed-package discovery
 14. development fallback

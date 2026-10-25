@@ -247,7 +247,7 @@ class TestBugMissingExperienceRouting:
             info_type=InformationType.EXPERIENCE,
         )
         decision = pipe.route(pkt)
-        # Should route to LEARNING, not just SCHOOL_CONTEXT
+        # Should route to LEARNING, not just TOOLIO_CONTEXT
         assert decision.has_destination(DestinationType.LEARNING), (
             f"EXPERIENCE should route to LEARNING, got: {[d.name for d in decision.destinations]}"
         )

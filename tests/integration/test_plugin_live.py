@@ -112,7 +112,7 @@ class TestLiveContextOptimizer:
         big = tmp_path / "big.py"
         big.write_text(_big_py(), encoding="utf-8", newline="\n")
         env = dict(os.environ)
-        env["SCHOOL_HOME"] = str(tmp_path / "nowhere")
+        env["TOOLIO_HOME"] = str(tmp_path / "nowhere")
         env["PATH"] = str(tmp_path / "nopath")
         env.pop("PYTHONPATH", None)
         out = _run(plugin_dir, worktree, big, env)
@@ -130,7 +130,7 @@ class TestLiveContextOptimizer:
         big = tmp_path / "big.py"
         big.write_text(_big_py(), encoding="utf-8", newline="\n")
         env = dict(os.environ)
-        env["SCHOOL_HOME"] = str(REPO_ROOT)
+        env["TOOLIO_HOME"] = str(REPO_ROOT)
         env["PYTHONPATH"] = str(REPO_ROOT)
         scripts = str(REPO_ROOT / ".venv" / "Scripts")
         env["PATH"] = scripts + os.pathsep + env.get("PATH", "")
@@ -146,7 +146,7 @@ class TestLiveContextOptimizer:
         big = tmp_path / "big.py"
         big.write_text(_big_py(), encoding="utf-8", newline="\n")
         env = dict(os.environ)
-        env["SCHOOL_CTX"] = "0"
+        env["TOOLIO_CTX"] = "0"
         out = _run(plugin_dir, worktree, big, env)
         original = big.read_text(encoding="utf-8")
         assert out["output"] == original
@@ -173,10 +173,10 @@ class TestLiveStatusFooter:
 
     def _env(self, tmp_path: Path) -> dict:
         env = dict(os.environ)
-        env["SCHOOL_HOME"] = str(tmp_path / "nowhere")
+        env["TOOLIO_HOME"] = str(tmp_path / "nowhere")
         env["PATH"] = str(tmp_path / "nopath")
         env.pop("PYTHONPATH", None)
-        env.pop("SCHOOL_HOOKS", None)
+        env.pop("TOOLIO_HOOKS", None)
         return env
 
     def test_footer_appends_and_is_idempotent(
@@ -206,6 +206,6 @@ class TestLiveStatusFooter:
         worktree = tmp_path / "wt"
         worktree.mkdir()
         env = self._env(tmp_path)
-        env["SCHOOL_HOOKS"] = "0"
+        env["TOOLIO_HOOKS"] = "0"
         out = _run_footer(plugin_dir, worktree, env)
         assert out["first"] == "Assistant reply."  # untouched

@@ -19,9 +19,9 @@ def watchdog(
 ) -> T | None:
     """Run *fn* with a single retry on exception.  Fail-open (returns None).
 
-    Kill switch: ``SCHOOL_WATCHDOG=0`` disables retry.
+    Kill switch: ``TOOLIO_WATCHDOG=0`` disables retry.
     """
-    if os.environ.get("SCHOOL_WATCHDOG", "") == "0":
+    if os.environ.get("TOOLIO_WATCHDOG", "") == "0":
         try:
             return fn(*args, **kwargs)
         except Exception:

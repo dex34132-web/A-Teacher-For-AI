@@ -96,8 +96,8 @@ def watchdog(fn, *args, **kwargs):
 ```
 
 - Fail-open stub: `{"ok": True, "mode": "degraded", "chip": "[toolio] degraded"}`
-- Timeout: 5s per call (configurable via `SCHOOL_WATCHDOG_MS`).
-- Kill switch: `SCHOOL_WATCHDOG=0` disables retry (still fail-open).
+- Timeout: 5s per call (configurable via `TOOLIO_WATCHDOG_MS`).
+- Kill switch: `TOOLIO_WATCHDOG=0` disables retry (still fail-open).
 - Covers: `context_status`, `context_compress`, `context_restore`, `context_view`, `context_coexist`.
 
 ## 8. Parity tests
@@ -112,10 +112,10 @@ For every telemetry surface (progress bar, bar graph, cumulative stats block):
 
 | Env | Effect |
 |-----|--------|
-| `SCHOOL_TELEMETRY=0` | No telemetry collection, no cumulative stats |
-| `SCHOOL_WATCHDOG=0` | No retry (fail-open still active) |
-| `SCHOOL_HOOKS=0` | No footer progress/graph |
-| `SCHOOL_PROGRESS=0` | No animated bars in CLI |
+| `TOOLIO_TELEMETRY=0` | No telemetry collection, no cumulative stats |
+| `TOOLIO_WATCHDOG=0` | No retry (fail-open still active) |
+| `TOOLIO_HOOKS=0` | No footer progress/graph |
+| `TOOLIO_PROGRESS=0` | No animated bars in CLI |
 
 ## 10. Exit criteria
 

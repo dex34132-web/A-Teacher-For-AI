@@ -82,7 +82,7 @@ class TestBelowThreshold:
 
 class TestKillSwitch:
     def test_toolio_ctx_zero_passthrough(self, monkeypatch):
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         text = _payload_lines(400)
         res = optimize(text, filename="data.json")
         assert res.compressed is False
@@ -528,7 +528,7 @@ class TestAstBigSix:
         )
         if estimate_tokens(strip_footer(text)) < CTX_THRESHOLD:
             text += "\n" + ("#" * 4)
-        monkeypatch.delenv("SCHOOL_CTX", raising=False)
+        monkeypatch.delenv("TOOLIO_CTX", raising=False)
         res = optimize(text, filename="sample.py")
         assert res.compressed is True
         assert res.parser in {"tree-sitter-python", "heuristic"}

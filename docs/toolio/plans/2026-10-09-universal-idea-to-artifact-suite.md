@@ -237,7 +237,7 @@ and **artifact** names carry the distinct flavor.
 - adversarial fuzz (reuse `tests/stress/fuzz_harness.py`) on every tool/feature ≥2000×
 - full battery green
 
-Each phase: TDD, Apple-grade visuals, fail-open, kill switch (`SCHOOL_FORGE=0`, etc.).
+Each phase: TDD, Apple-grade visuals, fail-open, kill switch (`TOOLIO_FORGE=0`, etc.).
 
 ---
 

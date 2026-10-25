@@ -129,7 +129,7 @@ def session(
     action_s = safe_str(action)
     session_id_s = safe_str(session_id)
     focus_s = safe_str(focus)
-    if os.environ.get("SCHOOL_SESSION", "") == "0":
+    if os.environ.get("TOOLIO_SESSION", "") == "0":
         return SessionResult(ok=True, action=action_s)
 
     if action_s not in ACTIONS:

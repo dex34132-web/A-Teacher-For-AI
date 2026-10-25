@@ -14,8 +14,8 @@ from collections import OrderedDict
 from collections.abc import Callable
 from typing import Any
 
-DEFAULT_TTL_S = float(os.environ.get("SCHOOL_SKILLGEN_GITHUB_CACHE_TTL", "900") or 900)
-DEFAULT_MAX_ENTRIES = int(os.environ.get("SCHOOL_SKILLGEN_GITHUB_CACHE_MAX", "200") or 200)
+DEFAULT_TTL_S = float(os.environ.get("TOOLIO_SKILLGEN_GITHUB_CACHE_TTL", "900") or 900)
+DEFAULT_MAX_ENTRIES = int(os.environ.get("TOOLIO_SKILLGEN_GITHUB_CACHE_MAX", "200") or 200)
 
 
 class TTLCache:

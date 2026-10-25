@@ -67,11 +67,11 @@ def parse_summary(raw: str) -> str | None:
 
 
 def default_judge() -> Judge | None:
-    cmd = os.environ.get("SCHOOL_COMPRESS_JUDGE_CMD", "").strip()
+    cmd = os.environ.get("TOOLIO_COMPRESS_JUDGE_CMD", "").strip()
     if not cmd:
         return None
-    timeout = _env_float("SCHOOL_COMPRESS_JUDGE_TIMEOUT", 60.0)
-    model_id = os.environ.get("SCHOOL_COMPRESS_JUDGE_MODEL", "compress-model")
+    timeout = _env_float("TOOLIO_COMPRESS_JUDGE_TIMEOUT", 60.0)
+    model_id = os.environ.get("TOOLIO_COMPRESS_JUDGE_MODEL", "compress-model")
 
     def _run(prompt: str) -> tuple[str, str]:
         proc = subprocess.run(  # noqa: S603

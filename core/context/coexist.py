@@ -21,7 +21,7 @@ _DCP_CACHE: dict[tuple[str, str], bool] = {}
 
 
 def ctx_enabled() -> bool:
-    return os.environ.get("SCHOOL_CTX", "") != "0"
+    return os.environ.get("TOOLIO_CTX", "") != "0"
 
 
 def state_path(worktree: str) -> Path:
@@ -112,7 +112,7 @@ def clear_cache() -> None:
 def view_mode(worktree: str, dcp_hint: bool = False, home: Path | None = None) -> str:
     if not ctx_enabled():
         return "off"
-    if os.environ.get("SCHOOL_COMPRESS", "") == "0":
+    if os.environ.get("TOOLIO_COMPRESS", "") == "0":
         return "off"
     state = load_state(worktree)
     decision = state.get("decision", "")

@@ -8,7 +8,7 @@ A. ``toolio/bridge.py`` — the JSON bridge ``main()`` wire: every one of the 40
    fed both in-process (monkeypatched stdin) and through real subprocess pipes.
 B. ``_dispatch_to_orchestrator`` + ``_safe_dump`` — hostile Python objects.
 C. ``toolio/mcp/server.py`` — ``_route_result``, ``_bridge_call``,
-   ``_build_request``, ``_call_tool`` (42 tools) and the ``SCHOOL_PREFERRED``
+   ``_build_request``, ``_call_tool`` (42 tools) and the ``TOOLIO_PREFERRED``
    dominance suffix on every tool description.
 D. ``toolio/cli.py`` — argparse + every subcommand with hostile argv (including
    non-str entries), and ``_cmd_visualize`` with hostile visual types/data.
@@ -26,8 +26,8 @@ therefore treated as results, not crashes):
 * ``mcp.server._call_tool`` ValueError("Unknown tool"/validation) which the
   MCP framework converts into a JSON-RPC error response.
 
-Network/latency kill-switches (``SCHOOL_SKILLGEN_GITHUB_DISABLED=1`` and
-``SCHOOL_DOCS=0``) are enabled during fuzzing so 2000-iteration labels stay
+Network/latency kill-switches (``TOOLIO_SKILLGEN_GITHUB_DISABLED=1`` and
+``TOOLIO_DOCS=0``) are enabled during fuzzing so 2000-iteration labels stay
 fast; the real network paths are exercised once each by a bounded live smoke
 test at the end. Worktrees and HOME are sandboxed under ``tempfile.mkdtemp``
 so no fuzz input can write outside the sandbox.
@@ -180,14 +180,14 @@ def sandbox() -> Any:
     _RESTORE["cwd"] = os.getcwd()
     _RESTORE["env"] = {
         k: os.environ.get(k)
-        for k in ("USERPROFILE", "HOME", "SCHOOL_SKILLGEN_GITHUB_DISABLED",
-                  "SCHOOL_DOCS", "SCHOOL_EXECUTE", "PYTHONIOENCODING")
+        for k in ("USERPROFILE", "HOME", "TOOLIO_SKILLGEN_GITHUB_DISABLED",
+                  "TOOLIO_DOCS", "TOOLIO_EXECUTE", "PYTHONIOENCODING")
     }
     os.chdir(SANDBOX)
     os.environ["USERPROFILE"] = HOME_DIR
     os.environ["HOME"] = HOME_DIR
-    os.environ["SCHOOL_SKILLGEN_GITHUB_DISABLED"] = "1"
-    os.environ["SCHOOL_DOCS"] = "0"
+    os.environ["TOOLIO_SKILLGEN_GITHUB_DISABLED"] = "1"
+    os.environ["TOOLIO_DOCS"] = "0"
     os.environ["PYTHONIOENCODING"] = "utf-8"
 
     # Bare `toolio mcp` must never enter the blocking stdio server loop when
@@ -753,15 +753,15 @@ def test_c_call_tool_all_tools_fuzz() -> None:
 
 @requires_mcp
 def test_c_tools_dominance_fuzz() -> None:
-    """SCHOOL_PREFERRED dominance suffix on ALL tool descriptions (2000x)."""
+    """TOOLIO_PREFERRED dominance suffix on ALL tool descriptions (2000x)."""
     def one(i: int) -> None:
         assert len(mcp_server._TOOLS) == 52, f"tool count {len(mcp_server._TOOLS)}"
         for t in mcp_server._list_tools().tools:
             name = t.name
             desc = t.description
             assert isinstance(desc, str), f"{name}: description not str"
-            assert "[SCHOOL — PREFERRED]" in desc, f"{name}: missing dominance suffix"
-            assert desc.count("[SCHOOL — PREFERRED]") == 1, f"{name}: duplicated suffix"
+            assert "[TOOLIO — PREFERRED]" in desc, f"{name}: missing dominance suffix"
+            assert desc.count("[TOOLIO — PREFERRED]") == 1, f"{name}: duplicated suffix"
 
     report = fuzz_fail_open(
         one, n=N, make_args=lambda i: ((i,), {}),
@@ -953,15 +953,15 @@ _CMD_KEY_RE = re.compile(r'command:\s*"([a-z_0-9]+)"')
 def assert_plugin_invariants(src: str, version: Any = None) -> None:
     """Structural fail-open invariants of the bundled TypeScript plugin."""
     if version is None:
-        version = plugin_source._SCHOOL_VERSION
+        version = plugin_source._TOOLIO_VERSION
     assert isinstance(src, str) and src, "plugin source empty"
-    if "__SCHOOL_VERSION__" not in str(version):
-        assert "__SCHOOL_VERSION__" not in src, "version placeholder not substituted"
+    if "__TOOLIO_VERSION__" not in str(version):
+        assert "__TOOLIO_VERSION__" not in src, "version placeholder not substituted"
     assert "export default Toolio" in src, "plugin default export missing"
     assert "withVis" in src, "withVis wrapper missing"
     assert "invokeBridge" in src, "invokeBridge missing"
-    assert "const SCHOOL_PREFERRED =" in src, "dominance constant missing"
-    assert "[SCHOOL — PREFERRED]" in src, "dominance suffix literal missing"
+    assert "const TOOLIO_PREFERRED =" in src, "dominance constant missing"
+    assert "[TOOLIO — PREFERRED]" in src, "dominance suffix literal missing"
     assert "const tool: any = ((opts: any) =>" in src, "dominance wrapper missing"
     assert "toolio_visualize: tool({" in src, "toolio_visualize tool missing"
 
@@ -983,8 +983,8 @@ def assert_plugin_invariants(src: str, version: Any = None) -> None:
         f"plugin/bridge command parity broken: {set(bridge._COMMANDS) ^ all_cmds}"
     )
 
-    version_line = re.search(r'const SCHOOL_VERSION = ("(?:[^"\\]|\\.)*")', src)
-    assert version_line, "SCHOOL_VERSION literal missing or unparseable"
+    version_line = re.search(r'const TOOLIO_VERSION = ("(?:[^"\\]|\\.)*")', src)
+    assert version_line, "TOOLIO_VERSION literal missing or unparseable"
     assert json.loads(version_line.group(1)) == str(version)
 
 
@@ -1006,7 +1006,7 @@ def test_e_plugin_invariants_fuzz() -> None:
 HOSTILE_VERSIONS = [
     "", " ", "\x00", '"; process.exit(1); const x = "', "2.6.0\nline2",
     "`${process.exit(1)}`", "\\u0000", "\\", "'", '"', "/*", "*/", "🔥" * 50,
-    "X" * 5000, "__SCHOOL_VERSION__", "${x}", "</script>", "\r\n\t",
+    "X" * 5000, "__TOOLIO_VERSION__", "${x}", "</script>", "\r\n\t",
     "2.6.0'; alert('x'); //", "-1", "null", "undefined",
 ]
 
@@ -1019,8 +1019,8 @@ def test_e_plugin_render_hostile_fuzz() -> None:
         src = plugin_source.render_plugin(version)
         assert isinstance(src, str), f"render_plugin returned {type(src)}"
         # The version literal must round-trip exactly (JSON-escaped TS string).
-        match = re.search(r'const SCHOOL_VERSION = ("(?:[^"\\]|\\.)*")', src)
-        assert match, "SCHOOL_VERSION literal broken by version injection"
+        match = re.search(r'const TOOLIO_VERSION = ("(?:[^"\\]|\\.)*")', src)
+        assert match, "TOOLIO_VERSION literal broken by version injection"
         assert json.loads(match.group(1)) == str(version)
         # Full structural invariants must still hold for any version.
         assert_plugin_invariants(src, version=version)
@@ -1086,7 +1086,7 @@ def test_live_network_smoke() -> None:
     import socket
 
     saved = {k: os.environ.pop(k, None)
-             for k in ("SCHOOL_SKILLGEN_GITHUB_DISABLED", "SCHOOL_DOCS")}
+             for k in ("TOOLIO_SKILLGEN_GITHUB_DISABLED", "TOOLIO_DOCS")}
     old_timeout = socket.getdefaulttimeout()
     socket.setdefaulttimeout(10)  # hard cap: no network call may hang this suite
     try:

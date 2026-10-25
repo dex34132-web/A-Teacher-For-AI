@@ -72,7 +72,7 @@ def test_corrupt_block_record_is_skipped(tmp_path) -> None:
 
 
 def test_bounds_oldest_evicted(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_MAX_BLOCKS", "3")
+    monkeypatch.setenv("TOOLIO_COMPRESS_MAX_BLOCKS", "3")
     store = BlockStore(str(tmp_path), "s1")
     for i in range(1, 6):
         store.add(_block(i))

@@ -48,7 +48,7 @@ class TestSession:
         assert r.ok is False
 
     def test_session_kill_switch(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_SESSION", "0")
+        monkeypatch.setenv("TOOLIO_SESSION", "0")
         r = session(str(tmp_path), "create")
         assert r.ok is True
         assert r.session_id == ""

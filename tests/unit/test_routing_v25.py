@@ -736,7 +736,7 @@ class TestRoutingPipeline:
         dec = pipe.route(pkt)
         assert dec.strategy == RoutingStrategy.DIRECT
         assert dec.has_destination(DestinationType.AGENT_CONTEXT) or \
-               dec.has_destination(DestinationType.SCHOOL_CONTEXT)
+               dec.has_destination(DestinationType.TOOLIO_CONTEXT)
 
     def test_route_observation(self) -> None:
         pipe = RoutingPipeline()

@@ -223,7 +223,7 @@ class TestOfflineSafety:
     def test_disabled_env_fails_search_closed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_DISABLED", "1")
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_DISABLED", "1")
         report = search_github(task="format markdown tables")
         assert report["ok"] is False
         assert report["offline"] is True
@@ -234,7 +234,7 @@ class TestOfflineSafety:
     def test_disabled_env_fails_discover_closed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_DISABLED", "1")
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_DISABLED", "1")
         report = discover(capability_gap="format markdown tables")
         assert report["ok"] is False
         assert report["offline"] is True
@@ -244,8 +244,8 @@ class TestOfflineSafety:
     def test_phase1_flow_works_while_github_disabled(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_SKILLGEN_GITHUB_DISABLED", "1")
-        monkeypatch.delenv("SCHOOL_SKILLGEN_JUDGE_CMD", raising=False)
+        monkeypatch.setenv("TOOLIO_SKILLGEN_GITHUB_DISABLED", "1")
+        monkeypatch.delenv("TOOLIO_SKILLGEN_JUDGE_CMD", raising=False)
         reg = SkillRegistry(tmp_path)
         pipeline = SkillPipeline(reg, judge=None)
         created = pipeline.create_manual(

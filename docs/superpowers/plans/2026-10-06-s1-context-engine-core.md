@@ -13,16 +13,16 @@
 ## Global Constraints
 
 - **Do NOT commit** at any point unless the user explicitly asks (spec §43-style standing rule). Steps below have no commit steps on purpose.
-- Kill switch: `SCHOOL_COMPRESS=0` disables compression entirely (engine returns raw pass-through report).
-- Trigger: auto-on-threshold, default ratio `0.8` (env `SCHOOL_COMPRESS_TRIGGER`).
+- Kill switch: `TOOLIO_COMPRESS=0` disables compression entirely (engine returns raw pass-through report).
+- Trigger: auto-on-threshold, default ratio `0.8` (env `TOOLIO_COMPRESS_TRIGGER`).
 - Fail-open: any exception in any layer → return original messages unchanged; never crash the caller.
 - Originals never mutated: `build_view`/`compress` must not modify the caller's `messages` list or its dicts.
 - Pair-safety: never split an assistant `tool_calls` message from its corresponding `tool_result` tool message (pydantic-ai idea).
-- Protected tail: the newest messages whose estimate ≥ 20 000 tokens (env `SCHOOL_COMPRESS_TAIL_TOKENS`, default 20000) are never compressed.
+- Protected tail: the newest messages whose estimate ≥ 20 000 tokens (env `TOOLIO_COMPRESS_TAIL_TOKENS`, default 20000) are never compressed.
 - Redaction: summaries persisted to disk must pass through `[REDACTED]` secret scrubbing; block `messages` hold verbatim originals, summaries never contain secrets.
-- Bounds: max 200 blocks/file (env `SCHOOL_COMPRESS_MAX_BLOCKS`), max 5 242 880 bytes/file (env `SCHOOL_COMPRESS_MAX_BYTES`).
-- Circuit breaker: after 3 consecutive Layer-1 failures enter cooldown (env `SCHOOL_COMPRESS_COOLDOWN`, default 300s) skipping Layer 1 only.
-- Model budget: reuse `core.skillgen.budget.ModelCallBudget`; cap from `SCHOOL_COMPRESS_MAX_CALLS_PER_TASK` (default 4).
+- Bounds: max 200 blocks/file (env `TOOLIO_COMPRESS_MAX_BLOCKS`), max 5 242 880 bytes/file (env `TOOLIO_COMPRESS_MAX_BYTES`).
+- Circuit breaker: after 3 consecutive Layer-1 failures enter cooldown (env `TOOLIO_COMPRESS_COOLDOWN`, default 300s) skipping Layer 1 only.
+- Model budget: reuse `core.skillgen.budget.ModelCallBudget`; cap from `TOOLIO_COMPRESS_MAX_CALLS_PER_TASK` (default 4).
 - Token estimates: `max(1, len(text) // 4)` — existing repo convention.
 - Battery baseline before this plan: **2972 passed**. All tasks end with full-suite green (or at minimum the new test file green + full suite at plan end).
 - Ruff rules E,W,F,I,B,UP,SIM line-length 100 on all touched files. `toolio/plugin_source.py` must stay exactly 16 E501 (untouched by S1 anyway).
@@ -351,7 +351,7 @@ def test_corrupt_file_fails_open_to_empty(tmp_path) -> None:
 
 
 def test_bounds_oldest_evicted(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_MAX_BLOCKS", "3")
+    monkeypatch.setenv("TOOLIO_COMPRESS_MAX_BLOCKS", "3")
     store = BlockStore(str(tmp_path), "s1")
     for i in range(1, 6):
         store.add(_block(i))
@@ -437,8 +437,8 @@ class BlockStore:
             return []
 
     def save(self, blocks: list[Block]) -> None:
-        max_blocks = _env_int("SCHOOL_COMPRESS_MAX_BLOCKS", _MAX_BLOCKS_DEFAULT)
-        max_bytes = _env_int("SCHOOL_COMPRESS_MAX_BYTES", _MAX_BYTES_DEFAULT)
+        max_blocks = _env_int("TOOLIO_COMPRESS_MAX_BLOCKS", _MAX_BLOCKS_DEFAULT)
+        max_bytes = _env_int("TOOLIO_COMPRESS_MAX_BYTES", _MAX_BYTES_DEFAULT)
         kept = blocks[-max_blocks:] if max_blocks > 0 else []
         payload: dict[str, Any] = {
             "version": 1,
@@ -624,13 +624,13 @@ def test_estimate_tokens() -> None:
 
 
 def test_protected_from_respects_tail_budget(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "15")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "15")
     msgs = [msg("user", "y" * 40) for _ in range(5)]  # 10 tokens each
     assert protected_from(msgs) == 3
 
 
 def test_duplicate_errors_and_runs_become_spans(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [
         msg("user", "please fix"),
         msg("tool", ERR),
@@ -651,7 +651,7 @@ def test_duplicate_errors_and_runs_become_spans(monkeypatch) -> None:
 
 
 def test_pair_safety_never_splits_tool_call_result(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     assistant = msg("assistant", "", tool_calls=[{"id": "t1"}])
     result = msg("tool", ERR)
     msgs = [
@@ -669,7 +669,7 @@ def test_pair_safety_never_splits_tool_call_result(monkeypatch) -> None:
 
 
 def test_existing_blocks_excluded(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [msg("tool", ERR), msg("assistant", "ok"), msg("tool", ERR), msg("user", "tail")]
     existing = [Block.make("b1", 0, 1, [msgs[0]], "prior", 1)]
     spans = find_spans(msgs, existing)
@@ -679,7 +679,7 @@ def test_existing_blocks_excluded(monkeypatch) -> None:
 
 
 def test_fail_open_on_junk(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     assert find_spans([None, {"role": "tool", "content": None}], []) == []
 ```
 
@@ -729,7 +729,7 @@ def total_tokens(messages: list[Any]) -> int:
 
 def protected_from(messages: list[Any]) -> int:
     """First index of the protected tail (newest ~N tokens never compressed)."""
-    budget = _env_int("SCHOOL_COMPRESS_TAIL_TOKENS", 20000)
+    budget = _env_int("TOOLIO_COMPRESS_TAIL_TOKENS", 20000)
     if budget <= 0:
         budget = 1
     acc = 0
@@ -867,7 +867,7 @@ Expected: All checks passed!
 - Test: `tests/unit/test_context_circuit.py`
 
 **Interfaces:**
-- Produces: `class CircuitBreaker` with `record_failure() -> CircuitState`, `record_success() -> CircuitState`, `allow() -> bool`, property `state -> CircuitState`. Injectable `clock` (default `time.monotonic`), cooldown from `SCHOOL_COMPRESS_COOLDOWN` (default 300). Engine (Task 9) gates Layer 1 on `allow()`.
+- Produces: `class CircuitBreaker` with `record_failure() -> CircuitState`, `record_success() -> CircuitState`, `allow() -> bool`, property `state -> CircuitState`. Injectable `clock` (default `time.monotonic`), cooldown from `TOOLIO_COMPRESS_COOLDOWN` (default 300). Engine (Task 9) gates Layer 1 on `allow()`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -916,10 +916,10 @@ def test_success_resets_ladder() -> None:
 
 
 def test_env_cooldown_default(monkeypatch) -> None:
-    monkeypatch.delenv("SCHOOL_COMPRESS_COOLDOWN", raising=False)
+    monkeypatch.delenv("TOOLIO_COMPRESS_COOLDOWN", raising=False)
     cb = CircuitBreaker(clock=lambda: 0.0)
     assert cb.cooldown == 300.0
-    monkeypatch.setenv("SCHOOL_COMPRESS_COOLDOWN", "42")
+    monkeypatch.setenv("TOOLIO_COMPRESS_COOLDOWN", "42")
     cb2 = CircuitBreaker(clock=lambda: 0.0)
     assert cb2.cooldown == 42.0
 ```
@@ -961,7 +961,7 @@ class CircuitBreaker:
     ) -> None:
         self._clock = clock
         self.cooldown = (
-            cooldown if cooldown is not None else _env_float("SCHOOL_COMPRESS_COOLDOWN", 300.0)
+            cooldown if cooldown is not None else _env_float("TOOLIO_COMPRESS_COOLDOWN", 300.0)
         )
         self._failures = 0
         self._until = 0.0
@@ -1016,7 +1016,7 @@ Expected: All checks passed!
 
 **Interfaces:**
 - Consumes: `redact` (Task 3), `estimate_tokens`/`message_tokens` (Task 4).
-- Produces: `build_prompt(messages, focus: str) -> str`; `parse_summary(raw: str) -> str | None`; `default_judge() -> Callable[[str], tuple[str, str]] | None` (env `SCHOOL_COMPRESS_JUDGE_CMD`); `summarize_segment(messages, judge, focus="") -> str | None` (redacted, fail-closed). Engine injects a mock judge in tests — no subprocess, no network.
+- Produces: `build_prompt(messages, focus: str) -> str`; `parse_summary(raw: str) -> str | None`; `default_judge() -> Callable[[str], tuple[str, str]] | None` (env `TOOLIO_COMPRESS_JUDGE_CMD`); `summarize_segment(messages, judge, focus="") -> str | None` (redacted, fail-closed). Engine injects a mock judge in tests — no subprocess, no network.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1093,7 +1093,7 @@ def test_summarize_segment_ok_fail_and_none_judge() -> None:
 
 
 def test_default_judge_none_without_env(monkeypatch) -> None:
-    monkeypatch.delenv("SCHOOL_COMPRESS_JUDGE_CMD", raising=False)
+    monkeypatch.delenv("TOOLIO_COMPRESS_JUDGE_CMD", raising=False)
     assert default_judge() is None
 
 
@@ -1109,10 +1109,10 @@ def test_default_judge_subprocess_pattern(monkeypatch, tmp_path) -> None:
     import sys
 
     monkeypatch.setenv(
-        "SCHOOL_SKILLGEN_JUDGE_CMD", ""
+        "TOOLIO_SKILLGEN_JUDGE_CMD", ""
     )  # ensure no cross-talk from skillgen env
     monkeypatch.setenv(
-        "SCHOOL_COMPRESS_JUDGE_CMD",
+        "TOOLIO_COMPRESS_JUDGE_CMD",
         f'"{sys.executable}" "{script}"',
     )
     judge = default_judge()
@@ -1199,11 +1199,11 @@ def parse_summary(raw: str) -> str | None:
 
 
 def default_judge() -> Judge | None:
-    cmd = os.environ.get("SCHOOL_COMPRESS_JUDGE_CMD", "").strip()
+    cmd = os.environ.get("TOOLIO_COMPRESS_JUDGE_CMD", "").strip()
     if not cmd:
         return None
-    timeout = _env_float("SCHOOL_COMPRESS_JUDGE_TIMEOUT", 60.0)
-    model_id = os.environ.get("SCHOOL_COMPRESS_JUDGE_MODEL", "compress-model")
+    timeout = _env_float("TOOLIO_COMPRESS_JUDGE_TIMEOUT", 60.0)
+    model_id = os.environ.get("TOOLIO_COMPRESS_JUDGE_MODEL", "compress-model")
 
     def _run(prompt: str) -> tuple[str, str]:
         proc = subprocess.run(  # noqa: S603
@@ -1278,7 +1278,7 @@ def msg(role: str, content: str) -> dict:
 
 
 def test_picks_oldest_free_segment(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [
         msg("user", "first"),
         msg("assistant", "answer"),
@@ -1295,7 +1295,7 @@ def test_picks_oldest_free_segment(monkeypatch) -> None:
 
 
 def test_skips_existing_blocks(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [msg("user", "a"), msg("assistant", "b"), msg("user", "c"), msg("user", "tail")]
     existing = [Block.make("b1", 0, 2, msgs[:2], "prior", 0)]
     span = emergency_span(msgs, existing)
@@ -1305,7 +1305,7 @@ def test_skips_existing_blocks(monkeypatch) -> None:
 
 
 def test_none_when_nothing_free(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [msg("user", "only"), msg("user", "tail")]
     existing = [Block.make("b1", 0, 1, msgs[:1], "prior", 0)]
     assert emergency_span(msgs, existing) is None
@@ -1313,7 +1313,7 @@ def test_none_when_nothing_free(monkeypatch) -> None:
 
 
 def test_pair_safety(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [
         {"role": "assistant", "content": "", "tool_calls": [{"id": "t1"}]},
         msg("tool", "result"),
@@ -1588,7 +1588,7 @@ Expected: All checks passed!
 
 **Interfaces:**
 - Consumes: Tasks 1–8; `ModelCallBudget` from `core.skillgen.budget`; `default_judge` from `layer1`.
-- Produces: `class ContextEngine(worktree=".", session_id="default", judge=_AUTO, budget=None, clock=time.monotonic)` with `should_compress(messages) -> bool`, `compress(messages) -> CompressionReport` (NEVER raises), `view(messages) -> ViewResult`, `restore(block_id="") -> dict`, properties `store`, `circuit`, `trigger`, `window`. `judge=_AUTO` resolves `default_judge()`; `judge=None` disables Layer 1. Env: `SCHOOL_COMPRESS` (0=off), `SCHOOL_COMPRESS_TRIGGER` (0.8), `SCHOOL_COMPRESS_WINDOW_TOKENS` (128000), `SCHOOL_COMPRESS_MAX_CALLS_PER_TASK` (4). `__init__.py` exports `ContextEngine`.
+- Produces: `class ContextEngine(worktree=".", session_id="default", judge=_AUTO, budget=None, clock=time.monotonic)` with `should_compress(messages) -> bool`, `compress(messages) -> CompressionReport` (NEVER raises), `view(messages) -> ViewResult`, `restore(block_id="") -> dict`, properties `store`, `circuit`, `trigger`, `window`. `judge=_AUTO` resolves `default_judge()`; `judge=None` disables Layer 1. Env: `TOOLIO_COMPRESS` (0=off), `TOOLIO_COMPRESS_TRIGGER` (0.8), `TOOLIO_COMPRESS_WINDOW_TOKENS` (128000), `TOOLIO_COMPRESS_MAX_CALLS_PER_TASK` (4). `__init__.py` exports `ContextEngine`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1627,7 +1627,7 @@ def over_threshold_msgs() -> list[dict]:
 
 
 def test_kill_switch_passthrough(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = over_threshold_msgs()
     report = engine.compress(msgs)
@@ -1638,7 +1638,7 @@ def test_kill_switch_passthrough(tmp_path, monkeypatch) -> None:
 
 
 def test_below_threshold_skipped(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100000")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100000")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     report = engine.compress([msg("user", "hi")])
     assert report.skipped == "below_threshold"
@@ -1646,8 +1646,8 @@ def test_below_threshold_skipped(tmp_path, monkeypatch) -> None:
 
 
 def test_layer0_creates_blocks_and_view(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = [
         msg("user", "start"),
@@ -1668,8 +1668,8 @@ def test_layer0_creates_blocks_and_view(tmp_path, monkeypatch) -> None:
 
 
 def test_layer1_used_when_no_layer0_spans(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge()
     engine = ContextEngine(str(tmp_path), "s1", judge=judge)
     report = engine.compress(over_threshold_msgs())
@@ -1682,8 +1682,8 @@ def test_layer1_used_when_no_layer0_spans(tmp_path, monkeypatch) -> None:
 
 
 def test_judge_failure_falls_to_layer2_and_trips_circuit(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge(fail=True)
     engine = ContextEngine(str(tmp_path), "s1", judge=judge)
     report = engine.compress(over_threshold_msgs())
@@ -1695,8 +1695,8 @@ def test_judge_failure_falls_to_layer2_and_trips_circuit(tmp_path, monkeypatch) 
 
 
 def test_tripped_circuit_skips_layer1(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge()
     engine = ContextEngine(str(tmp_path), "s1", judge=judge)
     for _ in range(3):
@@ -1708,8 +1708,8 @@ def test_tripped_circuit_skips_layer1(tmp_path, monkeypatch) -> None:
 
 
 def test_budget_zero_skips_layer1(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     judge = MockJudge()
     budget = ModelCallBudget({}, max_per_task=0)
     engine = ContextEngine(str(tmp_path), "s1", judge=judge, budget=budget)
@@ -1719,8 +1719,8 @@ def test_budget_zero_skips_layer1(tmp_path, monkeypatch) -> None:
 
 
 def test_store_failure_fails_open(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "60")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "60")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = over_threshold_msgs()
 
@@ -1734,8 +1734,8 @@ def test_store_failure_fails_open(tmp_path, monkeypatch) -> None:
 
 
 def test_should_compress_and_report_shape(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "40")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "40")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     msgs = over_threshold_msgs()
     assert engine.should_compress(msgs) is True
@@ -1804,16 +1804,16 @@ class ContextEngine:
         self.session_id = session_id
         self.store = BlockStore(worktree, session_id)
         self.circuit = CircuitBreaker(clock=clock)
-        self.trigger = _env_float("SCHOOL_COMPRESS_TRIGGER", _TRIGGER_DEFAULT)
-        self.window = _env_int("SCHOOL_COMPRESS_WINDOW_TOKENS", _WINDOW_DEFAULT)
+        self.trigger = _env_float("TOOLIO_COMPRESS_TRIGGER", _TRIGGER_DEFAULT)
+        self.window = _env_int("TOOLIO_COMPRESS_WINDOW_TOKENS", _WINDOW_DEFAULT)
         self.judge = default_judge() if judge is _AUTO else judge
         self.budget = budget or ModelCallBudget(
-            {}, max_per_task=_env_int("SCHOOL_COMPRESS_MAX_CALLS_PER_TASK", 4)
+            {}, max_per_task=_env_int("TOOLIO_COMPRESS_MAX_CALLS_PER_TASK", 4)
         )
         self._task_key = f"compress:{session_id}"
 
     def should_compress(self, messages: list[Any]) -> bool:
-        if os.environ.get("SCHOOL_COMPRESS", "") == "0":
+        if os.environ.get("TOOLIO_COMPRESS", "") == "0":
             return False
         if not messages or self.window <= 0:
             return False
@@ -1824,7 +1824,7 @@ class ContextEngine:
 
     def compress(self, messages: list[Any]) -> CompressionReport:
         try:
-            if os.environ.get("SCHOOL_COMPRESS", "") == "0":
+            if os.environ.get("TOOLIO_COMPRESS", "") == "0":
                 return CompressionReport(
                     skipped="kill_switch", messages=list(messages),
                     circuit=self.circuit.state.value,
@@ -1990,8 +1990,8 @@ def compress_once(tmp_path, session: str = "s1") -> ContextEngine:
 
 
 def test_blocks_survive_restart(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = compress_once(tmp_path)
     before = [b.to_dict() for b in engine.store.load()]
     assert before  # something persisted
@@ -2002,8 +2002,8 @@ def test_blocks_survive_restart(tmp_path, monkeypatch) -> None:
 
 
 def test_restore_is_idempotent_and_counted(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = compress_once(tmp_path)
     first = engine.restore()  # expand-last
     assert first["ok"] is True
@@ -2026,8 +2026,8 @@ def test_restore_errors_fail_closed(tmp_path) -> None:
 
 
 def test_corrupt_block_file_recoverable(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = compress_once(tmp_path)
     engine.store.path.write_text("{broken", encoding="utf-8")
     assert engine.store.load() == []
@@ -2039,8 +2039,8 @@ def test_corrupt_block_file_recoverable(tmp_path, monkeypatch) -> None:
 
 
 def test_sessions_are_isolated(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "100")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "100")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     e1 = ContextEngine(str(tmp_path), "alpha", judge=None)
     e1.compress([msg("user", "q" * 400), msg("assistant", "a" * 400)])
     e2 = ContextEngine(str(tmp_path), "beta", judge=None)
@@ -2217,8 +2217,8 @@ def big_msgs(n: int = 8) -> list[dict]:
 
 
 def test_full_ladder_end_to_end(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "integration", judge=None)
     msgs = big_msgs()
     snapshot = copy.deepcopy(msgs)
@@ -2242,8 +2242,8 @@ def test_full_ladder_end_to_end(tmp_path, monkeypatch) -> None:
 
 
 def test_fail_open_matrix(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
 
     # 1. judge=None -> ladder still works (L0/L2)
     e1 = ContextEngine(str(tmp_path), "m1", judge=None)
@@ -2268,14 +2268,14 @@ def test_fail_open_matrix(tmp_path, monkeypatch) -> None:
     assert e1.view([]).messages == []
 
     # 4. kill switch still wins over everything
-    monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS", "0")
     r5 = e1.compress(big_msgs())
     assert r5.skipped == "kill_switch"
 
 
 def test_view_of_restored_session_matches_block_payload(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "rt", judge=None)
     msgs = big_msgs()
     engine.compress(msgs)
@@ -2342,6 +2342,6 @@ Expected: modified/untracked files listed; HEAD still at `c62e3ce` (`git log --o
 
 - Spec coverage: §4 ladder → Tasks 4/6/7/9; §5 block store/restore/restart → Tasks 2/10; skeletonization seam → Task 8; circuit/cooldown → Task 5/9; redaction → Tasks 3/6; budget → Tasks 6/9; kill switch/trigger/fail-open → Task 9/12; chips §6 voice → Task 11; S1 exit (persistence, restart, restore, fail-open, battery, chips) → Tasks 10/12/13. Surfaces (MCP tools, CLI, plugin hooks, DCP coexistence) are **S2** — out of scope here by spec §10.
 - Type consistency: `Block(id,start,end,messages,summary,layer,...)`, `Block.make(block_id,start,end,messages,summary,layer)`, `find_spans(messages, existing) -> [(start,end,summary)]`, `emergency_span(...) -> (start,end,summary) | None`, `build_view(messages, blocks) -> ViewResult`, `CompressionReport(...)` fields as defined in Task 1 — used identically in every later task.
-- Env names are consistent across tasks: `SCHOOL_COMPRESS`, `_TRIGGER`, `_WINDOW_TOKENS`, `_TAIL_TOKENS`, `_COOLDOWN`, `_MAX_CALLS_PER_TASK`, `_JUDGE_CMD`, `_JUDGE_TIMEOUT`, `_MAX_BLOCKS`, `_MAX_BYTES`.
+- Env names are consistent across tasks: `TOOLIO_COMPRESS`, `_TRIGGER`, `_WINDOW_TOKENS`, `_TAIL_TOKENS`, `_COOLDOWN`, `_MAX_CALLS_PER_TASK`, `_JUDGE_CMD`, `_JUDGE_TIMEOUT`, `_MAX_BLOCKS`, `_MAX_BYTES`.
 - Known intentional deviations: `ViewResult` uses `mutated: bool` (always False, asserted); L1 target reuses `emergency_span` (oldest free segment) instead of a separate selector; report `ratio_after` is after/before (compression ratio), while the trigger uses tokens/window usage — both documented in their code.
 

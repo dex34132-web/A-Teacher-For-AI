@@ -26,7 +26,7 @@ def explore(
     focus: str = "structure",
 ) -> ExploreResult:
     """Explore a path and extract structure, patterns, conventions."""
-    if os.environ.get("SCHOOL_EXPLORE", "") == "0":
+    if os.environ.get("TOOLIO_EXPLORE", "") == "0":
         return ExploreResult(ok=True, target=safe_str(target))
 
     if not isinstance(target, str) or not target:

@@ -21,7 +21,7 @@ class DestinationType(Enum):
 
     # Agent interaction
     AGENT_CONTEXT = auto()  # Return to agent as context
-    SCHOOL_CONTEXT = auto()  # Internal Toolio context
+    TOOLIO_CONTEXT = auto()  # Internal Toolio context
 
     # Learning & knowledge
     LEARNING = auto()  # Route to learning subsystem
@@ -97,8 +97,8 @@ class Destination:
 # ---------------------------------------------------------------------------
 
 AGENT_CONTEXT = Destination(destination_type=DestinationType.AGENT_CONTEXT, name="agent_context")
-SCHOOL_CONTEXT = Destination(
-    destination_type=DestinationType.SCHOOL_CONTEXT, name="toolio_context"
+TOOLIO_CONTEXT = Destination(
+    destination_type=DestinationType.TOOLIO_CONTEXT, name="toolio_context"
 )
 LEARNING = Destination(destination_type=DestinationType.LEARNING, name="learning")
 RETRIEVAL = Destination(destination_type=DestinationType.RETRIEVAL, name="retrieval")
@@ -115,7 +115,7 @@ BATCH = Destination(destination_type=DestinationType.BATCH, name="batch")
 # Default destination registry
 DEFAULT_DESTINATIONS: list[Destination] = [
     AGENT_CONTEXT,
-    SCHOOL_CONTEXT,
+    TOOLIO_CONTEXT,
     LEARNING,
     RETRIEVAL,
     KNOWLEDGE,

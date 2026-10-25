@@ -51,8 +51,8 @@ class TestBridgeChip:
     def test_compress_and_status_chips(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         resp = bridge._COMMANDS["context_compress"](
             {"worktree": wt, "session": "chip1", "messages": big_msgs()}
@@ -67,8 +67,8 @@ class TestBridgeChip:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         bridge._COMMANDS["context_compress"](
             {"worktree": wt, "session": "chip2", "messages": big_msgs()}
@@ -88,8 +88,8 @@ class TestMcpChip:
         pytest.importorskip("mcp")
         from toolio.mcp import server as mcp_server
 
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         mcp_server._call_tool(
             wt, "toolio_context_compress", {"messages": big_msgs()}

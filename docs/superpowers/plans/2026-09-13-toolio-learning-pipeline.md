@@ -1,23 +1,23 @@
-# LEREV Learning Pipeline Implementation Plan
+# TOOLIO Learning Pipeline Implementation Plan
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *TOOLIO* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close the gap between LEREV's storage/retrieval layer and a real learning pipeline by wiring existing V2.2 conflict, V2.3 confidence, V2.4.2 lifecycle, and semantic similarity systems into the V2.6 `remember`/`recall` pathway.
+**Goal:** Close the gap between TOOLIO's storage/retrieval layer and a real learning pipeline by wiring existing V2.2 conflict, V2.3 confidence, V2.4.2 lifecycle, and semantic similarity systems into the V2.6 `remember`/`recall` pathway.
 
 **Architecture:** A new thin orchestrator (`LearningPipeline`) coordinates existing subsystems. The `remember` path gains: experience analysis → duplicate/conflict detection → confidence computation → knowledge extraction → learning decision → appropriate storage. The `recall` path gains: blended TF-IDF+semantic similarity ranking with confidence-aware filtering. No new engines are created — only integration wiring.
 
-**Tech Stack:** Python 3.14, existing LEREV core modules (no new dependencies)
+**Tech Stack:** Python 3.14, existing TOOLIO core modules (no new dependencies)
 
-**Spec:** The user-provided LEREV Learning System spec (inline in conversation)
+**Spec:** The user-provided TOOLIO Learning System spec (inline in conversation)
 
 ## Global Constraints
 
 - DO NOT delete working V2.4.2, V2.5, or V2.6 architecture
 - DO NOT change the public API (`toolio_status`, `toolio_remember`, `toolio_recall`)
-- DO NOT add benchmark-specific code or access `C:\LEREV-Benchmarks`
+- DO NOT add benchmark-specific code or access `C:\TOOLIO-Benchmarks`
 - DO NOT create a second confidence engine, lifecycle engine, or fake semantic search
 - DO NOT modify files unrelated to the learning/memory architecture
 - Preserve backward compatibility with existing V2.6 tools and persisted `.toolio/memory/v26_memory.json`

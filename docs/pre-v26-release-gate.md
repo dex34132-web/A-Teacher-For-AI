@@ -1,6 +1,6 @@
 # Toolio Pre-V2.6 Release Gate Audit
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *TOOLIO* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 **Date:** September 11, 2026

@@ -265,7 +265,7 @@ def research(
     deep=3); ``fmt`` controls the verbosity of ``learnings``; ``cite``
     attaches a structured citation entry to every finding.
     """
-    if os.environ.get("SCHOOL_RESEARCH", "") == "0":
+    if os.environ.get("TOOLIO_RESEARCH", "") == "0":
         return ResearchResult(
             ok=True,
             query=query if isinstance(query, str) else "",

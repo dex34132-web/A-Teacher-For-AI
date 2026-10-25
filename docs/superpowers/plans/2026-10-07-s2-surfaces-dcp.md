@@ -16,8 +16,8 @@
 
 - **Do NOT commit** at any point unless the user explicitly asks. Steps below have no commit steps on purpose. Do not touch `.superpowers/`, `.opencode/goals/`, or unrelated dirty working-tree files (`core/routing/v26/*`, `core/skillgen/*`, `tests/unit/test_skillgen_*`, etc. — leave them exactly as found).
 - **Fail-open everywhere:** any exception in any new path → original messages/payload unchanged; hooks never break a request, tool, or response.
-- Kill switches: `SCHOOL_COMPRESS=0` (view/compress off), `SCHOOL_CTX=0` (all context surfaces report disabled/off), `SCHOOL_HOOKS=0` (plugin hooks off). Existing `SCHOOL_ROUTE`/ctx-optimizer behavior unchanged.
-- Model budget: only `ContextEngine.compress` may spend model calls (S1 ladder, `SCHOOL_COMPRESS_MAX_CALLS_PER_TASK`, default 4). **apply-view never calls a model** — `context_view` is prompt-side only.
+- Kill switches: `TOOLIO_COMPRESS=0` (view/compress off), `TOOLIO_CTX=0` (all context surfaces report disabled/off), `TOOLIO_HOOKS=0` (plugin hooks off). Existing `TOOLIO_ROUTE`/ctx-optimizer behavior unchanged.
+- Model budget: only `ContextEngine.compress` may spend model calls (S1 ladder, `TOOLIO_COMPRESS_MAX_CALLS_PER_TASK`, default 4). **apply-view never calls a model** — `context_view` is prompt-side only.
 - Originals never mutated: `context_view`/`view_segments` must not modify the caller's `messages`; the plugin only rewrites `output.messages` (request-time view), never session history.
 - Never disable, patch, write, or delete the third-party DCP plugin or its files; all coexistence state lives in `<context_dir>/coexistence.json` (inside `.toolio/context/`). Clean break on `switch` (no state import).
 - No secrets in logs/JSON responses; summaries stay redacted (S1 engine handles this).
@@ -113,16 +113,16 @@ def _fresh_cache():
 
 
 def test_ctx_enabled_kill_switch(monkeypatch) -> None:
-    monkeypatch.delenv("SCHOOL_CTX", raising=False)
+    monkeypatch.delenv("TOOLIO_CTX", raising=False)
     assert ctx_enabled() is True
-    monkeypatch.setenv("SCHOOL_CTX", "0")
+    monkeypatch.setenv("TOOLIO_CTX", "0")
     assert ctx_enabled() is False
 
 
 def test_view_mode_off_when_compress_disabled(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS", "0")
     assert view_mode(str(tmp_path)) == "off"
-    monkeypatch.delenv("SCHOOL_COMPRESS", raising=False)
+    monkeypatch.delenv("TOOLIO_COMPRESS", raising=False)
     assert view_mode(str(tmp_path)) == "toolio"
 
 
@@ -248,7 +248,7 @@ def test_view_mode_keep_and_dcp_hint(tmp_path, monkeypatch) -> None:
     assert view_mode(wt, dcp_hint=True) == "dcp"
     save_state(wt, {"decision": "keep"})
     assert view_mode(wt) == "dcp"
-    monkeypatch.setenv("SCHOOL_CTX", "0")
+    monkeypatch.setenv("TOOLIO_CTX", "0")
     assert view_mode(wt) == "off"
 
 
@@ -291,7 +291,7 @@ _DCP_CACHE: dict[str, bool] = {}
 
 
 def ctx_enabled() -> bool:
-    return os.environ.get("SCHOOL_CTX", "") != "0"
+    return os.environ.get("TOOLIO_CTX", "") != "0"
 
 
 def state_path(worktree: str) -> Path:
@@ -383,7 +383,7 @@ def clear_cache() -> None:
 def view_mode(worktree: str, dcp_hint: bool = False) -> str:
     if not ctx_enabled():
         return "off"
-    if os.environ.get("SCHOOL_COMPRESS", "") == "0":
+    if os.environ.get("TOOLIO_COMPRESS", "") == "0":
         return "off"
     state = load_state(worktree)
     decision = state.get("decision", "")
@@ -461,8 +461,8 @@ def big_msgs(n: int = 8) -> list[dict]:
 
 @pytest.fixture()
 def compressed(tmp_path, monkeypatch) -> tuple[str, list[dict], list]:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     messages = big_msgs()
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     report = engine.compress(messages)
@@ -534,7 +534,7 @@ class TestContextView:
 
     def test_kill_switch_returns_no_segments(self, compressed, monkeypatch) -> None:
         worktree, messages, _ = compressed
-        monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS", "0")
         resp = call(
             "context_view",
             {"worktree": worktree, "session": "s1", "messages": messages},
@@ -543,7 +543,7 @@ class TestContextView:
 
     def test_disabled_by_toolio_ctx(self, compressed, monkeypatch) -> None:
         worktree, messages, _ = compressed
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         resp = call(
             "context_view",
             {"worktree": worktree, "session": "s1", "messages": messages},
@@ -598,7 +598,7 @@ class TestContextStatusCompressRestore:
         assert resp["decision"] == ""
 
     def test_status_disabled(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         resp = call(
             "context_status", {"worktree": str(tmp_path), "session": "s1"}
         )
@@ -607,8 +607,8 @@ class TestContextStatusCompressRestore:
         assert resp["chip"] == ""
 
     def test_compress_writes_blocks(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         resp = call(
             "context_compress",
             {"worktree": str(tmp_path), "session": "c1", "messages": big_msgs()},
@@ -1045,7 +1045,7 @@ Expected: All checks passed!
 
 **Interfaces:**
 - Produces (TS): `const VIEW_TIMEOUT_MS = 4000`, module fn `viewTextOf(m)`, Toolio-closure `const applyView = async (output) => Promise<void>` sending `command: "context_view"` with `{worktree, session, messages}`, rebuilding `output.messages` from originals.
-- Consumes: bridge `context_view` (Task 2). Kills itself on `SCHOOL_HOOKS=0`, `SCHOOL_CTX=0`, `SCHOOL_COMPRESS=0`, missing bridge, timeout, or any error — in all cases messages stay untouched.
+- Consumes: bridge `context_view` (Task 2). Kills itself on `TOOLIO_HOOKS=0`, `TOOLIO_CTX=0`, `TOOLIO_COMPRESS=0`, missing bridge, timeout, or any error — in all cases messages stay untouched.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1080,7 +1080,7 @@ class TestApplyView:
         block = self._block("applyView")
         assert "hooksEnabled()" in block
         assert "ctxEnabled()" in block
-        assert 'process.env.SCHOOL_COMPRESS === "0"' in block
+        assert 'process.env.TOOLIO_COMPRESS === "0"' in block
 
     def test_apply_view_is_timeboxed(self) -> None:
         assert "const VIEW_TIMEOUT_MS = 4000" in TS_PLUGIN_SOURCE
@@ -1156,7 +1156,7 @@ function viewTextOf(m: any): string {
   const applyView = async (output: any): Promise<void> => {
     try {
       if (!hooksEnabled() || !ctxEnabled()) return
-      if (process.env.SCHOOL_COMPRESS === "0") return
+      if (process.env.TOOLIO_COMPRESS === "0") return
       if (!bridge || !output || !Array.isArray(output.messages)) return
       const messages = output.messages
       if (!messages.length) return
@@ -1270,7 +1270,7 @@ Expected: **16 errors** (exactly the baseline — every new TS line must be ≤ 
 
 **Interfaces:**
 - Produces (TS, inside the Toolio closure): module `const DCP_TOKEN = "@tarquinen/opencode-dcp"`; closure state `let coexistDone = false` / `let dcpHinted = false`; `const checkCoexist = async (): Promise<void>` which calls bridge `context_coexist` (`action: "get"`, then one-time `action: "set_offer"` + `client.tui.showToast` with the offer); `applyView` now awaits `checkCoexist()` before requesting `context_view` and forwards `dcp: dcpHinted` on that request.
-- Consumes: bridge `context_coexist` + `OFFER_TEXT` (Task 2), `applyView` (Task 3). Fail-open: any coexist error leaves the view request and messages untouched; coexist runs at most once per process (`coexistDone`); `SCHOOL_HOOKS=0` / `SCHOOL_CTX=0` / `SCHOOL_COMPRESS=0` all disable it.
+- Consumes: bridge `context_coexist` + `OFFER_TEXT` (Task 2), `applyView` (Task 3). Fail-open: any coexist error leaves the view request and messages untouched; coexist runs at most once per process (`coexistDone`); `TOOLIO_HOOKS=0` / `TOOLIO_CTX=0` / `TOOLIO_COMPRESS=0` all disable it.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1300,7 +1300,7 @@ class TestDcpCoexist:
         block = self._block("checkCoexist")
         assert "hooksEnabled()" in block
         assert "ctxEnabled()" in block
-        assert 'process.env.SCHOOL_COMPRESS === "0"' in block
+        assert 'process.env.TOOLIO_COMPRESS === "0"' in block
 
     def test_check_coexist_runs_once_and_fails_open(self) -> None:
         block = self._block("checkCoexist")
@@ -1353,7 +1353,7 @@ const DCP_TOKEN = "@tarquinen/opencode-dcp"
   const checkCoexist = async (): Promise<void> => {
     if (coexistDone) return
     if (!bridge || !hooksEnabled() || !ctxEnabled()) return
-    if (process.env.SCHOOL_COMPRESS === "0") return
+    if (process.env.TOOLIO_COMPRESS === "0") return
     coexistDone = true
     try {
       if (!dcpHinted) {
@@ -1513,8 +1513,8 @@ class TestContextToolsMCP:
     def test_compress_then_status_chip(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         messages = [
             {"role": "user" if i % 2 == 0 else "assistant", "content": chr(97 + i) * 300}
             for i in range(8)
@@ -1531,8 +1531,8 @@ class TestContextToolsMCP:
     def test_restore_roundtrip_is_idempotent(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         messages = [
             {"role": "user" if i % 2 == 0 else "assistant", "content": chr(97 + i) * 300}
             for i in range(8)
@@ -1637,7 +1637,7 @@ In `toolio/mcp/server.py`, append after the `toolio_skill_import` entry (before 
             "Use toolio_context_compress to compress session messages through "
             "the Toolio context engine, returning blocks added, tokens saved, "
             "and a chip. Explicit action only - never automatic; "
-            "SCHOOL_COMPRESS=0 disables it."
+            "TOOLIO_COMPRESS=0 disables it."
         ),
         "schema": {
             "type": "object",
@@ -1727,7 +1727,7 @@ In `toolio/plugin_source.py`, insert after the `toolio_skill_import` block (stil
           "Use toolio_context_compress to compress session messages through " +
           "the Toolio context engine, returning blocks added, tokens saved, " +
           "and a chip. Explicit action only - never automatic; " +
-          "SCHOOL_COMPRESS=0 disables it.",
+          "TOOLIO_COMPRESS=0 disables it.",
         args: {
           session: tool.schema
             .string()
@@ -1863,8 +1863,8 @@ class TestContextCommand:
         monkeypatch: pytest.MonkeyPatch,
         capsys: pytest.CaptureFixture[str],
     ) -> dict:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         messages = [
             {"role": "user" if i % 2 == 0 else "assistant", "content": chr(97 + i) * 300}
             for i in range(8)
@@ -2201,8 +2201,8 @@ class TestBridgeChip:
     def test_compress_and_status_chips(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         resp = bridge._COMMANDS["context_compress"](
             {"worktree": wt, "session": "chip1", "messages": big_msgs()}
@@ -2216,8 +2216,8 @@ class TestBridgeChip:
     def test_view_chip_is_ctx_voice(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         bridge._COMMANDS["context_compress"](
             {"worktree": wt, "session": "chip2", "messages": big_msgs()}
@@ -2236,8 +2236,8 @@ class TestMcpChip:
     ) -> None:
         from toolio.mcp import server as mcp_server
 
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         wt = str(tmp_path)
         mcp_server._call_tool(
             wt, "toolio_context_compress", {"messages": big_msgs()}
@@ -2329,7 +2329,7 @@ Expected: **16 errors** (unchanged baseline)
 - Test: append `class TestCompactingNudge` at END of `tests/unit/test_toolio_plugin_hooks.py`
 
 **Interfaces:**
-- Produces (TS): hook `"experimental.session.compacting": async (_input, output) => {...}` which, only when hooks+ctx are on and `SCHOOL_COMPRESS != "0"`, estimates `output.context` via the existing `ctxEstimate`, and when it reaches `CTX_THRESHOLD` pushes one calm line onto the compaction context: `[toolio] compaction · toolio_context_compress keeps blocks restorable`.
+- Produces (TS): hook `"experimental.session.compacting": async (_input, output) => {...}` which, only when hooks+ctx are on and `TOOLIO_COMPRESS != "0"`, estimates `output.context` via the existing `ctxEstimate`, and when it reaches `CTX_THRESHOLD` pushes one calm line onto the compaction context: `[toolio] compaction · toolio_context_compress keeps blocks restorable`.
 - Consumes: `hooksEnabled()`, `ctxEnabled()`, `ctxEstimate`, `CTX_THRESHOLD` (all S1-exists). Never touches session history — only the `output.context` array of the compaction event. Fail-open: any error → compaction proceeds unmodified.
 
 - [ ] **Step 1: Write the failing tests**
@@ -2359,7 +2359,7 @@ class TestCompactingNudge:
         block = self._block()
         assert "hooksEnabled()" in block
         assert "ctxEnabled()" in block
-        assert 'process.env.SCHOOL_COMPRESS === "0"' in block
+        assert 'process.env.TOOLIO_COMPRESS === "0"' in block
 
     def test_nudges_only_above_threshold(self) -> None:
         block = self._block()
@@ -2392,7 +2392,7 @@ In `toolio/plugin_source.py`, insert between the end of the `"experimental.text.
     "experimental.session.compacting": async (_input, output) => {
       try {
         if (!hooksEnabled() || !ctxEnabled()) return
-        if (process.env.SCHOOL_COMPRESS === "0") return
+        if (process.env.TOOLIO_COMPRESS === "0") return
         const context = (output as any)?.context
         if (!Array.isArray(context) || !context.length) return
         const est = ctxEstimate(context.join("\n"))
@@ -2499,13 +2499,13 @@ process.stdout.write(
 
 def _live_env() -> dict:
     env = dict(os.environ)
-    env["SCHOOL_HOME"] = str(REPO_ROOT)
+    env["TOOLIO_HOME"] = str(REPO_ROOT)
     env["PYTHONPATH"] = str(REPO_ROOT)
     scripts = str(REPO_ROOT / ".venv" / "Scripts")
     env["PATH"] = scripts + os.pathsep + env.get("PATH", "")
-    env["SCHOOL_COMPRESS_WINDOW_TOKENS"] = "200"
-    env["SCHOOL_COMPRESS_TAIL_TOKENS"] = "0"
-    for key in ("SCHOOL_HOOKS", "SCHOOL_CTX", "SCHOOL_COMPRESS"):
+    env["TOOLIO_COMPRESS_WINDOW_TOKENS"] = "200"
+    env["TOOLIO_COMPRESS_TAIL_TOKENS"] = "0"
+    for key in ("TOOLIO_HOOKS", "TOOLIO_CTX", "TOOLIO_COMPRESS"):
         env.pop(key, None)
     return env
 
@@ -2670,9 +2670,9 @@ class TestLiveApplyView:
         worktree = tmp_path / "wt"
         worktree.mkdir()
         env = _live_env()
-        env["SCHOOL_COMPRESS"] = "0"
+        env["TOOLIO_COMPRESS"] = "0"
         out = _run_transform(plugin_dir, worktree, env)
-        assert out["after"] == out["before"], "SCHOOL_COMPRESS=0 -> no rewrite"
+        assert out["after"] == out["before"], "TOOLIO_COMPRESS=0 -> no rewrite"
 
     def test_compressed_blocks_are_applied(
         self, plugin_dir: Path, tmp_path: Path

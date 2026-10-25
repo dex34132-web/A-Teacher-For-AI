@@ -44,26 +44,26 @@ class TestBridgeDiscoveryCascade:
     """Test the full bridge discovery cascade."""
 
     def test_tier1_toolio_home(self, tmp_path: Path) -> None:
-        """Tier 1: SCHOOL_HOME env var."""
+        """Tier 1: TOOLIO_HOME env var."""
         bridge_dir = tmp_path / "toolio"
         bridge_dir.mkdir()
         bridge_file = bridge_dir / "bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
-        with patch.dict(os.environ, {"SCHOOL_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"TOOLIO_HOME": str(tmp_path)}):
             result = discover_bridge(str(tmp_path))
 
         assert result is not None
-        assert result.tier == "SCHOOL_HOME"
+        assert result.tier == "TOOLIO_HOME"
         assert result.bridge_path == str(bridge_file)
 
     def test_tier1_legacy_home_envs_not_honoured(self, tmp_path: Path) -> None:
-        """LEREV_HOME / EVO_HOME are no longer honoured (no compat fallbacks)."""
+        """TOOLIO_HOME / EVO_HOME are no longer honoured (no compat fallbacks)."""
         home = tmp_path / "legacy_home"
         (home / "toolio").mkdir(parents=True)
         (home / "toolio" / "bridge.py").write_text("", encoding="utf-8")
 
-        with patch.dict(os.environ, {"LEREV_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
+        with patch.dict(os.environ, {"TOOLIO_HOME": str(home), "EVO_HOME": str(home)}, clear=True):
             result = discover_bridge(str(tmp_path))
 
         assert result is None or not result.bridge_path.startswith(str(home))

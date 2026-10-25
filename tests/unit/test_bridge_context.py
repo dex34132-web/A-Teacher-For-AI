@@ -23,8 +23,8 @@ def big_msgs(n: int = 8) -> list[dict]:
 @pytest.fixture()
 def compressed(tmp_path, monkeypatch) -> tuple[str, list[dict], list]:
     monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     messages = big_msgs()
     engine = ContextEngine(str(tmp_path), "s1", judge=None)
     report = engine.compress(messages)
@@ -96,7 +96,7 @@ class TestContextView:
 
     def test_kill_switch_returns_no_segments(self, compressed, monkeypatch) -> None:
         worktree, messages, _ = compressed
-        monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS", "0")
         resp = call(
             "context_view",
             {"worktree": worktree, "session": "s1", "messages": messages},
@@ -105,7 +105,7 @@ class TestContextView:
 
     def test_disabled_by_toolio_ctx(self, compressed, monkeypatch) -> None:
         worktree, messages, _ = compressed
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         resp = call(
             "context_view",
             {"worktree": worktree, "session": "s1", "messages": messages},
@@ -160,7 +160,7 @@ class TestContextStatusCompressRestore:
         assert resp["decision"] == ""
 
     def test_status_disabled(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         resp = call(
             "context_status", {"worktree": str(tmp_path), "session": "s1"}
         )
@@ -169,8 +169,8 @@ class TestContextStatusCompressRestore:
         assert resp["chip"] == ""
 
     def test_compress_writes_blocks(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         resp = call(
             "context_compress",
             {"worktree": str(tmp_path), "session": "c1", "messages": big_msgs()},

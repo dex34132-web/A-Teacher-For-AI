@@ -52,7 +52,7 @@ class CumulativeStats:
             self._loaded = True
 
     def _refresh_inner(self) -> None:
-        if os.environ.get("SCHOOL_TELEMETRY", "") == "0":
+        if os.environ.get("TOOLIO_TELEMETRY", "") == "0":
             return
         try:
             from core.context.telemetry import TelemetryCollector

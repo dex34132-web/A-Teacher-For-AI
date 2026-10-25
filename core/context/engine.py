@@ -49,17 +49,17 @@ class ContextEngine:
         self.session_id = session_id
         self.store = BlockStore(worktree, session_id)
         self.circuit = CircuitBreaker(clock=clock)
-        self.trigger = _env_float("SCHOOL_COMPRESS_TRIGGER", _TRIGGER_DEFAULT)
-        self.window = _env_int("SCHOOL_COMPRESS_WINDOW_TOKENS", _WINDOW_DEFAULT)
+        self.trigger = _env_float("TOOLIO_COMPRESS_TRIGGER", _TRIGGER_DEFAULT)
+        self.window = _env_int("TOOLIO_COMPRESS_WINDOW_TOKENS", _WINDOW_DEFAULT)
         self.judge = default_judge() if judge is _AUTO else judge
         self.budget = budget or ModelCallBudget(
-            {}, max_per_task=_env_int("SCHOOL_COMPRESS_MAX_CALLS_PER_TASK", 4)
+            {}, max_per_task=_env_int("TOOLIO_COMPRESS_MAX_CALLS_PER_TASK", 4)
         )
         self._task_key = f"compress:{session_id}"
 
     def should_compress(self, messages: list[Any]) -> bool:
         try:
-            if os.environ.get("SCHOOL_COMPRESS", "") == "0":
+            if os.environ.get("TOOLIO_COMPRESS", "") == "0":
                 return False
             if not messages or self.window <= 0:
                 return False
@@ -72,7 +72,7 @@ class ContextEngine:
 
     def compress(self, messages: list[Any]) -> CompressionReport:
         try:
-            if os.environ.get("SCHOOL_COMPRESS", "") == "0":
+            if os.environ.get("TOOLIO_COMPRESS", "") == "0":
                 return CompressionReport(
                     skipped="kill_switch", messages=list(messages),
                     circuit=self.circuit.state.value,

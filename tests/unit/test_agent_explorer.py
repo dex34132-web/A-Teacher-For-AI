@@ -30,7 +30,7 @@ class TestExplore:
         assert "Python packaging" in r.conventions
 
     def test_explore_kill_switch(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_EXPLORE", "0")
+        monkeypatch.setenv("TOOLIO_EXPLORE", "0")
         r = explore(str(tmp_path), ".")
         assert r.ok is True
         assert r.structure == ""

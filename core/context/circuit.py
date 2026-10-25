@@ -27,7 +27,7 @@ class CircuitBreaker:
     ) -> None:
         self._clock = clock
         self.cooldown = (
-            cooldown if cooldown is not None else _env_float("SCHOOL_COMPRESS_COOLDOWN", 300.0)
+            cooldown if cooldown is not None else _env_float("TOOLIO_COMPRESS_COOLDOWN", 300.0)
         )
         self._failures = 0
         self._until = 0.0

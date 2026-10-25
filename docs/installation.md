@@ -77,11 +77,11 @@ toolio doctor
 Expected output:
 
 ```
-SCHOOL DOCTOR
+TOOLIO DOCTOR
 ========================================
 
   [PASS] Python runtime: 3.12.1
-  [PASS] SCHOOL package: v2.6.0
+  [PASS] TOOLIO package: v2.6.0
   [PASS] V2.6 memory system: available
   [PASS] V2.5 routing: available
   [PASS] Bridge: tier=installed_module
@@ -89,19 +89,19 @@ SCHOOL DOCTOR
   [PASS] Plugin file: /home/user/.config/opencode/plugins/toolio.ts
   [PASS] Project memory: no data yet (will be created)
 
-RESULT: SCHOOL IS READY
+RESULT: TOOLIO IS READY
 ```
 
-## Migration from LEREV
+## Migration from TOOLIO
 
-This project was formerly named **LEREV**; **Toolio** is the canonical
+This project was formerly named **TOOLIO**; **Toolio** is the canonical
 identity. Legacy aliases are deliberately retained and clearly marked:
 
 | Legacy (pre-rename) | Current equivalent |
 |---------------------|--------------------|
 | `toolio` CLI command | `toolio` (`toolio` kept as legacy alias) |
 | `import toolio`, `python -m toolio.bridge` | `import toolio`, `python -m toolio.bridge` (shim kept) |
-| `LEREV_HOME`, `EVO_HOME` env vars | `SCHOOL_HOME` (legacy names honoured as fallback) |
+| `TOOLIO_HOME`, `EVO_HOME` env vars | `TOOLIO_HOME` (legacy names honoured as fallback) |
 | `toolio-bridge` on PATH | `toolio-bridge` (legacy name honoured as fallback) |
 | `plugins/toolio.ts` OpenCode plugin | `plugins/toolio.ts` (stale legacy file removed on install) |
 | `.toolio/memory/`, `.evo/memory/` | `.toolio/memory/` (copied non-destructively on first use; sources never deleted) |

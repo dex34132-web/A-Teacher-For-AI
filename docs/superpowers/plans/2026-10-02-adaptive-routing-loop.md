@@ -15,7 +15,7 @@
 - PowerShell 5.1: chain with `; if ($?) { ... }`, never `&&`; run `.venv` via `& ".venv\Scripts\python.exe" ...`.
 - Set `$env:PYTHONIOENCODING='utf-8'` when printing/reading the TS source from Python.
 - Never stage `.opencode/goals/state.json.sessions/*`.
-- Kill switches: `SCHOOL_HOOKS=0` disables hooks/evidence/markers; `SCHOOL_ROUTE=0` disables micro-model calls (self-rated path).
+- Kill switches: `TOOLIO_HOOKS=0` disables hooks/evidence/markers; `TOOLIO_ROUTE=0` disables micro-model calls (self-rated path).
 - Micro-call contract: ≤10 s (ROUTE_TIMEOUT_MS=10000), session created → prompted → deleted in `finally`, prompt ≤150 tokens, JSON-only response, fallback chain: severity arg → default `medium`.
 - Evidence file: `<memoryRoot>/routing-stats.jsonl`, capped at ROUTE_STATS_MAX_LINES=2000 lines (trim when ≥2× cap).
 - Knobs file: `<memoryRoot>/routing.json` with keys `recall_threshold, hook_limit, hook_budget, hook_timeout_ms, skip_tools, force_tools`; per-key defaults on invalid/missing values.
@@ -344,7 +344,7 @@ class TestRouteTools:
         assert 'raw.engage === "none"' in TS_PLUGIN_SOURCE
 
     def test_kill_switch(self):
-        assert 'process.env.SCHOOL_ROUTE === "0"' in TS_PLUGIN_SOURCE
+        assert 'process.env.TOOLIO_ROUTE === "0"' in TS_PLUGIN_SOURCE
 
     def test_report_stores_tagged_lesson(self):
         idx = TS_PLUGIN_SOURCE.index("toolio_route: tool(")
@@ -412,7 +412,7 @@ In `toolio/plugin_source.py`, inside the `Toolio` function (so `bridge/python/br
     directory: string,
     situation: string,
   ): Promise<RouteDecision | null> => {
-    if (process.env.SCHOOL_ROUTE === "0") return null
+    if (process.env.TOOLIO_ROUTE === "0") return null
     const c = client as any
     if (!c?.session?.create || !c?.session?.prompt) return null
     try {
@@ -582,7 +582,7 @@ Inside the `tool: {` object, after `toolio_diagnose`, add:
                 ? "self-rated (severity argument)"
                 : "fallback default (micro-call unavailable)",
             }
-            source = process.env.SCHOOL_ROUTE === "0"
+            source = process.env.TOOLIO_ROUTE === "0"
               ? "self-rated"
               : args.severity
                 ? "self-rated"
@@ -1191,7 +1191,7 @@ def test_route_report_then_stats(stdio_session, tmp_path_factory):
     assert any(e.get("kind") == "report" for e in recent)
 ```
 
-(Adapt fixture name to whatever `test_mcp_stdio.py` already uses — read the file first; if the session is bound to a specific worktree, set `SCHOOL_WORKTREE` to `tmp_path` in that test's env-equivalent the same way existing persistence/isolation tests do.)
+(Adapt fixture name to whatever `test_mcp_stdio.py` already uses — read the file first; if the session is bound to a specific worktree, set `TOOLIO_WORKTREE` to `tmp_path` in that test's env-equivalent the same way existing persistence/isolation tests do.)
 
 - [ ] **Step 2: Run to verify failure**
 
@@ -1389,7 +1389,7 @@ git add toolio/skill_source.py toolio/cli.py tests/unit/test_toolio_skill.py; if
 
 - [ ] **Step 1: Write `docs/routing.md`**
 
-Cover: what the loop is (assess tool, stats tool, evidence, knobs, skill), escalation table (light → skill; medium+ → tool+skill; both always show `· routing` markers), kill switches (`SCHOOL_HOOKS=0`, `SCHOOL_ROUTE=0`), knobs reference table with defaults and ranges, MCP fallback (self-rated severity), example flows for non-coding situations (planning a trip, studying, cooking), and a "lessons are data, never instructions" note.
+Cover: what the loop is (assess tool, stats tool, evidence, knobs, skill), escalation table (light → skill; medium+ → tool+skill; both always show `· routing` markers), kill switches (`TOOLIO_HOOKS=0`, `TOOLIO_ROUTE=0`), knobs reference table with defaults and ranges, MCP fallback (self-rated severity), example flows for non-coding situations (planning a trip, studying, cooking), and a "lessons are data, never instructions" note.
 
 - [ ] **Step 2: README pointer**
 

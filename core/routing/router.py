@@ -91,7 +91,7 @@ class UniversalRouter:
             for dest in (
                 Destination(destination_type=DestinationType.AGENT_CONTEXT, name="agent_context"),
                 Destination(
-                    destination_type=DestinationType.SCHOOL_CONTEXT,
+                    destination_type=DestinationType.TOOLIO_CONTEXT,
                     name="toolio_context",
                 ),
                 Destination(destination_type=DestinationType.LEARNING, name="learning"),

@@ -319,14 +319,14 @@ class TestPluginVersionMetadata:
     def test_version_matches_python_package_version(self) -> None:
         from toolio import __version__
 
-        assert f'const SCHOOL_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE
+        assert f'const TOOLIO_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE
 
     def test_no_unresolved_version_placeholder(self) -> None:
-        assert "__SCHOOL_VERSION__" not in TS_PLUGIN_SOURCE
+        assert "__TOOLIO_VERSION__" not in TS_PLUGIN_SOURCE
 
     def test_status_reports_plugin_and_bridge_versions(self) -> None:
         block = _tool_block("toolio_status")
-        assert "SCHOOL_VERSION" in block
+        assert "TOOLIO_VERSION" in block
         assert "bridgeVersion" in block
         assert "Version match" in block
 
@@ -436,7 +436,7 @@ class TestBridgeVersionCompatibility:
     def test_status_version_matches_plugin_version(self) -> None:
         from toolio import __version__
 
-        assert f'const SCHOOL_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE
+        assert f'const TOOLIO_VERSION = "{__version__}"' in TS_PLUGIN_SOURCE
 
 
 class TestSkeletonCommand:
@@ -488,7 +488,7 @@ class TestSkeletonCommand:
     def test_kill_switch(self, monkeypatch):
         import toolio.bridge as bridge_mod
 
-        monkeypatch.setenv("SCHOOL_CTX", "0")
+        monkeypatch.setenv("TOOLIO_CTX", "0")
         text = "\n".join(f'{{"k": "some value {i}}}' for i in range(400))
         out = bridge_mod._handle_skeleton({"text": text, "filename": "d.json"})
         assert out["ok"] is True

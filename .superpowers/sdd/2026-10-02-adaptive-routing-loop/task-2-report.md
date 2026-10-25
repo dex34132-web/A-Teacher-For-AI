@@ -17,7 +17,7 @@ All inside `toolio/plugin_source.py` (`TS_PLUGIN_SOURCE`), per the brief:
      satisfies the controller's verbatim-none ruling); reason capped at 300 chars; returns
      `null` on any parse failure.
    - `async function microAssess(client, directory, situation)` — kill switch
-     (`SCHOOL_ROUTE === "0"` → `null`), scratch `session.create` → `config.get` →
+     (`TOOLIO_ROUTE === "0"` → `null`), scratch `session.create` → `config.get` →
      `small_model` ("provider/model" split) → `session.prompt` → text parts →
      `parseRouteDecision` → `finally` best-effort `session.delete`, raced against
      `ROUTE_TIMEOUT_MS` (10000) via `Promise.race`, outer `catch` → `null`.
@@ -47,7 +47,7 @@ All inside `toolio/plugin_source.py` (`TS_PLUGIN_SOURCE`), per the brief:
   `"function microAssess("` and `"function parseRouteDecision("` substrings, which the
   brief's `const microAssess = async (` code would not satisfy. Signatures unchanged.
 - **`appendEvidence` calls wrapped in `if (hooksEnabled())`**: binding global constraint
-  says `SCHOOL_HOOKS=0` disables hooks/evidence/markers; brief's tool code called it
+  says `TOOLIO_HOOKS=0` disables hooks/evidence/markers; brief's tool code called it
   unconditionally (Task 1 only ever called it from the gated after-hook).
 - **Line wrapping** for ≤100 physical chars (outcomes ternary, lesson output, nextStep).
 - One test line from the brief (`test_prompt_is_json_only`'s second assert, 120 chars)

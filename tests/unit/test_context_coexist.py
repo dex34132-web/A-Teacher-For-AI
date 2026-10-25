@@ -28,16 +28,16 @@ def _fresh_cache():
 
 
 def test_ctx_enabled_kill_switch(monkeypatch) -> None:
-    monkeypatch.delenv("SCHOOL_CTX", raising=False)
+    monkeypatch.delenv("TOOLIO_CTX", raising=False)
     assert ctx_enabled() is True
-    monkeypatch.setenv("SCHOOL_CTX", "0")
+    monkeypatch.setenv("TOOLIO_CTX", "0")
     assert ctx_enabled() is False
 
 
 def test_view_mode_off_when_compress_disabled(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS", "0")
     assert view_mode(str(tmp_path), home=tmp_path / "home") == "off"
-    monkeypatch.delenv("SCHOOL_COMPRESS", raising=False)
+    monkeypatch.delenv("TOOLIO_COMPRESS", raising=False)
     assert view_mode(str(tmp_path), home=tmp_path / "home") == "toolio"
 
 
@@ -171,7 +171,7 @@ def test_view_mode_keep_and_dcp_hint(tmp_path, monkeypatch) -> None:
     assert view_mode(wt, dcp_hint=True, home=home) == "dcp"
     save_state(wt, {"decision": "keep"})
     assert view_mode(wt, home=home) == "dcp"
-    monkeypatch.setenv("SCHOOL_CTX", "0")
+    monkeypatch.setenv("TOOLIO_CTX", "0")
     assert view_mode(wt, home=home) == "off"
 
 

@@ -393,7 +393,7 @@ class RoutingPipeline:
                 if pc <= Priority.HIGH.value:
                     destinations = (Destination(destination_type=DestinationType.AGENT_CONTEXT),)
                 else:
-                    destinations = (Destination(destination_type=DestinationType.SCHOOL_CONTEXT),)
+                    destinations = (Destination(destination_type=DestinationType.TOOLIO_CONTEXT),)
 
             elif itype == InformationType.OUTCOME:
                 strategy = RoutingStrategy.DIRECT
@@ -425,7 +425,7 @@ class RoutingPipeline:
 
             else:
                 strategy = RoutingStrategy.DIRECT
-                destinations = (Destination(destination_type=DestinationType.SCHOOL_CONTEXT),)
+                destinations = (Destination(destination_type=DestinationType.TOOLIO_CONTEXT),)
 
         # Apply priority from config
         if policy and hasattr(policy, 'apply_priority'):

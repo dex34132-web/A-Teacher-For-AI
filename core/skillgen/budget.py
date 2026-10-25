@@ -20,7 +20,7 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
-DEFAULT_MAX_CALLS_PER_TASK = _env_int("SCHOOL_SKILLGEN_MAX_CALLS_PER_TASK", 8)
+DEFAULT_MAX_CALLS_PER_TASK = _env_int("TOOLIO_SKILLGEN_MAX_CALLS_PER_TASK", 8)
 
 
 class ModelCallBudget:
@@ -39,7 +39,7 @@ class ModelCallBudget:
             self.max_per_task = max(0, safe_int(max_per_task, DEFAULT_MAX_CALLS_PER_TASK))
         else:
             self.max_per_task = _env_int(
-                "SCHOOL_SKILLGEN_MAX_CALLS_PER_TASK", DEFAULT_MAX_CALLS_PER_TASK
+                "TOOLIO_SKILLGEN_MAX_CALLS_PER_TASK", DEFAULT_MAX_CALLS_PER_TASK
             )
 
     @property

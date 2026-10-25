@@ -83,8 +83,8 @@ class BlockStore:
             self._save_inner(blocks)
 
     def _save_inner(self, blocks: list[Block]) -> None:
-        max_blocks = _env_int("SCHOOL_COMPRESS_MAX_BLOCKS", _MAX_BLOCKS_DEFAULT)
-        max_bytes = _env_int("SCHOOL_COMPRESS_MAX_BYTES", _MAX_BYTES_DEFAULT)
+        max_blocks = _env_int("TOOLIO_COMPRESS_MAX_BLOCKS", _MAX_BLOCKS_DEFAULT)
+        max_bytes = _env_int("TOOLIO_COMPRESS_MAX_BYTES", _MAX_BYTES_DEFAULT)
         kept = blocks[-max_blocks:] if max_blocks > 0 else []
         payload: dict[str, Any] = {
             "version": 1,

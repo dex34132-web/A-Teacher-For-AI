@@ -133,7 +133,7 @@ def execute(
     the retained stdout/stderr, and ``context`` is echoed into the learning
     evidence when supplied.
     """
-    if os.environ.get("SCHOOL_EXECUTE", "") == "0":
+    if os.environ.get("TOOLIO_EXECUTE", "") == "0":
         return ExecuteResult(ok=True, command=safe_str(command))
 
     if not isinstance(command, str) or not command.strip():

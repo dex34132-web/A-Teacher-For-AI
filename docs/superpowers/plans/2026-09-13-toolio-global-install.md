@@ -1,6 +1,6 @@
 # Toolio — Global Cross-Platform Installation Implementation Plan
 
-> **Historical document.** Written under the project's former name, *LEREV* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
+> **Historical document.** Written under the project's former name, *TOOLIO* (now *Toolio*), and preserved as-is for the record; names below may not match the current codebase.
 
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -21,7 +21,7 @@
 - V2.5 routing semantics must NOT be modified
 - Product name: Toolio (renamed from Toolio)
 - Memory dir: `.toolio/memory/` (`.toolio/memory/` still readable)
-- Env var: `LEREV_HOME` (`LEREV_HOME` still supported as fallback)
+- Env var: `TOOLIO_HOME` (`TOOLIO_HOME` still supported as fallback)
 - No HTTP daemon
 - No memory through CLI arguments
 - No global memory merging
@@ -203,35 +203,35 @@ class TestBridgeDiscovery:
     """Test the 4-tier bridge discovery cascade."""
 
     def test_tier1_toolio_home(self, tmp_path: Path) -> None:
-        """Tier 1: LEREV_HOME env var."""
+        """Tier 1: TOOLIO_HOME env var."""
         bridge_dir = tmp_path / "toolio"
         bridge_dir.mkdir()
         bridge_file = bridge_dir / "bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
-        with patch.dict(os.environ, {"LEREV_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"TOOLIO_HOME": str(tmp_path)}):
             result = discover_bridge(str(tmp_path))
 
         assert result is not None
-        assert result.tier == "LEREV_HOME"
+        assert result.tier == "TOOLIO_HOME"
         assert result.bridge_path == str(bridge_file)
 
     def test_tier1_evo_home_fallback(self, tmp_path: Path) -> None:
-        """Tier 1: LEREV_HOME env var as fallback."""
+        """Tier 1: TOOLIO_HOME env var as fallback."""
         bridge_dir = tmp_path / "toolio"
         bridge_dir.mkdir()
         bridge_file = bridge_dir / "bridge.py"
         bridge_file.write_text("# bridge", encoding="utf-8")
 
-        with patch.dict(os.environ, {"LEREV_HOME": str(tmp_path)}, clear=False):
-            # Remove LEREV_HOME if set
+        with patch.dict(os.environ, {"TOOLIO_HOME": str(tmp_path)}, clear=False):
+            # Remove TOOLIO_HOME if set
             env = os.environ.copy()
-            env.pop("LEREV_HOME", None)
+            env.pop("TOOLIO_HOME", None)
             with patch.dict(os.environ, env, clear=True):
                 result = discover_bridge(str(tmp_path))
 
         assert result is not None
-        assert result.tier == "LEREV_HOME"
+        assert result.tier == "TOOLIO_HOME"
 
     def test_tier4_dev_fallback(self, tmp_path: Path) -> None:
         """Tier 4: Development fallback."""
@@ -305,22 +305,22 @@ def _file_exists(path: str) -> bool:
 def discover_bridge(worktree: str) -> BridgeDiscovery | None:
     """Discover the Toolio bridge using a 4-tier cascade.
 
-    Tier 1: LEREV_HOME / LEREV_HOME env var
+    Tier 1: TOOLIO_HOME / TOOLIO_HOME env var
     Tier 2: toolio-bridge on PATH
     Tier 3: python -m toolio.bridge
     Tier 4: Dev fallback ({worktree}/scripts/toolio_bridge.py)
     """
     python = _find_python()
 
-    # Tier 1: LEREV_HOME / LEREV_HOME env var
-    toolio_home = os.environ.get("LEREV_HOME") or os.environ.get("LEREV_HOME")
+    # Tier 1: TOOLIO_HOME / TOOLIO_HOME env var
+    toolio_home = os.environ.get("TOOLIO_HOME") or os.environ.get("TOOLIO_HOME")
     if toolio_home:
         bridge_path = str(Path(toolio_home) / "toolio" / "bridge.py")
         if _file_exists(bridge_path):
             return BridgeDiscovery(
                 python=python or "python3",
                 bridge_path=bridge_path,
-                tier="LEREV_HOME",
+                tier="TOOLIO_HOME",
             )
 
     # Tier 2: toolio-bridge on PATH
@@ -1067,12 +1067,12 @@ interface BridgeInfo {
 async function discoverBridge(worktree: string): Promise<BridgeInfo | null> {
   const python = await findPython()
 
-  // Tier 1: LEREV_HOME / LEREV_HOME env var
-  const toolioHome = process.env.LEREV_HOME || process.env.LEREV_HOME
+  // Tier 1: TOOLIO_HOME / TOOLIO_HOME env var
+  const toolioHome = process.env.TOOLIO_HOME || process.env.TOOLIO_HOME
   if (toolioHome) {
     const bridgePath = resolve(toolioHome, "toolio", "bridge.py")
     if (fileExists(bridgePath)) {
-      return { python: python ?? "python3", bridgePath, tier: "LEREV_HOME" }
+      return { python: python ?? "python3", bridgePath, tier: "TOOLIO_HOME" }
     }
   }
 
@@ -1157,7 +1157,7 @@ async function invokeBridge(
   }
 }
 
-const LEREV: Plugin = async (ctx) => {
+const TOOLIO: Plugin = async (ctx) => {
   const bridge = await discoverBridge(ctx.worktree)
 
   if (!bridge) {
@@ -1396,7 +1396,7 @@ const LEREV: Plugin = async (ctx) => {
   }
 }
 
-export default LEREV
+export default TOOLIO
 '''
 ```
 
@@ -2031,7 +2031,7 @@ git commit -m "feat: add Homebrew formula"
 #!/bin/sh
 set -e
 
-LEREV_VERSION="2.6.0"
+TOOLIO_VERSION="2.6.0"
 INSTALL_DIR="${HOME}/.local/bin"
 
 echo "Toolio Installer"

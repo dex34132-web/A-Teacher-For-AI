@@ -37,7 +37,7 @@ class TestNavigate:
         assert "top.txt" in r.tree
 
     def test_navigate_kill_switch(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_NAVIGATE", "0")
+        monkeypatch.setenv("TOOLIO_NAVIGATE", "0")
         r = navigate(str(tmp_path), "read", path="missing.txt")
         assert r.ok is True
 

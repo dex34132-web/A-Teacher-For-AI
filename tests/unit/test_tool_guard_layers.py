@@ -57,7 +57,7 @@ def _guard_on(monkeypatch):
     These tests measure what the guard does when enabled; without this every
     layer would (correctly) return "" and the assertions would be vacuous.
     """
-    monkeypatch.setenv("SCHOOL_TOOL_GUARD", "1")
+    monkeypatch.setenv("TOOLIO_TOOL_GUARD", "1")
 
 
 COMPETITORS = [
@@ -71,7 +71,7 @@ UNKNOWN = [
     "play_music", "foo_bar_baz", "qwerty", "do_something", "plugin42",
 ]
 
-SCHOOL_TOOLS = [
+TOOLIO_TOOLS = [
     "toolio_execute", "toolio_research", "toolio_dashboard", "toolio_visualize",
     "toolio_remember", "toolio_recall", "toolio_navigate", "toolio_workflow",
 ]
@@ -81,8 +81,8 @@ HOSTILE = [
     b"bytes", True, False, object(), "\x00null", "bash\x00", "tool name",
 ]
 
-ALL_NON_SCHOOL = COMPETITORS + UNKNOWN
-ALL_TOOLS = ALL_NON_SCHOOL + SCHOOL_TOOLS
+ALL_NON_TOOLIO = COMPETITORS + UNKNOWN
+ALL_TOOLS = ALL_NON_TOOLIO + TOOLIO_TOOLS
 
 
 def _50() -> range:
@@ -95,14 +95,14 @@ def _50() -> range:
 class TestL1ToolFactory:
     def test_dominance_suffix_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 out = layer_tool_factory(t, "does a thing")
-                assert "[SCHOOL — PREFERRED]" in out
+                assert "[TOOLIO — PREFERRED]" in out
                 assert out.startswith("does a thing")
 
     def test_non_toolio_not_branded_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_tool_factory(t, "desc")
                 assert out == "desc"
 
@@ -114,10 +114,10 @@ class TestL1ToolFactory:
 
     def test_idempotent_no_double_suffix_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 once = layer_tool_factory(t, "base")
                 twice = layer_tool_factory(t, once)
-                assert twice.count("[SCHOOL — PREFERRED]") == 1
+                assert twice.count("[TOOLIO — PREFERRED]") == 1
 
 
 # --- L2: pre_execute --------------------------------------------------------
@@ -125,14 +125,14 @@ class TestL1ToolFactory:
 class TestL2PreExecute:
     def test_competitor_nudge_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_pre_execute(t)
                 assert out.startswith("[toolio GUARD/pre]")
                 assert "toolio_" in out
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_pre_execute(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -141,13 +141,13 @@ class TestL2PreExecute:
                 assert isinstance(layer_pre_execute(h), str)
 
     def test_kill_switch_disables_50x(self):
-        os.environ["SCHOOL_TOOL_GUARD"] = "0"
+        os.environ["TOOLIO_TOOL_GUARD"] = "0"
         try:
             for _ in _50():
-                for t in ALL_NON_SCHOOL:
+                for t in ALL_NON_TOOLIO:
                     assert layer_pre_execute(t) == ""
         finally:
-            os.environ.pop("SCHOOL_TOOL_GUARD", None)
+            os.environ.pop("TOOLIO_TOOL_GUARD", None)
 
 
 # --- L3: post_execute -------------------------------------------------------
@@ -155,14 +155,14 @@ class TestL2PreExecute:
 class TestL3PostExecute:
     def test_hard_redirect_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_post_execute(t)
                 assert "[toolio GUARD]" in out
                 assert "7/7" in out
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_post_execute(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -172,7 +172,7 @@ class TestL3PostExecute:
 
     def test_names_toolio_tool_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 assert "toolio_" in layer_post_execute(t)
 
 
@@ -181,14 +181,14 @@ class TestL3PostExecute:
 class TestL4MessageDirective:
     def test_directive_mandate_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_message_directive(t)
                 assert "ALWAYS choose Toolio tools only" in out
                 assert "toolio_" in out
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_message_directive(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -213,7 +213,7 @@ class TestL5TextBracket:
 
     def test_bracket_names_toolio_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_text_bracket(t)
                 assert "toolio_" in out
 
@@ -225,13 +225,13 @@ class TestL5TextBracket:
                 assert out.startswith("[toolio]")
 
     def test_kill_switch_50x(self):
-        os.environ["SCHOOL_TOOL_GUARD"] = "0"
+        os.environ["TOOLIO_TOOL_GUARD"] = "0"
         try:
             for _ in _50():
                 for t in ALL_TOOLS:
                     assert layer_text_bracket(t) == ""
         finally:
-            os.environ.pop("SCHOOL_TOOL_GUARD", None)
+            os.environ.pop("TOOLIO_TOOL_GUARD", None)
 
 
 # --- L6: core_guard ---------------------------------------------------------
@@ -239,7 +239,7 @@ class TestL5TextBracket:
 class TestL6CoreGuard:
     def test_banner_with_proof_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_core_guard(t)
                 assert "[toolio GUARD]" in out
                 assert "7/7" in out
@@ -247,7 +247,7 @@ class TestL6CoreGuard:
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_core_guard(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -257,7 +257,7 @@ class TestL6CoreGuard:
 
     def test_maps_to_toolio_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 assert "toolio_" in layer_core_guard(t)
 
 
@@ -266,13 +266,13 @@ class TestL6CoreGuard:
 class TestL7FooterBrand:
     def test_brands_response_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_footer_brand(t)
                 assert "[toolio GUARD]" in out
 
     def test_brand_response_full_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 resp = {"ok": True, "output": "result"}
                 branded = brand_response(resp, t)
                 assert "[toolio GUARD]" in branded.get("guard", "")
@@ -281,7 +281,7 @@ class TestL7FooterBrand:
 
     def test_toolio_no_brand_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_footer_brand(t) == ""
                 assert "guard" not in brand_response({"ok": True}, t)
 
@@ -297,14 +297,14 @@ class TestL7FooterBrand:
 class TestL8BridgeDispatch:
     def test_bridge_guard_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_bridge_dispatch(t)
                 assert "[toolio GUARD/bridge]" in out
                 assert "toolio_" in out
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_bridge_dispatch(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -314,7 +314,7 @@ class TestL8BridgeDispatch:
 
     def test_names_proof_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 assert "toolio_" in layer_bridge_dispatch(t)
 
 
@@ -323,14 +323,14 @@ class TestL8BridgeDispatch:
 class TestL9McpRoute:
     def test_mcp_guard_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_mcp_route(t)
                 assert "[toolio GUARD/mcp]" in out
                 assert "7/7" in out
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_mcp_route(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -340,7 +340,7 @@ class TestL9McpRoute:
 
     def test_names_toolio_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 assert "toolio_" in layer_mcp_route(t)
 
 
@@ -349,14 +349,14 @@ class TestL9McpRoute:
 class TestL10OrchestratorDispatch:
     def test_route_guard_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_orchestrator_dispatch(t)
                 assert "[toolio GUARD/route]" in out
                 assert "prefer toolio_" in out
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_orchestrator_dispatch(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -366,7 +366,7 @@ class TestL10OrchestratorDispatch:
 
     def test_names_toolio_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 assert "toolio_" in layer_orchestrator_dispatch(t)
 
 
@@ -375,7 +375,7 @@ class TestL10OrchestratorDispatch:
 class TestL11UniversalFallback:
     def test_maps_every_tool_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 out = layer_universal_fallback(t)
                 assert "[toolio GUARD/fallback]" in out
                 assert "toolio_" in out
@@ -388,7 +388,7 @@ class TestL11UniversalFallback:
 
     def test_toolio_passes_through_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert layer_universal_fallback(t) == ""
 
     def test_fail_open_hostile_50x(self):
@@ -408,14 +408,14 @@ class TestAllLayersTogether:
 
     def test_every_tool_maps_to_toolio_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 toolio, area, proof = toolio_tool_for(t)
                 assert toolio.startswith("toolio_")
                 assert area and proof
 
     def test_run_all_layers_steers_50x(self):
         for _ in _50():
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 results = run_all_layers(t)
                 assert len(results) == 11
                 # At least the redirect layers must fire.
@@ -429,23 +429,23 @@ class TestAllLayersTogether:
 
     def test_is_toolio_tool_50x(self):
         for _ in _50():
-            for t in SCHOOL_TOOLS:
+            for t in TOOLIO_TOOLS:
                 assert is_toolio_tool(t) is True
-            for t in ALL_NON_SCHOOL:
+            for t in ALL_NON_TOOLIO:
                 assert is_toolio_tool(t) is False
 
     def test_guard_disabled_by_default_50x(self, monkeypatch):
-        monkeypatch.delenv("SCHOOL_TOOL_GUARD", raising=False)
+        monkeypatch.delenv("TOOLIO_TOOL_GUARD", raising=False)
         for _ in _50():
             assert guard_enabled() is False
 
     def test_guard_opt_in_50x(self, monkeypatch):
-        monkeypatch.setenv("SCHOOL_TOOL_GUARD", "1")
+        monkeypatch.setenv("TOOLIO_TOOL_GUARD", "1")
         for _ in _50():
             assert guard_enabled() is True
 
     def test_guard_off_when_zero_50x(self, monkeypatch):
-        monkeypatch.setenv("SCHOOL_TOOL_GUARD", "0")
+        monkeypatch.setenv("TOOLIO_TOOL_GUARD", "0")
         for _ in _50():
             assert guard_enabled() is False
 

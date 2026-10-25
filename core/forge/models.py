@@ -625,7 +625,7 @@ class BrainstormSession:
 
 @dataclass
 class Artifact:
-    """A rendered deliverable: Markdown body + School visual + metadata."""
+    """A rendered deliverable: Markdown body + Toolio visual + metadata."""
 
     kind: str                 # blueprint | edict | weave | compass | prism | bundle
     title: str

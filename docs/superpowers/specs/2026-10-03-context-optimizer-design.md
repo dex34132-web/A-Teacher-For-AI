@@ -77,8 +77,8 @@ model sees result
 - One footer max per result; footer itself excluded from downstream estimates.
 - Budget: bridge parse capped at 2000 ms (separate constant, not the recall
   budget); heuristic path must stay under ~50 ms per result (no I/O).
-- Kill switch: `SCHOOL_CTX=0` disables compression entirely (raw world);
-  independent of `SCHOOL_HOOKS`.
+- Kill switch: `TOOLIO_CTX=0` disables compression entirely (raw world);
+  independent of `TOOLIO_HOOKS`.
 
 ## Non-goals
 
@@ -91,7 +91,7 @@ model sees result
 
 - Contract tests per language corpus (big-6 + 2 heuristic-only samples):
   signatures retained, bodies elided, footer format, threshold boundary
-  (999/1001 tokens), fail-open paths, `SCHOOL_CTX=0`.
+  (999/1001 tokens), fail-open paths, `TOOLIO_CTX=0`.
 - MCP: stdio integration for `toolio_read`/`toolio_grep` (skeletonized output,
   threshold, raw small reads, unknown-path errors).
 - Plugin: source-contract tests (hooks wiring, constants, footer) in the

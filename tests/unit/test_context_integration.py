@@ -18,8 +18,8 @@ def big_msgs(n: int = 8) -> list[dict]:
 
 
 def test_full_ladder_end_to_end(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "integration", judge=None)
     msgs = big_msgs()
     snapshot = copy.deepcopy(msgs)
@@ -43,8 +43,8 @@ def test_full_ladder_end_to_end(tmp_path, monkeypatch) -> None:
 
 
 def test_fail_open_matrix(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
 
     # 1. judge=None -> ladder still works (L0/L2)
     e1 = ContextEngine(str(tmp_path), "m1", judge=None)
@@ -69,14 +69,14 @@ def test_fail_open_matrix(tmp_path, monkeypatch) -> None:
     assert e1.view([]).messages == []
 
     # 4. kill switch still wins over everything
-    monkeypatch.setenv("SCHOOL_COMPRESS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS", "0")
     r5 = e1.compress(big_msgs())
     assert r5.skipped == "kill_switch"
 
 
 def test_view_of_restored_session_matches_block_payload(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     engine = ContextEngine(str(tmp_path), "rt", judge=None)
     msgs = big_msgs()
     engine.compress(msgs)

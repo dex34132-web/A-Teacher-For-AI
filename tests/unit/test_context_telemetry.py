@@ -45,7 +45,7 @@ class TestTelemetry:
         assert len(events) == 2
 
     def test_kill_switch_silent(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("SCHOOL_TELEMETRY", "0")
+        monkeypatch.setenv("TOOLIO_TELEMETRY", "0")
         tc = TelemetryCollector(worktree=str(tmp_path))
         tc.record("should_not_persist")
         tc.flush()

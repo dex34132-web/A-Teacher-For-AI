@@ -23,7 +23,7 @@ class TestObserve:
         assert "error" in r.pattern
 
     def test_kill_switch(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_OBSERVE", "0")
+        monkeypatch.setenv("TOOLIO_OBSERVE", "0")
         r = observe(str(tmp_path), "should not record")
         assert r.ok is True
         assert r.total == 0

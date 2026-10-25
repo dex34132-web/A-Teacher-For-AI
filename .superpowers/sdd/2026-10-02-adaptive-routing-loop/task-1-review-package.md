@@ -16,7 +16,7 @@ index 9aa6c7d..77d760a 100644
  
  from __future__ import annotations
  
- from toolio import __version__ as _SCHOOL_VERSION
+ from toolio import __version__ as _TOOLIO_VERSION
  
  _TS_PLUGIN_TEMPLATE = r'''import { tool } from "@opencode-ai/plugin/tool"
  import type { Plugin } from "@opencode-ai/plugin"
@@ -31,7 +31,7 @@ index 9aa6c7d..77d760a 100644
  const execFileAsync = promisify(execFile)
  
  /** Toolio version this plugin was generated from ΓÇö canonical source: toolio.__version__. */
- const SCHOOL_VERSION = "__SCHOOL_VERSION__"
+ const TOOLIO_VERSION = "__TOOLIO_VERSION__"
  
  /**
   * Find a usable Python interpreter.
@@ -51,7 +51,7 @@ index 9aa6c7d..77d760a 100644
 +const executionStart = new Map<string, number>()
 +
  function hooksEnabled(): boolean {
-   return process.env.SCHOOL_HOOKS !== "0"
+   return process.env.TOOLIO_HOOKS !== "0"
  }
  
 +const ROUTE_TIMEOUT_MS = 10000

@@ -125,7 +125,7 @@ class TestAutomaticCreation:
     def test_no_judge_configured_disables_creation(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("SCHOOL_SKILLGEN_JUDGE_CMD", raising=False)
+        monkeypatch.delenv("TOOLIO_SKILLGEN_JUDGE_CMD", raising=False)
         reg = SkillRegistry(tmp_path)
         report = SkillPipeline(reg, judge=None).observe(strong_exp(), task="t-noj")
         assert report["action"] == "rejected:no_judge_configured"

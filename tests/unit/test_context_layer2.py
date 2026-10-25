@@ -9,7 +9,7 @@ def msg(role: str, content: str) -> dict:
 
 
 def test_picks_oldest_free_segment(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [
         msg("user", "first"),
         msg("assistant", "answer"),
@@ -26,7 +26,7 @@ def test_picks_oldest_free_segment(monkeypatch) -> None:
 
 
 def test_skips_existing_blocks(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [msg("user", "a"), msg("assistant", "b"), msg("user", "c"), msg("user", "tail")]
     existing = [Block.make("b1", 0, 2, msgs[:2], "prior", 0)]
     span = emergency_span(msgs, existing)
@@ -36,7 +36,7 @@ def test_skips_existing_blocks(monkeypatch) -> None:
 
 
 def test_none_when_nothing_free(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [msg("user", "only"), msg("user", "tail")]
     existing = [Block.make("b1", 0, 1, msgs[:1], "prior", 0)]
     assert emergency_span(msgs, existing) is None
@@ -44,7 +44,7 @@ def test_none_when_nothing_free(monkeypatch) -> None:
 
 
 def test_pair_safety(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     msgs = [
         {"role": "assistant", "content": "", "tool_calls": [{"id": "t1"}]},
         msg("tool", "result"),
@@ -56,7 +56,7 @@ def test_pair_safety(monkeypatch) -> None:
 
 
 def test_summary_redacts_first_line_secrets(monkeypatch) -> None:
-    monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+    monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
     secret = "sk-" + "a" * 40
     msgs = [
         msg("user", f"using {secret} now"),

@@ -30,7 +30,7 @@ class TestWatchdog:
     def test_kill_switch_no_retry(self) -> None:
         import os
 
-        os.environ["SCHOOL_WATCHDOG"] = "0"
+        os.environ["TOOLIO_WATCHDOG"] = "0"
         try:
             calls = []
 
@@ -42,7 +42,7 @@ class TestWatchdog:
             assert result is None
             assert len(calls) == 1
         finally:
-            del os.environ["SCHOOL_WATCHDOG"]
+            del os.environ["TOOLIO_WATCHDOG"]
 
     def test_returns_kwargs(self) -> None:
         result = watchdog(lambda a, b: f"{a}-{b}", a="x", b="y")

@@ -46,7 +46,7 @@ def navigate(
     """Navigate project files: read / list / search / map."""
     action_s = safe_str(action)
     path_s = safe_str(path)
-    if os.environ.get("SCHOOL_NAVIGATE", "") == "0":
+    if os.environ.get("TOOLIO_NAVIGATE", "") == "0":
         return NavigateResult(ok=True, action=action_s)
 
     if action_s not in ACTIONS:

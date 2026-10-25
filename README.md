@@ -33,7 +33,7 @@ Every agent starts from zero. It re-reads the same files, re-derives the same de
 ```bash
 # 1. Clone
 git clone https://github.com/dksh3/toolio.git
-cd A-School-For-AI
+cd A-Toolio-For-AI
 
 # 2. Install (editable, with the MCP extra)
 pip install -e ".[mcp]"
@@ -45,7 +45,7 @@ toolio install
 toolio doctor
 ```
 
-Then restart your agent. The `school`/`toolio` plugin (52 tools) and the MCP server become available.
+Then restart your agent. The `toolio`/`toolio` plugin (52 tools) and the MCP server become available.
 
 > **Nothing is published to PyPI, npm, Homebrew, Chocolatey, or any installer channel.** The five steps above are the whole install. See [Install status](#install-status).
 

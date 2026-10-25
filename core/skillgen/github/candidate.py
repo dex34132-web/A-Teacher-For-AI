@@ -46,8 +46,8 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
-MAX_REPO_SIZE_KB = _env_int("SCHOOL_SKILLGEN_GITHUB_MAX_REPO_KB", 500000)
-MIN_RELEVANCE = float(os.environ.get("SCHOOL_SKILLGEN_GITHUB_MIN_RELEVANCE", "0.12") or 0.12)
+MAX_REPO_SIZE_KB = _env_int("TOOLIO_SKILLGEN_GITHUB_MAX_REPO_KB", 500000)
+MIN_RELEVANCE = float(os.environ.get("TOOLIO_SKILLGEN_GITHUB_MIN_RELEVANCE", "0.12") or 0.12)
 
 
 def classify_file(path: str) -> str:

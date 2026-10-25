@@ -196,9 +196,9 @@ class TestToolCalls:
     def test_remember_then_recall_same_session_scope(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("SCHOOL_PROJECT", raising=False)
-        monkeypatch.delenv("SCHOOL_SESSION", raising=False)
-        monkeypatch.delenv("SCHOOL_AGENT", raising=False)
+        monkeypatch.delenv("TOOLIO_PROJECT", raising=False)
+        monkeypatch.delenv("TOOLIO_SESSION", raising=False)
+        monkeypatch.delenv("TOOLIO_AGENT", raising=False)
         mcp_server._call_tool(
             worktree,
             "toolio_remember",
@@ -212,8 +212,8 @@ class TestToolCalls:
         assert recall.is_error is False
         assert recall.structured_content["memories"] == []
 
-        monkeypatch.setenv("SCHOOL_PROJECT", "envscope")
-        monkeypatch.setenv("SCHOOL_SESSION", "s1")
+        monkeypatch.setenv("TOOLIO_PROJECT", "envscope")
+        monkeypatch.setenv("TOOLIO_SESSION", "s1")
         recall = mcp_server._call_tool(
             worktree, "toolio_recall", {"query": "scoped memory probe"}
         )
@@ -272,26 +272,26 @@ class TestBuildRequest:
     def test_env_project_overrides_basename(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_PROJECT", "env-proj")
+        monkeypatch.setenv("TOOLIO_PROJECT", "env-proj")
         req = mcp_server._build_request("/tmp/proj-xyz", "toolio_recall", {"query": "q"})
         assert req["project"] == "env-proj"
 
     def test_arg_project_overrides_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_PROJECT", "env-proj")
+        monkeypatch.setenv("TOOLIO_PROJECT", "env-proj")
         req = mcp_server._build_request(
             "/tmp/proj-xyz", "toolio_recall", {"query": "q", "project": "arg-proj"}
         )
         assert req["project"] == "arg-proj"
 
     def test_session_env_fill(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_SESSION", "sess-9")
+        monkeypatch.setenv("TOOLIO_SESSION", "sess-9")
         req = mcp_server._build_request("/tmp/p", "toolio_recall", {"query": "q"})
         assert req["session"] == "sess-9"
 
     def test_agent_env_maps_to_bridge_agent_for_remember(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_AGENT", "mcp-agent")
+        monkeypatch.setenv("TOOLIO_AGENT", "mcp-agent")
         req = mcp_server._build_request("/tmp/p", "toolio_remember", {"content": "x"})
         assert req["agent"] == "mcp-agent"
         assert "agent_id" not in req
@@ -299,7 +299,7 @@ class TestBuildRequest:
     def test_agent_env_maps_to_agent_id_for_dispatch_tools(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_AGENT", "mcp-agent")
+        monkeypatch.setenv("TOOLIO_AGENT", "mcp-agent")
         req = mcp_server._build_request("/tmp/p", "toolio_learn", {"content": "x"})
         assert req["agent_id"] == "mcp-agent"
         assert "agent" not in req
@@ -344,7 +344,7 @@ class TestResources:
     def test_read_context_resource_budgeted(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_PROJECT", "ctxproj")
+        monkeypatch.setenv("TOOLIO_PROJECT", "ctxproj")
         for index in range(7):
             mcp_server._call_tool(
                 worktree,
@@ -410,7 +410,7 @@ class TestBuildServer:
     ) -> None:
         project = tmp_path / "env_wt"
         project.mkdir()
-        monkeypatch.setenv("SCHOOL_WORKTREE", str(project))
+        monkeypatch.setenv("TOOLIO_WORKTREE", str(project))
         mcp_server.build_server()
         assert bridge._manager is not None
 
@@ -768,8 +768,8 @@ class TestContextToolsMCP:
     def test_compress_then_status_chip(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         messages = [
             {"role": "user" if i % 2 == 0 else "assistant", "content": chr(97 + i) * 300}
             for i in range(8)
@@ -786,8 +786,8 @@ class TestContextToolsMCP:
     def test_restore_roundtrip_is_idempotent(
         self, worktree: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("SCHOOL_COMPRESS_WINDOW_TOKENS", "200")
-        monkeypatch.setenv("SCHOOL_COMPRESS_TAIL_TOKENS", "0")
+        monkeypatch.setenv("TOOLIO_COMPRESS_WINDOW_TOKENS", "200")
+        monkeypatch.setenv("TOOLIO_COMPRESS_TAIL_TOKENS", "0")
         messages = [
             {"role": "user" if i % 2 == 0 else "assistant", "content": chr(97 + i) * 300}
             for i in range(8)

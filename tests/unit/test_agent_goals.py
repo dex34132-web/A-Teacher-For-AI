@@ -45,7 +45,7 @@ class TestGoal:
         assert len(r.goals) == 0
 
     def test_kill_switch(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("SCHOOL_GOAL", "0")
+        monkeypatch.setenv("TOOLIO_GOAL", "0")
         r = goal(str(tmp_path), "set", objective="A")
         assert r.ok is True
 

@@ -1008,7 +1008,7 @@ def optimize(
     original = text
     body = strip_footer(text)
     tokens_in = estimate_tokens(body)
-    if os.environ.get("SCHOOL_CTX") == "0" or tokens_in < CTX_THRESHOLD:
+    if os.environ.get("TOOLIO_CTX") == "0" or tokens_in < CTX_THRESHOLD:
         return _passthrough(body, tokens_in, original)
     try:
         if strategy == "matches":

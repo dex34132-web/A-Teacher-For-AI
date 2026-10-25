@@ -70,7 +70,7 @@ def test_summarize_segment_ok_fail_and_none_judge() -> None:
 
 
 def test_default_judge_none_without_env(monkeypatch) -> None:
-    monkeypatch.delenv("SCHOOL_COMPRESS_JUDGE_CMD", raising=False)
+    monkeypatch.delenv("TOOLIO_COMPRESS_JUDGE_CMD", raising=False)
     assert default_judge() is None
 
 
@@ -86,10 +86,10 @@ def test_default_judge_subprocess_pattern(monkeypatch, tmp_path) -> None:
     import sys
 
     monkeypatch.setenv(
-        "SCHOOL_SKILLGEN_JUDGE_CMD", ""
+        "TOOLIO_SKILLGEN_JUDGE_CMD", ""
     )  # ensure no cross-talk from skillgen env
     monkeypatch.setenv(
-        "SCHOOL_COMPRESS_JUDGE_CMD",
+        "TOOLIO_COMPRESS_JUDGE_CMD",
         f'"{sys.executable}" "{script}"',
     )
     judge = default_judge()

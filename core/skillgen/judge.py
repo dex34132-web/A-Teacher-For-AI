@@ -3,7 +3,7 @@
 The model provides structured judgment only - it never writes files or
 executes code. Output must be strict JSON parsed by parse_judgment; invalid
 output is treated as "do not create" (fail closed). Judge is pluggable:
-tests inject a mock, real runs may set SCHOOL_SKILLGEN_JUDGE_CMD to a
+tests inject a mock, real runs may set TOOLIO_SKILLGEN_JUDGE_CMD to a
 command that reads the prompt on stdin and prints JSON on stdout.
 """
 
@@ -26,7 +26,7 @@ def _env_float(name: str, default: float) -> float:
         return default
 
 
-JUDGE_TIMEOUT_S = _env_float("SCHOOL_SKILLGEN_JUDGE_TIMEOUT", 60.0)
+JUDGE_TIMEOUT_S = _env_float("TOOLIO_SKILLGEN_JUDGE_TIMEOUT", 60.0)
 
 SKILL_TYPES = frozenset({"workflow", "procedure", "tool_strategy", "shortcut", "diagnostic"})
 SCOPES = frozenset({"session", "project", "agent", "global"})
@@ -198,10 +198,10 @@ class SubprocessModelJudge:
     """Real judge: run a configured command, prompt on stdin, JSON on stdout."""
 
     def __init__(self, command: str | None = None, timeout: float | None = None) -> None:
-        self.command = command or os.environ.get("SCHOOL_SKILLGEN_JUDGE_CMD", "")
+        self.command = command or os.environ.get("TOOLIO_SKILLGEN_JUDGE_CMD", "")
         self.timeout = timeout or JUDGE_TIMEOUT_S
         self.model_id = (
-            os.environ.get("SCHOOL_SKILLGEN_JUDGE_MODEL", "") or "subprocess"
+            os.environ.get("TOOLIO_SKILLGEN_JUDGE_MODEL", "") or "subprocess"
         )
 
     @property

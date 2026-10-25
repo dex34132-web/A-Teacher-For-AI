@@ -51,5 +51,5 @@ Toolio supports spaces in installation paths. If you encounter issues:
 ## Cross-platform notes
 
 - On Windows, `python` is used; on macOS/Linux, `python3` is preferred
-- The bridge discovery cascade: SCHOOL_HOME → PATH → installed module → dev fallback
+- The bridge discovery cascade: TOOLIO_HOME → PATH → installed module → dev fallback
 - `.toolio/memory/` is per-project; global installation does not share memory

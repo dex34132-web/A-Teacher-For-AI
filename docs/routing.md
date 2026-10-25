@@ -63,7 +63,7 @@ Two mechanisms make Toolio show itself on **every** prompt execution:
    description tells the model to call it once per user turn. The MCP twin
    reports what the MCP process can see (evidence tail + bridge health).
 
-Both are governed by `SCHOOL_HOOKS=0` (footer) and disappear with it; the
+Both are governed by `TOOLIO_HOOKS=0` (footer) and disappear with it; the
 dashboard tool itself stays available for on-demand checks.
 
 ## Escalation table
@@ -83,10 +83,10 @@ tell what the loop decided and why.
 
 | Env | Effect |
 | --- | --- |
-| `SCHOOL_HOOKS=0` | All execution/prompt hooks off — no recall, no markers, no injection. |
-| `SCHOOL_ROUTE=0` | No micro-model assess calls; `toolio_route` degrades without engaging the skill. |
+| `TOOLIO_HOOKS=0` | All execution/prompt hooks off — no recall, no markers, no injection. |
+| `TOOLIO_ROUTE=0` | No micro-model assess calls; `toolio_route` degrades without engaging the skill. |
 
-(The context optimizer has its own switch, `SCHOOL_CTX=0`, independent of both.)
+(The context optimizer has its own switch, `TOOLIO_CTX=0`, independent of both.)
 
 ## Knobs: `.toolio/routing.json`
 

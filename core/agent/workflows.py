@@ -514,7 +514,7 @@ def workflow(
     calls and processes. Phase durations are recorded on every advance and
     finished runs feed the guidance of future runs ("run history").
     """
-    if os.environ.get("SCHOOL_WORKFLOW", "") == "0":
+    if os.environ.get("TOOLIO_WORKFLOW", "") == "0":
         return WorkflowResult(
             ok=True,
             workflow=safe_str(name),
