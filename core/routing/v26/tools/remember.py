@@ -93,7 +93,7 @@ class RememberTool(Tool):
             return error_result(self.name, "content is required and must not be empty")
 
         outcome_raw = kwargs.get("outcome", "NEUTRAL")
-        outcome_key = coerce_text(outcome_raw)
+        outcome_key = coerce_text(outcome_raw).upper()
         try:
             outcome = ExperienceOutcome[outcome_key]
         except Exception:  # noqa: BLE001 - unhashable/hostile outcome -> graceful error
