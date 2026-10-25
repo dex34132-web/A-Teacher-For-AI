@@ -1,11 +1,21 @@
-import runpy, os, sys
-# Delegate to the renamed bridge
-here = os.path.dirname(os.path.abspath(__file__))
-target = os.path.join(here, "toolio_bridge.py")
-if os.path.exists(target):
-    runpy.run_path(target, run_name="__main__")
-else:
-    # fallback: invoke toolio bridge module
-    sys.path.insert(0, os.path.dirname(here))
-    from toolio.bridge import main
+"""Toolio bridge — development fallback wrapper.
+
+This is the development fallback bridge. For installed usage,
+use `python -m toolio.bridge` instead.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# Ensure project root is on sys.path so core.* imports work
+_BRIDGE_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _BRIDGE_DIR.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from toolio.bridge import main  # noqa: E402
+
+if __name__ == "__main__":
     main()
