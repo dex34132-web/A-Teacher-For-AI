@@ -1,134 +1,222 @@
-# School
+<div align="center">
 
-Universal AI-agent learning and long-term memory system.
+# Toolio
 
-School gives coding agents persistent, project-scoped memory that survives restarts.
+**Universal agent learning and memory system**
 
-## Install
+[![Version](https://img.shields.io/badge/version-2.6.0-blue?style=flat-square)](https://github.com/dksh3/toolio/releases)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/python-%E2%89%A53.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Tests](https://img.shields.io/badge/tests-3800%2B%20passing-brightgreen?style=flat-square)](https://github.com/dksh3/toolio)
+[![MCP](https://img.shields.io/badge/MCP-compatible-orange?style=flat-square)](https://modelcontextprotocol.io/)
 
-### Python
+> Agents forget. Toolio remembers — what worked, what broke, and what your project already decided — and hands it back before the next task starts.
+
+</div>
+
+---
+
+## Introduction
+
+Every agent starts from zero. It re-reads the same files, re-derives the same decisions, and re-makes the same mistakes — every session, every task. Context windows fill up and get truncated. Nothing is learned.
+
+**Toolio** is a learning layer that sits behind any agent. It stores what happened, compresses what no longer fits, and recalls what matters before the next task starts. It works with any agent that speaks [MCP](https://modelcontextprotocol.io/) or loads a plugin — coding, research, ops, support, or anything else.
+
+- **Not a coding-agent tool.** Toolio runs behind *any* agent that speaks MCP or loads a plugin.
+- **Nothing published yet.** Source install only — see [Install status](#install-status).
+- **Honest numbers.** Every figure in this repo is counted from the repo itself by one script (`python toolio/islands/mkdata.py`).
+
+---
+
+## Quickstart
+
 ```bash
-pip install school
+# 1. Clone
+git clone https://github.com/dksh3/toolio.git
+cd A-School-For-AI
+
+# 2. Install (editable, with the MCP extra)
+pip install -e ".[mcp]"
+
+# 3. Wire your agent
+toolio install
+
+# 4. Verify
+toolio doctor
 ```
 
-### npm / bun
-```bash
-npm install -g @dksh/school
-# or
-bun install -g @dksh/school
-```
+Then restart your agent. The `school`/`toolio` plugin (52 tools) and the MCP server become available.
 
-### Windows
-Download `School-Setup.exe` from [releases](https://github.com/dex34132-web/lerev/releases)
+> **Nothing is published to PyPI, npm, Homebrew, Chocolatey, or any installer channel.** The five steps above are the whole install. See [Install status](#install-status).
 
-### Chocolatey
-```bash
-choco install school
-```
+---
 
-### Homebrew (macOS)
-```bash
-brew install school
-```
+## What it does
 
-### Linux
-```bash
-curl -fsSL https://raw.githubusercontent.com/dex34132-web/lerev/main/packaging/linux/install.sh | sh
-```
+| Without Toolio | With Toolio |
+|---|---|
+| Every session starts from zero | Memory persists across sessions and projects |
+| Context window fills, then truncates | Context is compressed into named blocks; originals are kept |
+| Decisions get re-derived | Decisions are recalled before the next task |
+| Mistakes repeat | Failures are recorded and avoided |
+| One agent, one window | One memory, shared across agents |
 
-### From source
-```bash
-git clone https://github.com/dex34132-web/lerev.git
-pip install -e .
-```
+Core capabilities:
 
-Plugin auto-installs on first use. Restart OpenCode after install.
+- **Memory** — store, recall, and search facts, decisions, and lessons, scoped per project.
+- **Context engine** — count tokens, compress overflowing transcripts into named blocks, restore them on demand.
+- **Learning** — record what worked and what broke; promote patterns into skills.
+- **Skills** — create, use, evolve, and share agent skills (candidate → proven).
+- **MCP server** — 52 tools over stdio, budgeted resources instead of a firehose.
+- **CLI** — install, diagnose, visualize, and run the whole system from the terminal.
+- **Planning tools** — clarify, blueprint, edict, weave, compass, brainstorm, quantify, elicit, investigate.
 
-## What School Does
+---
 
-- Long-term memory across sessions
-- Project isolation (memories never leak between projects)
-- Session and agent awareness
-- Injection detection and security boundaries
-- Works with OpenCode, Claude Code, Codex, and others
-
-## How It Works
+## How it works
 
 ```
-Your coding agent
-    │
-    ▼
-School plugin (auto-discovered)
-    │
-    ▼
-Python bridge (JSON over stdin/stdout)
-    │
-    ▼
-School V2.6 memory engine
-    ├── MemoryManager
-    ├── Security
-    ├── Persistence (project-scoped)
-    └── MemoryStore
+┌──────────┐     ┌──────────┐     ┌──────────────┐
+│  Agent   │────▶│  Bridge  │────▶│ Toolio engine│
+│ (plugin/ │◀────│ (stdio)  │◀────│ (memory,     │
+│  MCP)    │     │          │     │  context,    │
+└──────────┘     └──────────┘     │  learning)   │
+                                  └──────┬───────┘
+                                         │
+                                  ┌──────▼───────┐
+                                  │ .toolio/     │
+                                  │  memory/     │
+                                  │  (per project)│
+                                  └──────────────┘
 ```
 
-Memory is stored in `.school/memory/` per project.
+- **Plugin path** — `toolio install` writes a plugin into your agent's config dir; the agent calls tools directly.
+- **MCP path** — `python -m toolio.mcp` runs a stdio MCP server; any MCP client connects to it.
+- **Storage** — memories live in `.toolio/memory/` inside the project (or a global dir), one JSON file per memory, plus an index.
+
+---
 
 ## CLI
 
-```bash
-school --help        # Show commands
-school version       # Print version
-school status        # Show installation status
-school doctor        # Run diagnostics
-school install       # Reinstall plugin
-school uninstall     # Remove plugin
-school mcp           # Run MCP server (stdio)
-school mcp config claude   # Print client MCP config
-```
+Run with `python -m toolio.cli <command>` (or `toolio <command>` if installed).
+
+| Command | What it does |
+|---|---|
+| `version` | Print Toolio version |
+| `status` | Show Toolio status |
+| `install` | Install Toolio globally for OpenCode |
+| `doctor` | Run diagnostics |
+| `uninstall` | Uninstall from OpenCode |
+| `mcp` | Run the MCP server over stdio, or print client config |
+| `skills` | Skill management (list, search, create, use, feedback, status, evolve, …) |
+| `context` | Context engine: status, compress, restore, switch, keep |
+| `visualize` | Render visuals (sparkline, heatmap, donut, radar, …) |
+| `clarion` | Discovery interview (idea → requirements) |
+| `blueprint` | Design spec from an interview (idea → spec) |
+| `edict` | Ordered commands + directives (spec → execution) |
+| `weave` | Roadmap + timeline (plan → phases/lanes/critical path) |
+| `compass` | Acceptance scenarios + checklist |
+| `brainstorm` | Brainstorm, score, cluster, select (any topic, any domain) |
+| `quantify` | Deterministic money/percent/risk/date checks with provenance |
+| `elicit` | Find the material questions a plan is missing |
+| `investigate` | Adaptive diagnosis (find what's wrong, why it keeps happening) |
+
+Optional extras: `pip install -e ".[dev,web,semantic,mcp,ctx,all]"`.
+
+---
 
 ## MCP
 
-School ships a production MCP server so any MCP-compatible client (Claude Code,
-Codex, OpenCode, Cursor, Windsurf, Cline, Roo, Gemini CLI, …) can use the same
-memory core — thin translation over the existing bridge, no second system:
+Toolio speaks MCP over stdio. Any MCP client can connect.
 
-```bash
-pip install "school[mcp]"
-school mcp                 # stdio server
-python -m school.mcp       # identical entry point
+```json
+{
+  "mcpServers": {
+    "toolio": {
+      "command": "python",
+      "args": ["-m", "toolio.mcp"]
+    }
+  }
+}
 ```
 
-Eleven `school_*` tools, a budgeted `school://` resource set, and a
-`relevant_context` prompt. See **[docs/mcp.md](docs/mcp.md)** for copy-paste client
-configs, tool reference, scope rules, and security notes. The JSON bridge and the
-OpenCode plugin keep working unchanged alongside it.
+Or generate the block for your client:
 
-- [Adaptive routing](docs/routing.md) - where School tools fire, and why
+```bash
+toolio mcp config claude   # .mcp.json / claude_desktop_config.json
+toolio mcp config codex    # ~/.codex/config.toml
+toolio mcp config          # generic block
+```
+
+**Budgeted resources** (trimmed, never dumped):
+
+| Resource | What it returns |
+|---|---|
+| `toolio://context` | The live window, trimmed to the budget |
+| `toolio://memories` | Stored memories |
+| `toolio://skills` | Available skills |
+| `toolio://prompt/relevant_context` | Relevant context for the current task |
+
+Plus a `relevant_context` prompt and 52 `toolio_*` functions.
+
+---
+
+## Configuration & data
+
+- **Memory location** — `.toolio/memory/` inside the project (or a global dir). One JSON file per memory, plus an index.
+- **Project scoping** — memories are tagged per project; recall filters by project by default.
+- **Environment variables** — `TOOLIO_LLM_API_KEY` (and friends) for the optional LLM-in-the-loop features. Without them, Toolio falls back to heuristics (no crash).
+- **Optional extras** — `dev` (pytest, ruff, mypy), `web` (httpx, bs4), `semantic` (fastembed), `mcp` (mcp sdk), `ctx` (tree-sitter), `all`.
+
+---
+
+## Install status
+
+Honest. Nothing is published. Source install is the only working path.
+
+| Channel | Status |
+|---|---|
+| Source (`git clone` + `pip install -e .`) | ✅ Works today |
+| PyPI (`pip install toolio`) | ⏳ Not published |
+| npm | ⏳ Not published |
+| Homebrew | ⏳ Not published |
+| Chocolatey | ⏳ Not published |
+| Windows installer | ⏳ Not built |
+| Linux install script | ⏳ Not available |
+
+If you want a published package, open an issue — the packaging scaffolding exists under `packaging/`.
+
+---
 
 ## Development
 
 ```bash
-pip install -e ".[dev]"
-pytest
-ruff check .
-mypy core/
+# Install dev deps
+pip install -e ".[dev,all]"
+
+# Run the test suite
+python -m pytest
+
+# Run a focused subset
+python -m pytest tests/unit/test_toolio_identity_compat.py -q
 ```
 
-## Migration from LEREV
+- **Layout** — `toolio/` (engine), `tests/` (unit + stress + fuzz), `docs/` (reference), `packaging/` (unbuilt channels).
+- **Contributing** — PRs welcome. Keep the honest-numbers rule: every figure must be reproducible by a script in the repo.
+- **Stress tests** — `tests/test_fuzz_*.py` run 10k–100k iterations; some are slow.
 
-This project was formerly named **LEREV**. The canonical identity is now
-**School**. Legacy aliases are kept so existing installs keep working:
-
-- `lerev` console script → runs the School CLI (legacy alias)
-- `import lerev` / `python -m lerev.bridge` → shim over `school`
-- `LEREV_HOME` / `EVO_HOME` env vars → honoured as fallbacks after `SCHOOL_HOME`
-- `lerev-bridge` on PATH → honoured as fallback after `school-bridge`
-- `.lerev/memory/` (and older `.evo/memory/`) → copied non-destructively to
-  `.school/memory/` on first use; the original data is never deleted
-- stale `plugins/lerev.ts` / `node_modules/lerev` → removed on `school install`
-
-New usage should always say **School** / `school` / `school_*`.
+---
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+⭐️ **Show your support** — give this project a star if it helped you.
+
+[![GitHub stars](https://img.shields.io/github/stars/dksh3/toolio?style=social)](https://github.com/dksh3/toolio)
+
+</div>

@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "school"
+name = "toolio"
 version = "2.6.0"
 description = "Universal agent learning and memory system"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
-    { name = "School Contributors" },
+    { name = "Toolio Contributors" },
 ]
 keywords = ["ai", "machine-learning", "coding-agent", "harness", "memory", "learning"]
 classifiers = [
@@ -32,8 +32,8 @@ dependencies = [
 ]
 
 [project.scripts]
-school = "school.cli:main"
-school-bridge = "school.bridge:main"
+toolio = "toolio.cli:main"
+toolio-bridge = "toolio.bridge:main"
 
 [project.optional-dependencies]
 dev = [
@@ -65,18 +65,18 @@ ctx = [
     "tree-sitter-cpp==0.23.4",
 ]
 all = [
-    "school[dev,web,semantic,mcp,ctx]",
+    "toolio[dev,web,semantic,mcp,ctx]",
 ]
 
 [project.urls]
 # Repository URL keeps the pre-rename GitHub repo path (remote not renamed).
-Homepage = "https://github.com/dex34132-web/lerev"
-Documentation = "https://github.com/dex34132-web/lerev/tree/main/docs"
-Repository = "https://github.com/dex34132-web/lerev"
-Issues = "https://github.com/dex34132-web/lerev/issues"
+Homepage = "https://github.com/dksh3/toolio"
+Documentation = "https://github.com/dksh3/toolio/tree/main/docs"
+Repository = "https://github.com/dksh3/toolio"
+Issues = "https://github.com/dksh3/toolio/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["core", "web", "adapters", "storage", "school", "lerev"]
+packages = ["core", "web", "adapters", "storage", "toolio", "toolio"]
 
 [tool.ruff]
 line-length = 100
