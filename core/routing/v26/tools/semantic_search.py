@@ -91,7 +91,10 @@ class SemanticSearchTool(Tool):
             q_words = set(q_lower.split())
             fallback = []
             for e in entries:
-                content = str(getattr(e, "content", "") or "").lower()
+                if isinstance(e, dict):
+                    content = str(e.get("content", "") or "").lower()
+                else:
+                    content = str(getattr(e, "content", "") or "").lower()
                 if any(w in content for w in q_words) or q_lower in content:
                     fallback.append(e)
                     if len(fallback) >= limit:
