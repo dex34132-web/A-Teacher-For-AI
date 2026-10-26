@@ -84,6 +84,21 @@ class SemanticSearchTool(Tool):
 
         results = scored_query(entries, query, self._extractor, limit=limit)
 
+        # Fallback: if TF-IDF returns nothing, try simple keyword overlap
+        # so search never returns empty when recall would find matches.
+        if not results and entries:
+            q_lower = query.lower()
+            q_words = set(q_lower.split())
+            fallback = []
+            for e in entries:
+                content = str(getattr(e, "content", "") or "").lower()
+                if any(w in content for w in q_words) or q_lower in content:
+                    fallback.append(e)
+                    if len(fallback) >= limit:
+                        break
+            if fallback:
+                results = fallback
+
         return ToolResult(
             success=True,
             data={
